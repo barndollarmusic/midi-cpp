@@ -3,6 +3,7 @@ include(BMMidiTargets)
 bmmidi_header_library(Lib
     bmmidi.hpp
     channel.hpp
+    control.hpp
     data_value.hpp
     key_number.hpp
     pitch_bend.hpp
@@ -12,6 +13,10 @@ bmmidi_header_library(Lib
 if(BMMidi_ENABLE_TESTING)
   bmmidi_gtest(ChannelTest channel_test.cpp)
   target_link_libraries(BMMidi_ChannelTest
+      PRIVATE BMMidi::Lib)
+
+  bmmidi_gtest(ControlTest control_test.cpp)
+  target_link_libraries(BMMidi_ControlTest
       PRIVATE BMMidi::Lib)
 
   bmmidi_gtest(DataValueTest data_value_test.cpp)
