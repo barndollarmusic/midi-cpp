@@ -5,6 +5,7 @@
 
 #include "bmmidi/channel.hpp"
 #include "bmmidi/key_number.hpp"
+#include "bmmidi/preset_number.hpp"
 
 // TODO: Audit when library is finished to make sure this includes all
 // individual headers.

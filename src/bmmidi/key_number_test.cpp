@@ -9,7 +9,7 @@ using ::testing::Eq;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
 
-TEST(KeyNumber, ShouldWorkForAllNormalChannels) {
+TEST(KeyNumber, ShouldWorkForAllNormalKeys) {
   // Should work for values 0 through 127.
   for (int keyNumber = 0; keyNumber <= 127; ++keyNumber) {
     const auto ch = bmmidi::KeyNumber::key(keyNumber);
