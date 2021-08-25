@@ -3,6 +3,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "bmmidi/data_value.hpp"
+
 namespace {
 
 using ::testing::Eq;
