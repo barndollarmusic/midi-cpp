@@ -4,6 +4,7 @@
 #define BMMIDI_BMMIDI_HPP
 
 #include "bmmidi/channel.hpp"
+#include "bmmidi/key_number.hpp"
 
 // TODO: Audit when library is finished to make sure this includes all
 // individual headers.
