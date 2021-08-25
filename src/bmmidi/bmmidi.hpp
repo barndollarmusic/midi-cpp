@@ -4,6 +4,7 @@
 #define BMMIDI_BMMIDI_HPP
 
 #include "bmmidi/channel.hpp"
+#include "bmmidi/data_value.hpp"
 #include "bmmidi/key_number.hpp"
 #include "bmmidi/preset_number.hpp"
 
