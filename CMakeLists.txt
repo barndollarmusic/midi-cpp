@@ -15,9 +15,9 @@ else()
   set(bmMidiTestingDefault OFF)
 endif()
   
-option(BMMIDI_ENABLE_TESTS "Enable testing for the BMMidi project"
+option(BMMidi_ENABLE_TESTING "Enable testing for the BMMidi project"
     ${bmMidiTestingDefault})
-if(BMMIDI_ENABLE_TESTS)
+if(BMMidi_ENABLE_TESTING)
   enable_testing()
 endif()
 

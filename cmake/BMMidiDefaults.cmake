@@ -1,7 +1,7 @@
 if(NOT BMMIDI_IS_TOP_LEVEL_PROJECT)
-  if(CMAKE_CXX_STANDARD LESS 14)
+  if(CMAKE_CXX_STANDARD LESS 20)
     message(FATAL_ERROR
-        "BMMidi requires CMAKE_CXX_STANDARD >= 14 (got: ${CMAKE_CXX_STANDARD})")
+        "BMMidi requires CMAKE_CXX_STANDARD >= 20 (got: ${CMAKE_CXX_STANDARD})")
   endif()
 
   return()  # Don't set these defaults if this isn't the top-level project.
@@ -13,8 +13,8 @@ endif()
 
 include(CheckCXXCompilerFlag)
 
-# Default to C++14 standard.
-set(CMAKE_CXX_STANDARD 14)
+# Default to C++20 standard.
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS NO)
 
@@ -54,6 +54,6 @@ if(NOT CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
 endif()
 
 # Discover Google Test list of tests at test time, rather than post build.
-if(BMMIDI_ENABLE_TESTS)
+if(BMMidi_ENABLE_TESTING)
   set(CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE PRE_TEST)
 endif()

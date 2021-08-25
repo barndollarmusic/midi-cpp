@@ -63,9 +63,9 @@ endfunction()
 ##
 ## All remaining arguments are passed to add_executable().
 function(bmmidi_gtest name)
-  if(NOT BMMIDI_ENABLE_TESTS)
+  if(NOT BMMidi_ENABLE_TESTING)
     # Project testing off, so bmmidi_gtest() should never have been invoked.
-    message(FATAL_ERROR "Must guard test targets with BMMIDI_ENABLE_TESTS")
+    message(FATAL_ERROR "Must guard test targets with BMMidi_ENABLE_TESTING")
   endif()
 
   include(GoogleTest)
