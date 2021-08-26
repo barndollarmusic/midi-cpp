@@ -2,7 +2,6 @@
 #define BMMIDI_CHANNEL_HPP
 
 #include <cassert>
-#include <compare>
 
 namespace bmmidi {
 
@@ -49,11 +48,13 @@ public:
   /** Returns 1-based [1, 16] display number, suitable for display to users. */
   constexpr int displayNumber() const { return index() + 1; }
 
-  /**
-   * Numerically compares to another Channel, with 'none' treated as less
-   * than all normal channels and 'omni' treated as greater.
-   */
-  auto operator<=>(const Channel&) const = default;
+  // Comparison operations:
+  friend bool operator==(Channel lhs, Channel rhs) { return lhs.index_ == rhs.index_; }
+  friend bool operator!=(Channel lhs, Channel rhs) { return lhs.index_ != rhs.index_; }
+  friend bool operator<(Channel lhs, Channel rhs) { return lhs.index_ < rhs.index_; }
+  friend bool operator<=(Channel lhs, Channel rhs) { return lhs.index_ <= rhs.index_; }
+  friend bool operator>(Channel lhs, Channel rhs) { return lhs.index_ > rhs.index_; }
+  friend bool operator>=(Channel lhs, Channel rhs) { return lhs.index_ >= rhs.index_; }
 
 private:
   static constexpr int kNone = -1;

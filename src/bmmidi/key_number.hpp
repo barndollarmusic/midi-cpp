@@ -2,7 +2,6 @@
 #define BMMIDI_KEY_NUMBER_HPP
 
 #include <cassert>
-#include <compare>
 
 namespace bmmidi {
 
@@ -50,11 +49,13 @@ public:
     return value_;
   }
 
-  /**
-   * Numerically compares to another KeyNumber, with 'none' treated as less
-   * than all normal keys and 'all' treated as greater.
-   */
-  auto operator<=>(const KeyNumber&) const = default;
+  // Comparison operations:
+  friend bool operator==(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ == rhs.value_; }
+  friend bool operator!=(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ != rhs.value_; }
+  friend bool operator<(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ < rhs.value_; }
+  friend bool operator<=(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ <= rhs.value_; }
+  friend bool operator>(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ > rhs.value_; }
+  friend bool operator>=(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ >= rhs.value_; }
 
 private:
   static constexpr int kNone = -1;

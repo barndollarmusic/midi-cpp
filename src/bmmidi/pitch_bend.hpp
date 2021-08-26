@@ -100,12 +100,6 @@ public:
   explicit constexpr PitchBend(std::int16_t value)
       : DoubleDataValue{(value == 0) ? std::int16_t{1} : value} {}
 
-  constexpr PitchBend(const PitchBend&) = default;
-  PitchBend& operator=(const PitchBend&) = default;
-
-  constexpr PitchBend(PitchBend&&) = default;
-  PitchBend& operator=(PitchBend&&) = default;
-
   constexpr PitchBend(DoubleDataValue rhs)
       : PitchBend{rhs.value()} {}
   PitchBend& operator=(DoubleDataValue rhs) {
