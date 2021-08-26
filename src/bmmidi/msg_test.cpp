@@ -11,6 +11,8 @@
 namespace {
 
 using ::testing::Eq;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 
 TEST(Msg, ShouldBePackedSize) {
   EXPECT_THAT(sizeof(bmmidi::Msg<1>), Eq(1));
@@ -65,6 +67,87 @@ TEST(Msg, ThreeByteVersionHasData2) {
                                       bmmidi::Channel::index(9))));
   EXPECT_THAT(controlChangeCh10.data1(), Eq(bmmidi::DataValue{11}));
   EXPECT_THAT(controlChangeCh10.data2(), Eq(bmmidi::DataValue{76}));
+}
+
+TEST(Msg, OneByteVersionSupportsEqualityOperations) {
+  bmmidi::Msg<1> oscTuneRequest{
+      bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)};
+  bmmidi::Msg<1> alsoOscTuneRequest{
+      bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)};
+  bmmidi::Msg<1> systemReset{
+      bmmidi::Status::system(bmmidi::MsgType::kSystemReset)};
+
+  EXPECT_THAT(oscTuneRequest == oscTuneRequest, IsTrue());
+  EXPECT_THAT(oscTuneRequest != oscTuneRequest, IsFalse());
+
+  EXPECT_THAT(oscTuneRequest == alsoOscTuneRequest, IsTrue());
+  EXPECT_THAT(alsoOscTuneRequest == oscTuneRequest, IsTrue());
+  EXPECT_THAT(oscTuneRequest != alsoOscTuneRequest, IsFalse());
+  EXPECT_THAT(alsoOscTuneRequest != oscTuneRequest, IsFalse());
+
+  EXPECT_THAT(oscTuneRequest == systemReset, IsFalse());
+  EXPECT_THAT(systemReset == oscTuneRequest, IsFalse());
+  EXPECT_THAT(oscTuneRequest != systemReset, IsTrue());
+  EXPECT_THAT(systemReset != oscTuneRequest, IsTrue());
+}
+
+TEST(Msg, TwoByteVersionSupportsEqualityOperations) {
+  bmmidi::Msg<2> pcCh13Prog57{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
+                                   bmmidi::Channel::index(12)),
+      bmmidi::DataValue{57}};
+  bmmidi::Msg<2> alsoProgramChangeCh13Prog57{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
+                                   bmmidi::Channel::index(12)),
+      bmmidi::DataValue{57}};
+  bmmidi::Msg<2> pcCh13Prog58{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
+                                   bmmidi::Channel::index(12)),
+      bmmidi::DataValue{58}};
+
+  EXPECT_THAT(pcCh13Prog57 == pcCh13Prog57, IsTrue());
+  EXPECT_THAT(pcCh13Prog57 != pcCh13Prog57, IsFalse());
+
+  EXPECT_THAT(pcCh13Prog57 == alsoProgramChangeCh13Prog57, IsTrue());
+  EXPECT_THAT(alsoProgramChangeCh13Prog57 == pcCh13Prog57, IsTrue());
+  EXPECT_THAT(pcCh13Prog57 != alsoProgramChangeCh13Prog57, IsFalse());
+  EXPECT_THAT(alsoProgramChangeCh13Prog57 != pcCh13Prog57, IsFalse());
+
+  EXPECT_THAT(pcCh13Prog57 == pcCh13Prog58, IsFalse());
+  EXPECT_THAT(pcCh13Prog58 == pcCh13Prog57, IsFalse());
+  EXPECT_THAT(pcCh13Prog57 != pcCh13Prog58, IsTrue());
+  EXPECT_THAT(pcCh13Prog58 != pcCh13Prog57, IsTrue());
+}
+
+TEST(Msg, ThreeByteVersionSupportsEqualityOperations) {
+  bmmidi::Msg<3> ccCh10Expr76{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                   bmmidi::Channel::index(9)),
+      bmmidi::controlToDataValue(bmmidi::Control::kExpression),
+      bmmidi::DataValue{76}};
+  bmmidi::Msg<3> alsoCcCh10Expr76{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                   bmmidi::Channel::index(9)),
+      bmmidi::controlToDataValue(bmmidi::Control::kExpression),
+      bmmidi::DataValue{76}};
+  bmmidi::Msg<3> ccCh10Expr77{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                   bmmidi::Channel::index(9)),
+      bmmidi::controlToDataValue(bmmidi::Control::kExpression),
+      bmmidi::DataValue{77}};
+
+  EXPECT_THAT(ccCh10Expr76 == ccCh10Expr76, IsTrue());
+  EXPECT_THAT(ccCh10Expr76 != ccCh10Expr76, IsFalse());
+
+  EXPECT_THAT(ccCh10Expr76 == alsoCcCh10Expr76, IsTrue());
+  EXPECT_THAT(alsoCcCh10Expr76 == ccCh10Expr76, IsTrue());
+  EXPECT_THAT(ccCh10Expr76 != alsoCcCh10Expr76, IsFalse());
+  EXPECT_THAT(alsoCcCh10Expr76 != ccCh10Expr76, IsFalse());
+
+  EXPECT_THAT(ccCh10Expr76 == ccCh10Expr77, IsFalse());
+  EXPECT_THAT(ccCh10Expr77 == ccCh10Expr76, IsFalse());
+  EXPECT_THAT(ccCh10Expr76 != ccCh10Expr77, IsTrue());
+  EXPECT_THAT(ccCh10Expr77 != ccCh10Expr76, IsTrue());
 }
 
 }  // namespace

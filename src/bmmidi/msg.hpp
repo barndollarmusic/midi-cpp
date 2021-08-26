@@ -63,6 +63,25 @@ static_assert(sizeof(bmmidi::Msg<1>) == 1, "Msg<1> must be 1 byte");
 static_assert(sizeof(bmmidi::Msg<2>) == 2, "Msg<2> must be 2 bytes");
 static_assert(sizeof(bmmidi::Msg<3>) == 3, "Msg<3> must be 3 bytes");
 
+// Equality operations:
+inline bool operator==(Msg<1> lhs, Msg<1> rhs) {
+  return (lhs.status() == rhs.status());
+}
+
+inline bool operator==(Msg<2> lhs, Msg<2> rhs) {
+  return (lhs.status() == rhs.status())
+      && (lhs.data1() == rhs.data1());
+}
+
+inline bool operator==(Msg<3> lhs, Msg<3> rhs) {
+  return (lhs.status() == rhs.status())
+      && (lhs.data1() == rhs.data1())
+      && (lhs.data2() == rhs.data2());
+}
+
+template<std::size_t N>
+inline bool operator!=(Msg<N> lhs, Msg<N> rhs) { return !(lhs == rhs); }
+
 }  // namespace bmmidi
 
 #endif  // BMMIDI_MSG_HPP
