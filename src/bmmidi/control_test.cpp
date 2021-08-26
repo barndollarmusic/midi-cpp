@@ -5,6 +5,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "bmmidi/data_value.hpp"
+
 namespace {
 
 using ::testing::Eq;
@@ -196,6 +198,43 @@ TEST(Control, ShouldConvertToAndFromNumber) {
   EXPECT_THAT(bmmidi::controlFromNumber(127), Eq(bmmidi::Control::k127));
   EXPECT_THAT(bmmidi::controlToNumber(bmmidi::Control::k127), Eq(127));
   EXPECT_THAT(bmmidi::controlToNumber(bmmidi::Control::kPolyMode), Eq(127));
+}
+
+TEST(Control, ShouldConvertToAndFromDataValue) {
+  EXPECT_THAT(bmmidi::controlFromDataValue(bmmidi::DataValue{0}),
+              Eq(bmmidi::Control::k000));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::k000),
+              Eq(bmmidi::DataValue{0}));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::kBankSelect),
+              Eq(bmmidi::DataValue{0}));
+
+  EXPECT_THAT(bmmidi::controlFromDataValue(bmmidi::DataValue{1}),
+              Eq(bmmidi::Control::k001));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::k001),
+              Eq(bmmidi::DataValue{1}));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::kModWheel),
+              Eq(bmmidi::DataValue{1}));
+
+  EXPECT_THAT(bmmidi::controlFromDataValue(bmmidi::DataValue{11}),
+              Eq(bmmidi::Control::k011));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::k011),
+              Eq(bmmidi::DataValue{11}));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::kExpression),
+              Eq(bmmidi::DataValue{11}));
+
+  EXPECT_THAT(bmmidi::controlFromDataValue(bmmidi::DataValue{126}),
+              Eq(bmmidi::Control::k126));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::k126),
+              Eq(bmmidi::DataValue{126}));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::kMonoMode),
+              Eq(bmmidi::DataValue{126}));
+
+  EXPECT_THAT(bmmidi::controlFromDataValue(bmmidi::DataValue{127}),
+              Eq(bmmidi::Control::k127));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::k127),
+              Eq(bmmidi::DataValue{127}));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::kPolyMode),
+              Eq(bmmidi::DataValue{127}));
 }
 
 }  // namespace

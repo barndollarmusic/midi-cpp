@@ -1,0 +1,70 @@
+#include "bmmidi/msg.hpp"
+
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
+#include "bmmidi/channel.hpp"
+#include "bmmidi/control.hpp"
+#include "bmmidi/data_value.hpp"
+#include "bmmidi/status.hpp"
+
+namespace {
+
+using ::testing::Eq;
+
+TEST(Msg, ShouldBePackedSize) {
+  EXPECT_THAT(sizeof(bmmidi::Msg<1>), Eq(1));
+  EXPECT_THAT(sizeof(bmmidi::Msg<2>), Eq(2));
+  EXPECT_THAT(sizeof(bmmidi::Msg<3>), Eq(3));
+}
+
+TEST(Msg, ProvidesNumBytesConstant) {
+  EXPECT_THAT(bmmidi::Msg<1>::kNumBytes, Eq(1));
+  EXPECT_THAT(bmmidi::Msg<2>::kNumBytes, Eq(2));
+  EXPECT_THAT(bmmidi::Msg<3>::kNumBytes, Eq(3));
+}
+
+TEST(Msg, OneByteVersionHasStatus) {
+  bmmidi::Msg<1> oscTuneRequest{
+      bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)};
+
+  EXPECT_THAT(oscTuneRequest.status(),
+      Eq(bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)));
+
+  // The following functions should NOT exist, so they should cause compilation
+  // errors if these lines are uncommented:
+  //     oscTuneRequest.data1();
+  //     oscTuneRequest.data2();
+}
+
+TEST(Msg, TwoByteVersionHasData1) {
+  bmmidi::Msg<2> programChangeCh13{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
+                                   bmmidi::Channel::index(12)),
+      bmmidi::DataValue{57}};
+
+  EXPECT_THAT(programChangeCh13.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
+                                      bmmidi::Channel::index(12))));
+  EXPECT_THAT(programChangeCh13.data1(), Eq(bmmidi::DataValue{57}));
+
+  // The following functions should NOT exist, so they should cause compilation
+  // errors if these lines are uncommented:
+  //     programChangeCh13.data2();
+}
+
+TEST(Msg, ThreeByteVersionHasData2) {
+  bmmidi::Msg<3> controlChangeCh10{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                   bmmidi::Channel::index(9)),
+      bmmidi::controlToDataValue(bmmidi::Control::kExpression),
+      bmmidi::DataValue{76}};
+
+  EXPECT_THAT(controlChangeCh10.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                      bmmidi::Channel::index(9))));
+  EXPECT_THAT(controlChangeCh10.data1(), Eq(bmmidi::DataValue{11}));
+  EXPECT_THAT(controlChangeCh10.data2(), Eq(bmmidi::DataValue{76}));
+}
+
+}  // namespace

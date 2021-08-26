@@ -4,6 +4,8 @@
 #include <cassert>
 #include <cstdint>
 
+#include "bmmidi/data_value.hpp"
+
 namespace bmmidi {
 
 /**
@@ -507,6 +509,16 @@ Control controlFromNumber(int value) {
 /** Returns [0, 127] numerical value of given Control. */
 std::int8_t controlToNumber(Control control) {
   return static_cast<std::int8_t>(control);
+}
+
+/** Returns Control from [0, 127] DataValue. */
+Control controlFromDataValue(DataValue dataValue) {
+  return static_cast<Control>(dataValue.value());
+}
+
+/** Returns [0, 127] as a DataValue. */
+DataValue controlToDataValue(Control control) {
+  return DataValue(controlToNumber(control));
 }
 
 }  // namespace bmmidi
