@@ -32,6 +32,7 @@ TEST(Msg, OneByteVersionHasStatus) {
   bmmidi::Msg<1> oscTuneRequest{
       bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)};
 
+  EXPECT_THAT(oscTuneRequest.type(), Eq(bmmidi::MsgType::kOscillatorTuneRequest));
   EXPECT_THAT(oscTuneRequest.status(),
       Eq(bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)));
 
@@ -47,6 +48,7 @@ TEST(Msg, TwoByteVersionHasData1) {
                                    bmmidi::Channel::index(12)),
       bmmidi::DataValue{57}};
 
+  EXPECT_THAT(programChangeCh13.type(), Eq(bmmidi::MsgType::kProgramChange));
   EXPECT_THAT(programChangeCh13.status(),
       Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
                                       bmmidi::Channel::index(12))));
@@ -64,6 +66,7 @@ TEST(Msg, ThreeByteVersionHasData2) {
       bmmidi::controlToDataValue(bmmidi::Control::kExpression),
       bmmidi::DataValue{76}};
 
+  EXPECT_THAT(controlChangeCh10.type(), Eq(bmmidi::MsgType::kControlChange));
   EXPECT_THAT(controlChangeCh10.status(),
       Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
                                       bmmidi::Channel::index(9))));

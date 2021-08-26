@@ -42,6 +42,9 @@ public:
               static_cast<std::uint8_t>(data1.value()),
               static_cast<std::uint8_t>(data2.value())} {}
 
+  /** Returns type of this message. */
+  MsgType type() const { return status().type(); }
+
   /** Returns Status byte (first byte of this MIDI message). */
   Status status() const { return Status{data_[0]}; }
 
