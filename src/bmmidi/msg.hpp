@@ -7,6 +7,7 @@
 
 #include "bmmidi/data_value.hpp"
 #include "bmmidi/status.hpp"
+#include "bmmidi/time.hpp"
 
 namespace bmmidi {
 
@@ -87,6 +88,10 @@ inline bool operator==(Msg<3> lhs, Msg<3> rhs) {
 
 template<std::size_t N>
 inline bool operator!=(Msg<N> lhs, Msg<N> rhs) { return !(lhs == rhs); }
+
+/** Alias for a timestamped N-byte MIDI message. */
+template<std::size_t N>
+using TimedMsg = Timed<Msg<N>>;
 
 }  // namespace bmmidi
 

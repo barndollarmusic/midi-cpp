@@ -9,7 +9,8 @@ bmmidi_header_library(Lib
     msg.hpp
     pitch_bend.hpp
     preset_number.hpp
-    status.hpp)
+    status.hpp
+    time.hpp)
 
 if(BMMidi_ENABLE_TESTING)
   bmmidi_gtest(ChannelTest channel_test.cpp)
@@ -42,5 +43,9 @@ if(BMMidi_ENABLE_TESTING)
 
   bmmidi_gtest(StatusTest status_test.cpp)
   target_link_libraries(BMMidi_StatusTest
+      PRIVATE BMMidi::Lib)
+
+  bmmidi_gtest(TimeTest time_test.cpp)
+  target_link_libraries(BMMidi_TimeTest
       PRIVATE BMMidi::Lib)
 endif()
