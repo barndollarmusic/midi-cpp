@@ -24,6 +24,9 @@ public:
   /** The # of bytes (N) this message contains. */
   static constexpr std::size_t kNumBytes = N;
 
+  /** Read-only raw data array type. */
+  using ConstDataArray = const std::uint8_t[N];
+
   template<typename = std::enable_if_t<N == 1>>
   explicit Msg(Status status)
       : data_{status.value()} {}
@@ -52,6 +55,9 @@ public:
   DataValue data2() const {
     return DataValue{static_cast<std::int8_t>(data_[2])};
   }
+
+  /** Returns read-only reference to raw data array. */
+  ConstDataArray& rawData() const { return data_; }
 
 private:
   std::uint8_t data_[N];

@@ -1,5 +1,7 @@
 #include "bmmidi/msg.hpp"
 
+#include <cstdint>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -148,6 +150,34 @@ TEST(Msg, ThreeByteVersionSupportsEqualityOperations) {
   EXPECT_THAT(ccCh10Expr77 == ccCh10Expr76, IsFalse());
   EXPECT_THAT(ccCh10Expr76 != ccCh10Expr77, IsTrue());
   EXPECT_THAT(ccCh10Expr77 != ccCh10Expr76, IsTrue());
+}
+
+TEST(Msg, ProvidesReadOnlyRawArrayAccess) {
+  // One byte version:
+  bmmidi::Msg<1> oscTuneRequest{
+      bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)};
+  EXPECT_THAT(sizeof(oscTuneRequest.rawData()), Eq(1));
+  EXPECT_THAT(oscTuneRequest.rawData()[0], Eq(std::uint8_t{0xF6}));
+
+  // Two byte version:
+  bmmidi::Msg<2> programChangeCh13{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
+                                   bmmidi::Channel::index(12)),
+      bmmidi::DataValue{57}};
+  EXPECT_THAT(sizeof(programChangeCh13.rawData()), Eq(2));
+  EXPECT_THAT(programChangeCh13.rawData()[0], Eq(std::uint8_t{0xCC}));
+  EXPECT_THAT(programChangeCh13.rawData()[1], Eq(std::uint8_t{57}));
+
+  // Three byte version:
+  bmmidi::Msg<3> controlChangeCh10{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                   bmmidi::Channel::index(9)),
+      bmmidi::controlToDataValue(bmmidi::Control::kExpression),
+      bmmidi::DataValue{76}};
+  EXPECT_THAT(sizeof(controlChangeCh10.rawData()), Eq(3));
+  EXPECT_THAT(controlChangeCh10.rawData()[0], Eq(std::uint8_t{0xB9}));
+  EXPECT_THAT(controlChangeCh10.rawData()[1], Eq(std::uint8_t{11}));
+  EXPECT_THAT(controlChangeCh10.rawData()[2], Eq(std::uint8_t{76}));
 }
 
 }  // namespace
