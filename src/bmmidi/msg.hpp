@@ -11,9 +11,31 @@
 
 namespace bmmidi {
 
+/** Used as a template parameter to control read-only vs. read-write access. */
+enum class MsgAccess {kReadOnly, kReadWrite};
+
+namespace internal {
+
+template<MsgAccess AccessType>
+struct BytePointerTraits {};
+
+template<>
+struct BytePointerTraits<MsgAccess::kReadOnly> {
+  using type = const std::uint8_t*;
+};
+
+template<>
+struct BytePointerTraits<MsgAccess::kReadWrite> {
+  using type = std::uint8_t*;
+};
+
+}  // namespace internal
+
 /**
- * A read-only view of a MIDI message stored as contiguous bytes (which
- * must outlive this reference object).
+ * A reference to a MIDI message stored as contiguous bytes (which
+ * must outlive this reference object). Can either be read-write (see MsgRef
+ * alias) or read-only (see MsgView alias), based on AccessType template
+ * parameter.
  *
  * For example, this can refer to a Msg<N> instance, a SysExMsg, or to bytes
  * managed by any other MIDI framework.
@@ -22,16 +44,20 @@ namespace bmmidi {
  * System Realtime message bytes, which can occur at any point in a raw MIDI
  * byte stream.
  */
-class MsgView {
+template<MsgAccess AccessType = MsgAccess::kReadWrite>
+class MsgReference {
 public:
+  /** Type of input byte pointer (const or non-const based on AccessType). */
+  using BytePointerType = typename internal::BytePointerTraits<AccessType>::type;
+
   /**
-   * Constructs a new MsgView pointing to contiguous MIDI data bytes, starting
-   * from Status byte byte[0] and spanning through last data byte (inclusive)
-   * of bytes[numBytes - 1].
+   * Constructs a new MsgReference pointing to contiguous MIDI data bytes,
+   * starting from Status byte byte[0] and spanning through last data byte
+   * (inclusive) of bytes[numBytes - 1].
    *
-   * The referenced MIDI data must outlive this MsgView instance.
+   * The referenced MIDI data must outlive this MsgReference instance.
    */
-  explicit MsgView(const std::uint8_t* bytes, int numBytes)
+  explicit MsgReference(BytePointerType bytes, int numBytes)
       : bytes_{bytes}, numBytes_{numBytes} {
     assert(bytes != nullptr);
     assert(numBytes >= 1);
@@ -42,8 +68,12 @@ public:
   /** Returns type of this message, as determined by its Status byte. */
   MsgType type() const { return status().type(); }
 
-  /** Returns Status byte. */
+  /** Returns Status byte (first byte of this MIDI message). */
   Status status() const { return Status{bytes_[0]}; }
+
+  /** Updates Status byte to the given value. */
+  template<typename = std::enable_if_t<AccessType == MsgAccess::kReadWrite>>
+  void setStatus(Status status) { bytes_[0] = status.value(); }
 
   /**
    * Returns [0, 127] value of the 1st data byte. Error to call (fails
@@ -52,6 +82,16 @@ public:
   DataValue data1() const {
     assert(status().numDataBytes() >= 1);
     return DataValue{static_cast<std::int8_t>(bytes_[1])};
+  }
+
+  /**
+   * Updates 1st data byte to the given value. Error to call (fails
+   * debug assertion) if this message does not have any data bytes.
+   */
+  template<typename = std::enable_if_t<AccessType == MsgAccess::kReadWrite>>
+  void setData1(DataValue data1) {
+    assert(status().numDataBytes() >= 1);
+    bytes_[1] = static_cast<std::uint8_t>(data1.value());
   }
 
   /**
@@ -64,6 +104,16 @@ public:
   }
 
   /**
+   * Updates 2nd data byte to the given value. Error to call (fails
+   * debug assertion) if this message does not have a 2nd data byte.
+   */
+  template<typename = std::enable_if_t<AccessType == MsgAccess::kReadWrite>>
+  void setData2(DataValue data2) {
+    assert(status().numDataBytes() >= 2);
+    bytes_[2] = static_cast<std::uint8_t>(data2.value());
+  }
+
+  /**
    * Returns the number of bytes that this message contains, including the
    * initial status byte.
    */
@@ -72,75 +122,24 @@ public:
   /** Returns read-only pointer to first byte. */
   const std::uint8_t* rawBytes() const { return bytes_; }
 
+  /** Returns pointer to first byte (read-write only if AccessType allows). */
+  BytePointerType rawBytes() { return bytes_; }
+
 private:
-  const std::uint8_t* bytes_;
+  BytePointerType bytes_;
   int numBytes_;
 };
 
-/** Alias for a timestamped read-only view of a MIDI message. */
+/** Alias for a read-only MsgReference. */
+using MsgView = MsgReference<MsgAccess::kReadOnly>;
+
+/** Alias for a read-write MsgReference. */
+using MsgRef = MsgReference<MsgAccess::kReadWrite>;
+
+/** Alias for a timestamped read-only reference to a MIDI message. */
 using TimedMsgView = Timed<MsgView>;
 
-/**
- * A read/write reference to a MIDI message stored as contiguous bytes (which
- * must outlive this reference object).
- *
- * For example, this can refer to a Msg<N> instance, a SysExMsg, or to bytes
- * managed by any other MIDI framework.
- *
- * Make sure MIDI data this is referring to does NOT contain any interleaved
- * System Realtime message bytes, which can occur at any point in a raw MIDI
- * byte stream.
- */
-class MsgRef : public MsgView {
-public:
-  /**
-   * Constructs a new MsgRef pointing to contiguous MIDI data bytes, starting
-   * from Status byte byte[0] and spanning through last data byte (inclusive)
-   * of bytes[numBytes - 1].
-   *
-   * The referenced MIDI data must outlive this MsgRef instance.
-   */
-  explicit MsgRef(std::uint8_t* bytes, int numBytes)
-      : MsgView{bytes, numBytes} {}
-
-  /** Updates Status byte to the given value. */
-  void setStatus(Status status) {
-    rawBytes()[0] = status.value();
-  }
-
-  /**
-   * Updates 1st data byte to the given value. Error to call (fails
-   * debug assertion) if this message does not have any data bytes.
-   */
-  void setData1(DataValue data1) {
-    assert(status().numDataBytes() >= 1);
-    rawBytes()[1] = static_cast<std::uint8_t>(data1.value());
-  }
-
-  /**
-   * Updates 2nd data byte to the given value. Error to call (fails
-   * debug assertion) if this message does not have a 2nd data byte.
-   */
-  void setData2(DataValue data2) {
-    assert(status().numDataBytes() >= 2);
-    rawBytes()[2] = static_cast<std::uint8_t>(data2.value());
-  }
-
-  /**
-   * Returns read/write pointer to first byte; careful if mutating raw bytes
-   * directly, since it is of course possible to mutate into something that
-   * does not represent a valid MIDI message (which can cause undefined behavior
-   * for this bmmidi library).
-   */
-  std::uint8_t* rawBytes() {
-    // NOTE: This is safe only because we know MsgRef was constructed with a
-    // non-const std::uint8_t*. Not storing the non-const pointer separately,
-    // since that would be redundant.
-    return const_cast<std::uint8_t*>(MsgView::rawBytes());
-  }
-};
-
-/** Alias for a timestamped read/write reference to a MIDI message. */
+/** Alias for a timestamped read-write reference to a MIDI message. */
 using TimedMsgRef = Timed<MsgRef>;
 
 // TODO: Add more specific MsgView/Ref classes.
@@ -176,7 +175,7 @@ public:
               static_cast<std::uint8_t>(data1.value()),
               static_cast<std::uint8_t>(data2.value())} {}
 
-  /** Returns type of this message. */
+  /** Returns type of this message, as determined by its Status byte. */
   MsgType type() const { return status().type(); }
 
   /** Returns Status byte (first byte of this MIDI message). */
