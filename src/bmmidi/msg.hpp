@@ -14,23 +14,6 @@ namespace bmmidi {
 /** Used as a template parameter to control read-only vs. read-write access. */
 enum class MsgAccess {kReadOnly, kReadWrite};
 
-namespace internal {
-
-template<MsgAccess AccessType>
-struct BytePointerTraits {};
-
-template<>
-struct BytePointerTraits<MsgAccess::kReadOnly> {
-  using type = const std::uint8_t*;
-};
-
-template<>
-struct BytePointerTraits<MsgAccess::kReadWrite> {
-  using type = std::uint8_t*;
-};
-
-}  // namespace internal
-
 /**
  * A reference to a MIDI message stored as contiguous bytes (which
  * must outlive this reference object). Can either be read-write (see MsgRef
@@ -48,7 +31,8 @@ template<MsgAccess AccessType = MsgAccess::kReadWrite>
 class MsgReference {
 public:
   /** Type of input byte pointer (const or non-const based on AccessType). */
-  using BytePointerType = typename internal::BytePointerTraits<AccessType>::type;
+  using BytePointerType = std::conditional_t<AccessType == MsgAccess::kReadOnly,
+                                             const std::uint8_t*, std::uint8_t*>;
 
   /**
    * Constructs a new MsgReference pointing to contiguous MIDI data bytes,
