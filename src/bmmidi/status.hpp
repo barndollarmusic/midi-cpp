@@ -285,8 +285,8 @@ private:
 };
 
 // Support equality comparisons but not ordering.
-bool operator==(Status lhs, Status rhs) { return lhs.value() == rhs.value(); }
-bool operator!=(Status lhs, Status rhs) { return lhs.value() != rhs.value(); }
+constexpr bool operator==(Status lhs, Status rhs) { return lhs.value() == rhs.value(); }
+constexpr bool operator!=(Status lhs, Status rhs) { return lhs.value() != rhs.value(); }
 
 }  // namespace bmmidi
 

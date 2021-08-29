@@ -29,49 +29,86 @@ TEST(Msg, ProvidesNumBytesConstant) {
 }
 
 TEST(Msg, OneByteVersionHasStatus) {
-  bmmidi::Msg<1> oscTuneRequest{
-      bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)};
+  bmmidi::Msg<1> msg{bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)};
 
-  EXPECT_THAT(oscTuneRequest.type(), Eq(bmmidi::MsgType::kOscillatorTuneRequest));
-  EXPECT_THAT(oscTuneRequest.status(),
+  EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kOscillatorTuneRequest));
+  EXPECT_THAT(msg.status(),
       Eq(bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)));
 
-  // The following functions should NOT exist, so they should cause compilation
-  // errors if these lines are uncommented:
-  //     oscTuneRequest.data1();
-  //     oscTuneRequest.data2();
+  msg.setStatus(bmmidi::Status::system(bmmidi::MsgType::kSystemReset));
+  EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kSystemReset));
+  EXPECT_THAT(msg.status(),
+      Eq(bmmidi::Status::system(bmmidi::MsgType::kSystemReset)));
 }
 
 TEST(Msg, TwoByteVersionHasData1) {
-  bmmidi::Msg<2> programChangeCh13{
+  bmmidi::Msg<2> msg{
       bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
                                    bmmidi::Channel::index(12)),
       bmmidi::DataValue{57}};
 
-  EXPECT_THAT(programChangeCh13.type(), Eq(bmmidi::MsgType::kProgramChange));
-  EXPECT_THAT(programChangeCh13.status(),
+  EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kProgramChange));
+  EXPECT_THAT(msg.status(),
       Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
                                       bmmidi::Channel::index(12))));
-  EXPECT_THAT(programChangeCh13.data1(), Eq(bmmidi::DataValue{57}));
+  EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{57}));
 
-  // The following functions should NOT exist, so they should cause compilation
-  // errors if these lines are uncommented:
-  //     programChangeCh13.data2();
+  msg.setData1(bmmidi::DataValue{63});
+  EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kProgramChange));
+  EXPECT_THAT(msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
+                                      bmmidi::Channel::index(12))));
+  EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{63}));
+
+  msg.setStatus(
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
+                                   bmmidi::Channel::index(3)));
+  EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kChannelPressure));
+  EXPECT_THAT(msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
+                                      bmmidi::Channel::index(3))));
+  EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{63}));
 }
 
 TEST(Msg, ThreeByteVersionHasData2) {
-  bmmidi::Msg<3> controlChangeCh10{
+  bmmidi::Msg<3> msg{
       bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
                                    bmmidi::Channel::index(9)),
       bmmidi::controlToDataValue(bmmidi::Control::kExpression),
       bmmidi::DataValue{76}};
 
-  EXPECT_THAT(controlChangeCh10.type(), Eq(bmmidi::MsgType::kControlChange));
-  EXPECT_THAT(controlChangeCh10.status(),
+  EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kControlChange));
+  EXPECT_THAT(msg.status(),
       Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
                                       bmmidi::Channel::index(9))));
-  EXPECT_THAT(controlChangeCh10.data1(), Eq(bmmidi::DataValue{11}));
-  EXPECT_THAT(controlChangeCh10.data2(), Eq(bmmidi::DataValue{76}));
+  EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{11}));
+  EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{76}));
+
+  msg.setData2(bmmidi::DataValue{27});
+  EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kControlChange));
+  EXPECT_THAT(msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                      bmmidi::Channel::index(9))));
+  EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{11}));
+  EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{27}));
+
+  msg.setData1(bmmidi::controlToDataValue(bmmidi::Control::kModWheel));
+  EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kControlChange));
+  EXPECT_THAT(msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                      bmmidi::Channel::index(9))));
+  EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{1}));
+  EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{27}));
+
+  msg.setStatus(
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
+                                   bmmidi::Channel::index(3)));
+  EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kPolyphonicKeyPressure));
+  EXPECT_THAT(msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
+                                      bmmidi::Channel::index(3))));
+  EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{1}));
+  EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{27}));
 }
 
 TEST(Msg, OneByteVersionSupportsEqualityOperations) {
@@ -157,30 +194,77 @@ TEST(Msg, ThreeByteVersionSupportsEqualityOperations) {
 
 TEST(Msg, ProvidesReadOnlyRawArrayAccess) {
   // One byte version:
-  bmmidi::Msg<1> oscTuneRequest{
+  const bmmidi::Msg<1> oscTuneRequest{
       bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)};
   EXPECT_THAT(sizeof(oscTuneRequest.rawBytes()), Eq(1));
   EXPECT_THAT(oscTuneRequest.rawBytes()[0], Eq(std::uint8_t{0xF6}));
 
   // Two byte version:
-  bmmidi::Msg<2> programChangeCh13{
+  const bmmidi::Msg<2> programChangeCh13{
       bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
                                    bmmidi::Channel::index(12)),
       bmmidi::DataValue{57}};
   EXPECT_THAT(sizeof(programChangeCh13.rawBytes()), Eq(2));
   EXPECT_THAT(programChangeCh13.rawBytes()[0], Eq(std::uint8_t{0xCC}));
-  EXPECT_THAT(programChangeCh13.rawBytes()[1], Eq(std::uint8_t{57}));
+  EXPECT_THAT(programChangeCh13.rawBytes()[1], Eq(std::uint8_t{0x39}));
 
   // Three byte version:
-  bmmidi::Msg<3> controlChangeCh10{
+  const bmmidi::Msg<3> controlChangeCh10{
       bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
                                    bmmidi::Channel::index(9)),
       bmmidi::controlToDataValue(bmmidi::Control::kExpression),
       bmmidi::DataValue{76}};
   EXPECT_THAT(sizeof(controlChangeCh10.rawBytes()), Eq(3));
   EXPECT_THAT(controlChangeCh10.rawBytes()[0], Eq(std::uint8_t{0xB9}));
-  EXPECT_THAT(controlChangeCh10.rawBytes()[1], Eq(std::uint8_t{11}));
-  EXPECT_THAT(controlChangeCh10.rawBytes()[2], Eq(std::uint8_t{76}));
+  EXPECT_THAT(controlChangeCh10.rawBytes()[1], Eq(std::uint8_t{0x0B}));
+  EXPECT_THAT(controlChangeCh10.rawBytes()[2], Eq(std::uint8_t{0x4C}));
+}
+
+TEST(Msg, ProvidesReadWriteRawArrayAccess) {
+  bmmidi::Msg<3> msg{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                   bmmidi::Channel::index(9)),
+      bmmidi::controlToDataValue(bmmidi::Control::kExpression),
+      bmmidi::DataValue{76}};
+  EXPECT_THAT(sizeof(msg.rawBytes()), Eq(3));
+  EXPECT_THAT(msg.rawBytes()[0], Eq(std::uint8_t{0xB9}));
+  EXPECT_THAT(msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                      bmmidi::Channel::index(9))));
+  EXPECT_THAT(msg.rawBytes()[1], Eq(std::uint8_t{0x0B}));
+  EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{11}));
+  EXPECT_THAT(msg.rawBytes()[2], Eq(std::uint8_t{0x4C}));
+  EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{76}));
+
+  msg.rawBytes()[2] = 0x1B;
+  EXPECT_THAT(msg.rawBytes()[0], Eq(std::uint8_t{0xB9}));
+  EXPECT_THAT(msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                      bmmidi::Channel::index(9))));
+  EXPECT_THAT(msg.rawBytes()[1], Eq(std::uint8_t{0x0B}));
+  EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{11}));
+  EXPECT_THAT(msg.rawBytes()[2], Eq(std::uint8_t{0x1B}));
+  EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{27}));
+
+  msg.rawBytes()[1] = 0x01;
+  EXPECT_THAT(msg.rawBytes()[0], Eq(std::uint8_t{0xB9}));
+  EXPECT_THAT(msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                      bmmidi::Channel::index(9))));
+  EXPECT_THAT(msg.rawBytes()[1], Eq(std::uint8_t{0x01}));
+  EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{1}));
+  EXPECT_THAT(msg.rawBytes()[2], Eq(std::uint8_t{0x1B}));
+  EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{27}));
+
+  msg.rawBytes()[0] = 0xA3;
+  EXPECT_THAT(msg.rawBytes()[0], Eq(std::uint8_t{0xA3}));
+  EXPECT_THAT(msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
+                                      bmmidi::Channel::index(3))));
+  EXPECT_THAT(msg.rawBytes()[1], Eq(std::uint8_t{0x01}));
+  EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{1}));
+  EXPECT_THAT(msg.rawBytes()[2], Eq(std::uint8_t{0x1B}));
+  EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{27}));
 }
 
 TEST(MsgView, WorksForStandaloneBytes) {
@@ -209,7 +293,7 @@ TEST(MsgView, WorksForMsg) {
                                    bmmidi::Channel::index(12)),
       bmmidi::controlToDataValue(bmmidi::Control::kModWheel),
       bmmidi::DataValue{37}};
-  auto view = ccCh13Mod37.view();
+  auto view = ccCh13Mod37.asView<bmmidi::MsgView>();
 
   // Read-only accessors:
   EXPECT_THAT(view.type(), Eq(bmmidi::MsgType::kControlChange));
@@ -295,7 +379,7 @@ TEST(MsgRef, WorksForMsg) {
                                    bmmidi::Channel::index(12)),
       bmmidi::controlToDataValue(bmmidi::Control::kModWheel),
       bmmidi::DataValue{37}};
-  auto ref = ccCh13Mod37.ref();
+  auto ref = ccCh13Mod37.asRef<bmmidi::MsgRef>();
 
   // Read-only accessors are still available:
   EXPECT_THAT(ref.type(), Eq(bmmidi::MsgType::kControlChange));
@@ -354,6 +438,66 @@ TEST(MsgRef, WorksForMsg) {
   EXPECT_THAT(ccCh13Mod37.rawBytes()[1], Eq(0x44));
   EXPECT_THAT(ccCh13Mod37.rawBytes()[2], Eq(0x5A));
 }
+
+TEST(NoteMsgView, ShouldYieldCorrectData) {
+  {
+    // Note Off, channel 13, key 61, velocity 0.
+    const std::uint8_t srcBytes[] = {0x8C, 0x3D, 0x00};
+    bmmidi::NoteMsgView view{srcBytes, sizeof(srcBytes)};
+
+    EXPECT_THAT(view.channel().displayNumber(), Eq(13));
+    EXPECT_THAT(view.isNoteOff(), IsTrue());
+    EXPECT_THAT(view.isNoteOn(), IsFalse());
+    EXPECT_THAT(view.key().value(), Eq(61));
+    EXPECT_THAT(view.velocity().value(), Eq(0));
+  }
+
+  {
+    // Note Off, channel 1, key 127, velocity 93.
+    const auto msg = bmmidi::NoteMsg::off(bmmidi::Channel::index(0),
+                                          bmmidi::KeyNumber::key(127),
+                                          bmmidi::DataValue{93});
+    auto view = msg.asView<bmmidi::NoteMsgView>();
+
+    EXPECT_THAT(view.channel().displayNumber(), Eq(1));
+    EXPECT_THAT(view.isNoteOff(), IsTrue());
+    EXPECT_THAT(view.isNoteOn(), IsFalse());
+    EXPECT_THAT(view.key().value(), Eq(127));
+    EXPECT_THAT(view.velocity().value(), Eq(93));
+  }
+
+  {
+    // Note On, channel 3, key 69, velocity 0 (should treat as Note Off).
+    const std::uint8_t srcBytes[] = {0x92, 0x45, 0x00};
+    bmmidi::NoteMsgView view{srcBytes, sizeof(srcBytes)};
+
+    EXPECT_THAT(view.channel().displayNumber(), Eq(3));
+    EXPECT_THAT(view.isNoteOff(), IsTrue());
+    EXPECT_THAT(view.isNoteOn(), IsFalse());
+    EXPECT_THAT(view.key().value(), Eq(69));
+    EXPECT_THAT(view.velocity().value(), Eq(0));
+  }
+
+  {
+    // Note On, channel 3, key 69, velocity 90.
+    const auto msg = bmmidi::NoteMsg::on(bmmidi::Channel::index(2),
+                                         bmmidi::KeyNumber::key(69),
+                                         bmmidi::DataValue{90});
+    auto view = msg.asView<bmmidi::NoteMsgView>();
+
+    EXPECT_THAT(view.channel().displayNumber(), Eq(3));
+    EXPECT_THAT(view.isNoteOff(), IsFalse());
+    EXPECT_THAT(view.isNoteOn(), IsTrue());
+    EXPECT_THAT(view.key().value(), Eq(69));
+    EXPECT_THAT(view.velocity().value(), Eq(90));
+  }
+}
+
+// TODO: Add more thorough tests for:
+//   - ChanMsgView, ChanMsgRef
+//   - NoteMsgView, NoteMsgRef
+//   - ChanMsg<2>, ChanMsg<3>
+//   - NoteMsg
 
 // TODO: Add tests for MsgView and MsgRef referring to SysExMsg.
 

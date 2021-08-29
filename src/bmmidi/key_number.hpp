@@ -50,12 +50,12 @@ public:
   }
 
   // Comparison operations:
-  friend bool operator==(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ == rhs.value_; }
-  friend bool operator!=(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ != rhs.value_; }
-  friend bool operator<(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ < rhs.value_; }
-  friend bool operator<=(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ <= rhs.value_; }
-  friend bool operator>(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ > rhs.value_; }
-  friend bool operator>=(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ >= rhs.value_; }
+  friend constexpr bool operator==(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ == rhs.value_; }
+  friend constexpr bool operator!=(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ != rhs.value_; }
+  friend constexpr bool operator<(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ < rhs.value_; }
+  friend constexpr bool operator<=(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ <= rhs.value_; }
+  friend constexpr bool operator>(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ > rhs.value_; }
+  friend constexpr bool operator>=(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ >= rhs.value_; }
 
 private:
   static constexpr int kNone = -1;

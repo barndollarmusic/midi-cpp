@@ -49,12 +49,12 @@ public:
   constexpr int displayNumber() const { return index() + 1; }
 
   // Comparison operations:
-  friend bool operator==(Channel lhs, Channel rhs) { return lhs.index_ == rhs.index_; }
-  friend bool operator!=(Channel lhs, Channel rhs) { return lhs.index_ != rhs.index_; }
-  friend bool operator<(Channel lhs, Channel rhs) { return lhs.index_ < rhs.index_; }
-  friend bool operator<=(Channel lhs, Channel rhs) { return lhs.index_ <= rhs.index_; }
-  friend bool operator>(Channel lhs, Channel rhs) { return lhs.index_ > rhs.index_; }
-  friend bool operator>=(Channel lhs, Channel rhs) { return lhs.index_ >= rhs.index_; }
+  friend constexpr bool operator==(Channel lhs, Channel rhs) { return lhs.index_ == rhs.index_; }
+  friend constexpr bool operator!=(Channel lhs, Channel rhs) { return lhs.index_ != rhs.index_; }
+  friend constexpr bool operator<(Channel lhs, Channel rhs) { return lhs.index_ < rhs.index_; }
+  friend constexpr bool operator<=(Channel lhs, Channel rhs) { return lhs.index_ <= rhs.index_; }
+  friend constexpr bool operator>(Channel lhs, Channel rhs) { return lhs.index_ > rhs.index_; }
+  friend constexpr bool operator>=(Channel lhs, Channel rhs) { return lhs.index_ >= rhs.index_; }
 
 private:
   static constexpr int kNone = -1;
