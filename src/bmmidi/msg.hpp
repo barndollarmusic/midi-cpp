@@ -69,11 +69,15 @@ public:
   Status status() const { return Status{bytes_[0]}; }
 
   /** Updates Status byte to the given value. */
-  template<typename = std::enable_if_t<AccessType == MsgAccess::kReadWrite>>
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setStatus(Status status) { bytes_[0] = status.value(); }
 
   // (This empty deleted overload allows using declarations in subclasses).
-  template<typename = std::enable_if_t<AccessType == MsgAccess::kReadOnly>>
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadOnly>>
   void setStatus() = delete;
 
   /**
@@ -89,14 +93,18 @@ public:
    * Updates 1st data byte to the given value. Error to call (fails
    * debug assertion) if this message does not have any data bytes.
    */
-  template<typename = std::enable_if_t<AccessType == MsgAccess::kReadWrite>>
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setData1(DataValue data1) {
     assert(status().numDataBytes() >= 1);
     bytes_[1] = static_cast<std::uint8_t>(data1.value());
   }
 
   // (This empty deleted overload allows using declarations in subclasses).
-  template<typename = std::enable_if_t<AccessType == MsgAccess::kReadOnly>>
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadOnly>>
   void setData1() = delete;
 
   /**
@@ -112,14 +120,18 @@ public:
    * Updates 2nd data byte to the given value. Error to call (fails
    * debug assertion) if this message does not have a 2nd data byte.
    */
-  template<typename = std::enable_if_t<AccessType == MsgAccess::kReadWrite>>
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setData2(DataValue data2) {
     assert(status().numDataBytes() >= 2);
     bytes_[2] = static_cast<std::uint8_t>(data2.value());
   }
 
   // (This empty deleted overload allows using declarations in subclasses).
-  template<typename = std::enable_if_t<AccessType == MsgAccess::kReadOnly>>
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadOnly>>
   void setData2() = delete;
 
   /**
@@ -194,31 +206,35 @@ using TimedMsgRef = Timed<MsgRef>;
 template<MsgAccess AccessType>
 class ChanMsgReference : public MsgReference<AccessType> {
 public:
+  using BytePointerType = typename MsgReference<AccessType>::BytePointerType;
+
   explicit ChanMsgReference(BytePointerType bytes, int numBytes)
-      : MsgReference{bytes, numBytes} {
-    assert(status().isChannelSpecific());
+      : MsgReference<AccessType>{bytes, numBytes} {
+    assert(this->status().isChannelSpecific());
   }
 
   /** Returns MIDI channel this Channel message applies to. */
-  Channel channel() const { return status().channel(); }
+  Channel channel() const { return this->status().channel(); }
 
   /**
    * Updates to the given MIDI channel, which must be a normal [0, 15] value
    * (not a special "none" or "omni" value).
    */
-  template<typename = std::enable_if_t<AccessType == MsgAccess::kReadWrite>>
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setChannel(Channel channel) {
     assert(channel.isNormal());
-    setStatus(Status::channelVoice(type(), channel));
+    setStatus(Status::channelVoice(this->type(), channel));
   }
 
 protected:
   // Hide the more general mutation functions, since specific subclasses provide
   // more specific semantic APIs that will limit correct mutations for the
   // appropriate message type.
-  using MsgReference::setStatus;
-  using MsgReference::setData1;
-  using MsgReference::setData2;
+  using MsgReference<AccessType>::setStatus;
+  using MsgReference<AccessType>::setData1;
+  using MsgReference<AccessType>::setData2;
 };
 
 /** Alias for a read-only ChanMsgReference. */
@@ -242,9 +258,11 @@ using TimedChanMsgRef = Timed<ChanMsgRef>;
 template<MsgAccess AccessType>
 class NoteMsgReference : public ChanMsgReference<AccessType> {
 public:
+  using BytePointerType = typename ChanMsgReference<AccessType>::BytePointerType;
+
   explicit NoteMsgReference(BytePointerType bytes, int numBytes)
-      : ChanMsgReference{bytes, numBytes} {
-    assert((type() == MsgType::kNoteOff) || (type() == MsgType::kNoteOn));
+      : ChanMsgReference<AccessType>{bytes, numBytes} {
+    assert((this->type() == MsgType::kNoteOff) || (this->type() == MsgType::kNoteOn));
   }
 
   /** Returns true if this is a Note On message (with velocity >= 1). */
@@ -255,34 +273,38 @@ public:
    * which should be treated identically).
    */
   bool isNoteOff() const {
-    return (velocity().value() == 0) || (status().type() == MsgType::kNoteOff);
+    return (velocity().value() == 0) || (this->status().type() == MsgType::kNoteOff);
   }
 
   /** Sets type of this message to Note On or Note Off. */
   void setType(MsgType type) {
     assert((type == MsgType::kNoteOff) || (type == MsgType::kNoteOn));
-    setStatus(Status::channelVoice(type, channel()));
+    setStatus(Status::channelVoice(type, this->channel()));
   }
 
   /** Returns key of note that was pressed or released. */
-  KeyNumber key() const { return KeyNumber::key(data1().value()); }
+  KeyNumber key() const { return KeyNumber::key(this->data1().value()); }
 
   /**
    * Updates to the given key number, which must be a normal [0, 127] value
    * (not a special "none" or "all" value).
    */
-  template<typename = std::enable_if_t<AccessType == MsgAccess::kReadWrite>>
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setKey(KeyNumber key) {
     assert(key.isNormal());
-    setData1(DataValue{static_cast<std::int8_t>(key.value())});
+    this->setData1(DataValue{static_cast<std::int8_t>(this->key.value())});
   }
 
   /** Returns [0, 127] velocity value. */
-  DataValue velocity() const { return data2(); }
+  DataValue velocity() const { return this->data2(); }
 
   /** Updates to the given [0, 127] velocity value. */
-  template<typename = std::enable_if_t<AccessType == MsgAccess::kReadWrite>>
-  void setVelocity(DataValue velocity) { setData2(velocity); }
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setVelocity(DataValue velocity) { this->setData2(velocity); }
 };
 
 /** Alias for a read-only NoteMsgReference. */
@@ -318,21 +340,21 @@ public:
   /** Read-only raw byte array type. */
   using ConstByteArray = const std::uint8_t[N];
 
-  template<typename = std::enable_if_t<N == 1>>
+  template<std::size_t NN = N, typename = std::enable_if_t<NN == 1>>
   explicit constexpr Msg(Status status)
       : bytes_{status.value()} {
     assert((type() == MsgType::kSystemExclusive)
         || (N == 1 + status.numDataBytes()));
   }
 
-  template<typename = std::enable_if_t<N == 2>>
+  template<std::size_t NN = N, typename = std::enable_if_t<NN == 2>>
   explicit constexpr Msg(Status status, DataValue data1)
       : bytes_{status.value(), static_cast<std::uint8_t>(data1.value())} {
     assert((type() == MsgType::kSystemExclusive)
         || (N == 1 + status.numDataBytes()));
   }
 
-  template<typename = std::enable_if_t<N == 3>>
+  template<std::size_t NN = N, typename = std::enable_if_t<NN == 3>>
   explicit constexpr Msg(Status status, DataValue data1, DataValue data2)
       : bytes_{status.value(),
               static_cast<std::uint8_t>(data1.value()),
@@ -351,25 +373,25 @@ public:
   void setStatus(Status status) { bytes_[0] = status.value(); }
 
   /** Returns [0, 127] value of the 1st data byte. */
-  template<typename = std::enable_if_t<N >= 2>>
+  template<std::size_t NN = N, typename = std::enable_if_t<NN >= 2>>
   constexpr DataValue data1() const {
     return DataValue{static_cast<std::int8_t>(bytes_[1])};
   }
 
   /** Updates 1st data byte to the given [0, 127] value. */
-  template<typename = std::enable_if_t<N >= 2>>
+  template<std::size_t NN = N, typename = std::enable_if_t<NN >= 2>>
   void setData1(DataValue data1) {
     bytes_[1] = static_cast<std::uint8_t>(data1.value());
   }
 
   /** Returns [0, 127] value of the 2nd data byte. */
-  template<typename = std::enable_if_t<N >= 3>>
+  template<std::size_t NN = N, typename = std::enable_if_t<NN >= 3>>
   constexpr DataValue data2() const {
     return DataValue{static_cast<std::int8_t>(bytes_[2])};
   }
 
   /** Updates 2nd data byte to the given [0, 127] value. */
-  template<typename = std::enable_if_t<N >= 3>>
+  template<std::size_t NN = N, typename = std::enable_if_t<NN >= 3>>
   void setData2(DataValue data2) {
     bytes_[2] = static_cast<std::uint8_t>(data2.value());
   }
@@ -393,7 +415,7 @@ public:
    */
   template<
       typename MsgT,
-      typename = std::enable_if_t<std::is_base_of_v<Msg<N>, MsgT>>>
+      typename = std::enable_if_t<std::is_base_of<Msg<N>, MsgT>::value>>
   MsgT to() const { return MsgT::fromMsg(*this); }
 
   /**
@@ -420,6 +442,9 @@ private:
   ByteArray bytes_;
 };
 
+template<std::size_t N>
+constexpr std::size_t Msg<N>::kNumBytes;  // Definition.
+
 // Ensure compiler keeps these structs packed.
 // (It should for char[]; hopefully std::uint8_t[] is the same).
 static_assert(sizeof(Msg<1>) == 1, "Msg<1> must be 1 byte");
@@ -427,9 +452,9 @@ static_assert(sizeof(Msg<2>) == 2, "Msg<2> must be 2 bytes");
 static_assert(sizeof(Msg<3>) == 3, "Msg<3> must be 3 bytes");
 
 // Ensure trivial destructors (so they can be skipped):
-static_assert(std::is_trivially_destructible_v<Msg<1>>, "Msg<1> must be trivially destructible");
-static_assert(std::is_trivially_destructible_v<Msg<2>>, "Msg<2> must be trivially destructible");
-static_assert(std::is_trivially_destructible_v<Msg<3>>, "Msg<3> must be trivially destructible");
+static_assert(std::is_trivially_destructible<Msg<1>>::value, "Msg<1> must be trivially destructible");
+static_assert(std::is_trivially_destructible<Msg<2>>::value, "Msg<2> must be trivially destructible");
+static_assert(std::is_trivially_destructible<Msg<3>>::value, "Msg<3> must be trivially destructible");
 
 // Equality operations:
 inline constexpr bool operator==(Msg<1> lhs, Msg<1> rhs) {
@@ -476,20 +501,20 @@ public:
     return ChanMsg<3>{msg.status(), msg.data1(), msg.data2()};
   }
 
-  template<typename = std::enable_if_t<N == 2>>
+  template<std::size_t NN = N, typename = std::enable_if_t<NN == 2>>
   explicit constexpr ChanMsg(Status status, DataValue data1)
-      : Msg{status, data1} {
+      : Msg<N>{status, data1} {
     assert(status.isChannelSpecific());
   }
 
-  template<typename = std::enable_if_t<N == 3>>
+  template<std::size_t NN = N, typename = std::enable_if_t<NN == 3>>
   explicit constexpr ChanMsg(Status status, DataValue data1, DataValue data2)
-      : Msg{status, data1, data2} {
+      : Msg<N>{status, data1, data2} {
     assert(status.isChannelSpecific());
   }
 
   /** Returns MIDI channel this Channel message applies to. */
-  constexpr Channel channel() const { return status().channel(); }
+  constexpr Channel channel() const { return this->status().channel(); }
 
   /**
    * Updates to the given MIDI channel, which must be a normal [0, 15] value
@@ -497,24 +522,24 @@ public:
    */
   void setChannel(Channel channel) {
     assert(channel.isNormal());
-    setStatus(Status::channelVoice(type(), channel));
+    setStatus(Status::channelVoice(this->type(), channel));
   }
 
 protected:
   // Hide the more general mutation functions, since specific subclasses provide
   // more specific semantic APIs that will limit correct mutations for the
   // appropriate message type.
-  using Msg::setStatus;
-  using Msg::setData1;
-  using Msg::setData2;
+  using Msg<N>::setStatus;
+  using Msg<N>::setData1;
+  using Msg<N>::setData2;
 };
 
 static_assert(sizeof(ChanMsg<2>) == 2, "ChanMsg<2> must be 2 bytes");
 static_assert(sizeof(ChanMsg<3>) == 3, "ChanMsg<3> must be 3 bytes");
 
-static_assert(std::is_trivially_destructible_v<ChanMsg<2>>,
+static_assert(std::is_trivially_destructible<ChanMsg<2>>::value,
               "ChanMsg<2> must be trivially destructible");
-static_assert(std::is_trivially_destructible_v<ChanMsg<3>>,
+static_assert(std::is_trivially_destructible<ChanMsg<3>>::value,
               "ChanMsg<3> must be trivially destructible");
 
 /** Alias for a timestamped N-byte Channel message. */
@@ -610,7 +635,7 @@ private:
 };
 
 static_assert(sizeof(NoteMsg) == 3, "NoteMsg must be 3 bytes");
-static_assert(std::is_trivially_destructible_v<NoteMsg>,
+static_assert(std::is_trivially_destructible<NoteMsg>::value,
               "NoteMsg must be trivially destructible");
 
 /** Alias for a timestamped Note Off or Note On message. */
