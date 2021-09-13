@@ -439,6 +439,91 @@ TEST(MsgRef, WorksForMsg) {
   EXPECT_THAT(ccCh13Mod37.rawBytes()[2], Eq(0x5A));
 }
 
+TEST(MsgView, ComparesByteValues) {
+  // Should be able to compare a Msg to raw bytes through MsgView interface.
+  // Control Change, channel 13, CC #1 (Mod Wheel), value 37.
+  bmmidi::Msg<3> msg{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                   bmmidi::Channel::index(12)),
+      bmmidi::controlToDataValue(bmmidi::Control::kModWheel),
+      bmmidi::DataValue{37}};
+  const auto msgView = msg.asView<bmmidi::MsgView>();
+
+  // (Same, just as raw bytes).
+  const std::uint8_t rawBytes[] = {0xBC, 0x01, 0x25};
+  const bmmidi::MsgView rawBytesView{rawBytes, sizeof(rawBytes)};
+
+  EXPECT_THAT(msgView.hasSameValueAs(rawBytesView), IsTrue());
+  EXPECT_THAT(rawBytesView.hasSameValueAs(msgView), IsTrue());
+
+  // A different Msg<3> value should compare as unequal.
+  bmmidi::Msg<3> differentMsg{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                   bmmidi::Channel::index(12)),
+      bmmidi::controlToDataValue(bmmidi::Control::kModWheel),
+      bmmidi::DataValue{38}};  // Value 38 instead of 37.
+  const auto differentMsgView = differentMsg.asView<bmmidi::MsgView>();
+
+  EXPECT_THAT(msgView.hasSameValueAs(differentMsgView), IsFalse());
+  EXPECT_THAT(differentMsgView.hasSameValueAs(msgView), IsFalse());
+
+  EXPECT_THAT(rawBytesView.hasSameValueAs(differentMsgView), IsFalse());
+  EXPECT_THAT(differentMsgView.hasSameValueAs(rawBytesView), IsFalse());
+}
+
+TEST(NoteMsgView, ShouldConvertFromMsgView) {
+  // A more generic MsgView...
+  // (Note On, channel 3, key 69, velocity 90).
+  const std::uint8_t srcBytes[] = {0x92, 0x45, 0x5A};
+  bmmidi::MsgView msgView{srcBytes, sizeof(srcBytes)};
+
+  // ... should be convertible to the more specific NoteMsgView.
+  const auto noteMsgView = msgView.asView<bmmidi::NoteMsgView>();
+
+  EXPECT_THAT(noteMsgView.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(noteMsgView.isNoteOff(), IsFalse());
+  EXPECT_THAT(noteMsgView.isNoteOn(), IsTrue());
+  EXPECT_THAT(noteMsgView.key().value(), Eq(69));
+  EXPECT_THAT(noteMsgView.velocity().value(), Eq(90));
+}
+
+TEST(NoteMsgView, ShouldConvertFromMsgRef) {
+  // A more generic MsgRef (which is also read-write)...
+  // (Note On, channel 3, key 69, velocity 90).
+  std::uint8_t srcBytes[] = {0x92, 0x45, 0x5A};
+  bmmidi::MsgRef msgRef{srcBytes, sizeof(srcBytes)};
+
+  // ... should be convertible to the more specific NoteMsgView
+  // (which is only read-only).
+  const auto noteMsgView = msgRef.asView<bmmidi::NoteMsgView>();
+
+  EXPECT_THAT(noteMsgView.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(noteMsgView.isNoteOff(), IsFalse());
+  EXPECT_THAT(noteMsgView.isNoteOn(), IsTrue());
+  EXPECT_THAT(noteMsgView.key().value(), Eq(69));
+  EXPECT_THAT(noteMsgView.velocity().value(), Eq(90));
+}
+
+TEST(NoteMsgRef, ShouldConvertFromMsgRef) {
+  // A more generic MsgRef...
+  // (Note On, channel 3, key 69, velocity 90).
+  std::uint8_t srcBytes[] = {0x92, 0x45, 0x5A};
+  bmmidi::MsgRef msgRef{srcBytes, sizeof(srcBytes)};
+
+  // ...should be convertible to the more specific NoteMsgRef...
+  auto noteMsgRef = msgRef.asRef<bmmidi::NoteMsgRef>();
+
+  EXPECT_THAT(noteMsgRef.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(noteMsgRef.isNoteOff(), IsFalse());
+  EXPECT_THAT(noteMsgRef.isNoteOn(), IsTrue());
+  EXPECT_THAT(noteMsgRef.key().value(), Eq(69));
+  EXPECT_THAT(noteMsgRef.velocity().value(), Eq(90));
+
+  // ...which is mutable.
+  noteMsgRef.setChannel(bmmidi::Channel::index(6));
+  EXPECT_THAT(noteMsgRef.channel().displayNumber(), Eq(7));
+}
+
 TEST(NoteMsgView, ShouldYieldCorrectData) {
   {
     // Note Off, channel 13, key 61, velocity 0.
