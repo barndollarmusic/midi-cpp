@@ -133,6 +133,9 @@ private:
   // by value as a DoubleDataValue.
 };
 
+static_assert(sizeof(PitchBend) == sizeof(DoubleDataValue),
+              "PitchBend must have same size as DoubleDataValue");
+
 }  // namespace bmmidi
 
 #endif  // BMMIDI_PITCH_BEND_HPP

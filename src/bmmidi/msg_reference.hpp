@@ -10,6 +10,7 @@
 #include "bmmidi/control.hpp"
 #include "bmmidi/data_value.hpp"
 #include "bmmidi/key_number.hpp"
+#include "bmmidi/pitch_bend.hpp"
 #include "bmmidi/preset_number.hpp"
 #include "bmmidi/status.hpp"
 #include "bmmidi/time.hpp"
@@ -500,11 +501,56 @@ using ChanPressureMsgView = ChanPressureMsgReference<MsgAccess::kReadOnly>;
 /** Alias for a read-write ChanPressureMsgReference. */
 using ChanPressureMsgRef = ChanPressureMsgReference<MsgAccess::kReadWrite>;
 
-/** Alias for a timestamped read-only reference to a program change message. */
+/** Alias for a timestamped read-only reference to a channel pressure message. */
 using TimedChanPressureMsgView = Timed<ChanPressureMsgView>;
 
-/** Alias for a timestamped read-write reference to a program change message. */
+/** Alias for a timestamped read-write reference to a channel pressure message. */
 using TimedChanPressureMsgRef = Timed<ChanPressureMsgRef>;
+
+/**
+ * A reference to a Pitch Bend Change message stored as contiguous bytes (which
+ * must outlive this reference object). Can either be read-write (see
+ * PitchBendMsgRef alias) or read-only (see PitchBendMsgView alias), based on
+ * AccessType template parameter.
+ */
+template<MsgAccess AccessType>
+class PitchBendMsgReference : public ChanMsgReference<AccessType> {
+public:
+  using BytePointerType = typename ChanMsgReference<AccessType>::BytePointerType;
+
+  explicit PitchBendMsgReference(BytePointerType bytes, int numBytes)
+      : ChanMsgReference<AccessType>{bytes, numBytes} {
+    assert(this->type() == MsgType::kPitchBend);
+  }
+
+  /** Returns 14-bit [1, 16383] MIDI pitch bend value. */
+  PitchBend bend() const {
+    return PitchBend::fromLsbMsb(
+        static_cast<std::uint8_t>(this->data1().value()),
+        static_cast<std::uint8_t>(this->data2().value()));
+  }
+
+  /** Updates to the given 14-bit [1, 16383] MIDI pitch bend value. */
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setBend(PitchBend bend) {
+    this->setData1(DataValue{static_cast<std::int8_t>(bend.lsb())});
+    this->setData2(DataValue{static_cast<std::int8_t>(bend.msb())});
+  }
+};
+
+/** Alias for a read-only PitchBendMsgReference. */
+using PitchBendMsgView = PitchBendMsgReference<MsgAccess::kReadOnly>;
+
+/** Alias for a read-write PitchBendMsgReference. */
+using PitchBendMsgRef = PitchBendMsgReference<MsgAccess::kReadWrite>;
+
+/** Alias for a timestamped read-only reference to a pitch bend message. */
+using TimedPitchBendMsgView = Timed<PitchBendMsgView>;
+
+/** Alias for a timestamped read-write reference to a pitch bend message. */
+using TimedPitchBendMsgRef = Timed<PitchBendMsgRef>;
 
 }  // namespace bmmidi
 

@@ -628,4 +628,57 @@ TEST(ChanPressureMsg, ShouldConvertFromMsg) {
   EXPECT_THAT(msg.data1().value(), Eq(56));
 }
 
+TEST(PitchBendMsg, ShouldCreate) {
+  // (Pitch Bend, channel 3, bend 3427).
+  // LSB:            0b110 0011 (  0x63 = 99)
+  // MSB:   0b00 1101 0         (  0x1A = 26)
+  // Val: 0b  00 1101 0110 0011 (0x0D63 = 3427)
+  auto pbMsg = bmmidi::PitchBendMsg{bmmidi::Channel::index(2), bmmidi::PitchBend{3427}};
+
+  EXPECT_THAT(pbMsg.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(pbMsg.bend().value(), Eq(3427));
+
+  EXPECT_THAT(pbMsg.rawBytes()[0], Eq(0xE2));
+  EXPECT_THAT(pbMsg.rawBytes()[1], Eq(0x63));
+  EXPECT_THAT(pbMsg.rawBytes()[2], Eq(0x1A));
+
+  // Can mutate:
+  pbMsg.setChannel(bmmidi::Channel::index(13));
+  pbMsg.setBend(bmmidi::PitchBend::max());
+
+  EXPECT_THAT(pbMsg.channel().displayNumber(), Eq(14));
+  EXPECT_THAT(pbMsg.bend().value(), Eq(16383));
+
+  EXPECT_THAT(pbMsg.rawBytes()[0], Eq(0xED));
+  EXPECT_THAT(pbMsg.rawBytes()[1], Eq(0x7F));
+  EXPECT_THAT(pbMsg.rawBytes()[2], Eq(0x7F));
+}
+
+TEST(PitchBendMsg, ShouldConvertFromMsg) {
+  // A more generic Msg...
+  // (Pitch Bend, channel 3, bend 8192).
+  // LSB:            0b000 0000 (  0x00 = 0)
+  // MSB:   0b10 0000 0         (  0x40 = 64)
+  // Val: 0b  10 0000 0000 0000 (0x2000 = 8192)
+  bmmidi::Msg<3> msg{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kPitchBend,
+                                   bmmidi::Channel::index(2)),
+      bmmidi::DataValue{0x00},
+      bmmidi::DataValue{0x40}};
+  
+  // ...should convert to the more specific PitchBendMsg...
+  auto pbMsg = msg.to<bmmidi::PitchBendMsg>();
+
+  EXPECT_THAT(pbMsg.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(pbMsg.bend().value(), Eq(8192));
+
+  // ...and this converted copy should be mutable...
+  pbMsg.setBend(bmmidi::PitchBend{22});
+  EXPECT_THAT(pbMsg.bend().value(), Eq(22));
+
+  // ...and changes to it should NOT affect original Msg.
+  EXPECT_THAT(msg.data1().value(), Eq(0x00));
+  EXPECT_THAT(msg.data2().value(), Eq(0x40));
+}
+
 }  // namespace

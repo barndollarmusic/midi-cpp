@@ -10,6 +10,7 @@
 #include "bmmidi/control.hpp"
 #include "bmmidi/data_value.hpp"
 #include "bmmidi/key_number.hpp"
+#include "bmmidi/pitch_bend.hpp"
 #include "bmmidi/preset_number.hpp"
 #include "bmmidi/status.hpp"
 #include "bmmidi/time.hpp"
@@ -524,6 +525,56 @@ static_assert(std::is_trivially_destructible<ChanPressureMsg>::value,
 
 /** Alias for a timestamped Channel Pressure message. */
 using TimedChanPressureMsg = Timed<ChanPressureMsg>;
+
+/**
+ * A Pitch Bend Change message that stores its own bytes contiguously.
+ *
+ * Memory layout is packed bytes, so it should be safe to use reinterpret_cast<>
+ * on existing memory (but see warnings in MsgReference documentation about
+ * interleaved System Realtime messages and running status).
+ */
+class PitchBendMsg : public ChanMsg<3> {
+public:
+  static PitchBendMsg fromMsg(const Msg<3>& msg) {
+    assert(msg.type() == MsgType::kPitchBend);
+    return PitchBendMsg{
+        msg.status().channel(),
+        PitchBend::fromLsbMsb(
+            static_cast<std::uint8_t>(msg.data1().value()),
+            static_cast<std::uint8_t>(msg.data2().value()))};
+  }
+
+  /**
+   * Returns a Pitch Bend message with the given channel and bend.
+   *
+   * Input channel must be a normal channel (not a special "none" or "omni"
+   * value).
+   */
+  explicit constexpr PitchBendMsg(Channel channel, PitchBend bend)
+      : ChanMsg<3>{Status::channelVoice(MsgType::kPitchBend, channel),
+                   DataValue{static_cast<std::int8_t>(bend.lsb())},
+                   DataValue{static_cast<std::int8_t>(bend.msb())}} {}
+
+  /** Returns 14-bit [1, 16383] MIDI pitch bend value. */
+  constexpr PitchBend bend() const {
+    return PitchBend::fromLsbMsb(
+        static_cast<std::uint8_t>(data1().value()),
+        static_cast<std::uint8_t>(data2().value()));
+  }
+
+  /** Updates to the given 14-bit [1, 16383] MIDI pitch bend value. */
+  void setBend(PitchBend bend) {
+    setData1(DataValue{static_cast<std::int8_t>(bend.lsb())});
+    setData2(DataValue{static_cast<std::int8_t>(bend.msb())});
+  }
+};
+
+static_assert(sizeof(PitchBendMsg) == 3, "PitchBendMsg must be 3 bytes");
+static_assert(std::is_trivially_destructible<PitchBendMsg>::value,
+              "PitchBendMsg must be trivially destructible");
+
+/** Alias for a timestamped Pitch Bend message. */
+using TimedPitchBendMsg = Timed<PitchBendMsg>;
 
 }  // namespace bmmidi
 

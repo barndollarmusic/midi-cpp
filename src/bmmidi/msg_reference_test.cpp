@@ -639,4 +639,66 @@ TEST(ChanPressureMsgRef, CanReferToRawBytes) {
   EXPECT_THAT(srcBytes[1], Eq(0x16));
 }
 
+TEST(PitchBendMsgView, CanReferToRawBytes) {
+  // (Pitch Bend, channel 3, bend 15243).
+  // LSB:            0b000 1011 (  0x0B = 11)
+  // MSB:   0b11 1011 1         (  0x77 = 119)
+  // Val: 0b  11 1011 1000 1011 (0x3B8B = 15243)
+  const std::uint8_t srcBytes[] = {0xE2, 0x0B, 0x77};
+  bmmidi::PitchBendMsgView pbMsgView{srcBytes, sizeof(srcBytes)};
+
+  // Can use PitchBendMsgView accessors:
+  EXPECT_THAT(pbMsgView.bend().value(), Eq(15243));
+  EXPECT_THAT(pbMsgView.bend().lsb(), Eq(0x0B));
+  EXPECT_THAT(pbMsgView.bend().msb(), Eq(0x77));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(pbMsgView.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(pbMsgView.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPitchBend,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(pbMsgView.data1(), Eq(bmmidi::DataValue{0x0B}));
+  EXPECT_THAT(pbMsgView.data2(), Eq(bmmidi::DataValue{0x77}));
+}
+
+TEST(PitchBendMsgRef, CanReferToRawBytes) {
+  // (Pitch Bend, channel 3, bend 15243).
+  // LSB:            0b000 1011 (  0x0B = 11)
+  // MSB:   0b11 1011 1         (  0x77 = 119)
+  // Val: 0b  11 1011 1000 1011 (0x3B8B = 15243)
+  std::uint8_t srcBytes[] = {0xE2, 0x0B, 0x77};
+  bmmidi::PitchBendMsgRef pbMsgRef{srcBytes, sizeof(srcBytes)};
+
+  // Can use PitchBendMsgRef accessors:
+  EXPECT_THAT(pbMsgRef.bend().value(), Eq(15243));
+  EXPECT_THAT(pbMsgRef.bend().lsb(), Eq(0x0B));
+  EXPECT_THAT(pbMsgRef.bend().msb(), Eq(0x77));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(pbMsgRef.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(pbMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPitchBend,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(pbMsgRef.data1(), Eq(bmmidi::DataValue{0x0B}));
+  EXPECT_THAT(pbMsgRef.data2(), Eq(bmmidi::DataValue{0x77}));
+
+  // Can mutate:
+  pbMsgRef.setChannel(bmmidi::Channel::index(13));
+  pbMsgRef.setBend(bmmidi::PitchBend::min());  // Uses 1 instead of 0, for symmetry.
+
+  EXPECT_THAT(pbMsgRef.bend().value(), Eq(1));
+  EXPECT_THAT(pbMsgRef.bend().lsb(), Eq(0x01));
+  EXPECT_THAT(pbMsgRef.bend().msb(), Eq(0x00));
+  EXPECT_THAT(pbMsgRef.channel().displayNumber(), Eq(14));
+  EXPECT_THAT(pbMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPitchBend,
+                                      bmmidi::Channel::index(13))));
+  EXPECT_THAT(pbMsgRef.data1(), Eq(bmmidi::DataValue{0x01}));
+  EXPECT_THAT(pbMsgRef.data2(), Eq(bmmidi::DataValue{0x00}));
+
+  EXPECT_THAT(srcBytes[0], Eq(0xED));
+  EXPECT_THAT(srcBytes[1], Eq(0x01));
+  EXPECT_THAT(srcBytes[2], Eq(0x00));
+}
+
 }  // namespace
