@@ -467,6 +467,45 @@ using TimedProgramChangeMsgView = Timed<ProgramChangeMsgView>;
 /** Alias for a timestamped read-write reference to a program change message. */
 using TimedProgramChangeMsgRef = Timed<ProgramChangeMsgRef>;
 
+/**
+ * A reference to a Channel Pressure message (non-polyphonic aftertouch which
+ * applies to all keys) stored as contiguous bytes (which must outlive this
+ * reference object). Can either be read-write (see ChanPressureMsgRef alias) or
+ * read-only (see ChanPressureMsgView alias), based on AccessType template
+ * parameter.
+ */
+template<MsgAccess AccessType>
+class ChanPressureMsgReference : public ChanMsgReference<AccessType> {
+public:
+  using BytePointerType = typename ChanMsgReference<AccessType>::BytePointerType;
+
+  explicit ChanPressureMsgReference(BytePointerType bytes, int numBytes)
+      : ChanMsgReference<AccessType>{bytes, numBytes} {
+    assert(this->type() == MsgType::kChannelPressure);
+  }
+
+  /** Returns [0, 127] pressure value. */
+  DataValue pressure() const { return this->data1(); }
+
+  /** Updates to the given [0, 127] pressure value. */
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setPressure(DataValue pressure) { this->setData1(pressure); }
+};
+
+/** Alias for a read-only ChanPressureMsgReference. */
+using ChanPressureMsgView = ChanPressureMsgReference<MsgAccess::kReadOnly>;
+
+/** Alias for a read-write ChanPressureMsgReference. */
+using ChanPressureMsgRef = ChanPressureMsgReference<MsgAccess::kReadWrite>;
+
+/** Alias for a timestamped read-only reference to a program change message. */
+using TimedChanPressureMsgView = Timed<ChanPressureMsgView>;
+
+/** Alias for a timestamped read-write reference to a program change message. */
+using TimedChanPressureMsgRef = Timed<ChanPressureMsgRef>;
+
 }  // namespace bmmidi
 
 #endif  // BMMIDI_MSG_REFERENCE_HPP

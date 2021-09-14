@@ -516,7 +516,7 @@ TEST(ControlChangeMsgRef, CanReferToRawBytes) {
   std::uint8_t srcBytes[] = {0xB2, 0x0B, 0x5A};
   bmmidi::ControlChangeMsgRef ccMsgRef{srcBytes, sizeof(srcBytes)};
 
-  // Can use ControlChangeMsgView accessors:
+  // Can use ControlChangeMsgRef accessors:
   EXPECT_THAT(ccMsgRef.control(), Eq(bmmidi::Control::kExpression));
   EXPECT_THAT(ccMsgRef.value(), Eq(bmmidi::DataValue{90}));
 
@@ -568,7 +568,7 @@ TEST(ProgramChangeMsgRef, CanReferToRawBytes) {
   std::uint8_t srcBytes[] = {0xC2, 0x38};
   bmmidi::ProgramChangeMsgRef pcMsgRef{srcBytes, sizeof(srcBytes)};
 
-  // Can use ProgramChangeMsgView accessors:
+  // Can use ProgramChangeMsgRef accessors:
   EXPECT_THAT(pcMsgRef.program().displayNumber(), Eq(57));
 
   // Can also still use base accessors:
@@ -590,6 +590,52 @@ TEST(ProgramChangeMsgRef, CanReferToRawBytes) {
   EXPECT_THAT(pcMsgRef.data1(), Eq(bmmidi::DataValue{22}));
 
   EXPECT_THAT(srcBytes[0], Eq(0xCD));
+  EXPECT_THAT(srcBytes[1], Eq(0x16));
+}
+
+TEST(ChanPressureMsgView, CanReferToRawBytes) {
+  // (Channel Pressure, channel 3, pressure 56).
+  const std::uint8_t srcBytes[] = {0xD2, 0x38};
+  bmmidi::ChanPressureMsgView cpMsgView{srcBytes, sizeof(srcBytes)};
+
+  // Can use ChanPressureMsgView accessors:
+  EXPECT_THAT(cpMsgView.pressure().value(), Eq(56));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(cpMsgView.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(cpMsgView.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(cpMsgView.data1(), Eq(bmmidi::DataValue{56}));
+}
+
+TEST(ChanPressureMsgRef, CanReferToRawBytes) {
+  // (Channel Pressure, channel 3, pressure 56).
+  std::uint8_t srcBytes[] = {0xD2, 0x38};
+  bmmidi::ChanPressureMsgRef cpMsgRef{srcBytes, sizeof(srcBytes)};
+
+  // Can use ChanPressureMsgRef accessors:
+  EXPECT_THAT(cpMsgRef.pressure().value(), Eq(56));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(cpMsgRef.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(cpMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(cpMsgRef.data1(), Eq(bmmidi::DataValue{56}));
+
+  // Can mutate:
+  cpMsgRef.setChannel(bmmidi::Channel::index(13));
+  cpMsgRef.setPressure(bmmidi::DataValue{22});
+
+  EXPECT_THAT(cpMsgRef.pressure().value(), Eq(22));
+  EXPECT_THAT(cpMsgRef.channel().displayNumber(), Eq(14));
+  EXPECT_THAT(cpMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
+                                      bmmidi::Channel::index(13))));
+  EXPECT_THAT(cpMsgRef.data1(), Eq(bmmidi::DataValue{22}));
+
+  EXPECT_THAT(srcBytes[0], Eq(0xDD));
   EXPECT_THAT(srcBytes[1], Eq(0x16));
 }
 

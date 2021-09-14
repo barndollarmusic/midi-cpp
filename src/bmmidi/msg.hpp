@@ -487,6 +487,44 @@ static_assert(std::is_trivially_destructible<ProgramChangeMsg>::value,
 /** Alias for a timestamped Program Change message. */
 using TimedProgramChangeMsg = Timed<ProgramChangeMsg>;
 
+/**
+ * A Channel Pressure message (non-polyphonic aftertouch that affects all keys)
+ * that stores its own bytes contiguously.
+ *
+ * Memory layout is packed bytes, so it should be safe to use reinterpret_cast<>
+ * on existing memory (but see warnings in MsgReference documentation about
+ * interleaved System Realtime messages and running status).
+ */
+class ChanPressureMsg : public ChanMsg<2> {
+public:
+  static ChanPressureMsg fromMsg(const Msg<2>& msg) {
+    assert(msg.type() == MsgType::kChannelPressure);
+    return ChanPressureMsg{msg.status().channel(), msg.data1()};
+  }
+
+  /**
+   * Returns a Channel Pressure message with the given channel and pressure.
+   *
+   * Input channel must be a normal channel (not a special "none" or "omni"
+   * value).
+   */
+  explicit constexpr ChanPressureMsg(Channel channel, DataValue pressure)
+      : ChanMsg<2>{Status::channelVoice(MsgType::kChannelPressure, channel), pressure} {}
+
+  /** Returns [0, 127] pressure value. */
+  constexpr DataValue pressure() const { return data1(); }
+
+  /** Updates to the given [0, 127] pressure value. */
+  void setPressure(DataValue pressure) { setData1(pressure); }
+};
+
+static_assert(sizeof(ChanPressureMsg) == 2, "ChanPressureMsg must be 2 bytes");
+static_assert(std::is_trivially_destructible<ChanPressureMsg>::value,
+              "ChanPressureMsg must be trivially destructible");
+
+/** Alias for a timestamped Channel Pressure message. */
+using TimedChanPressureMsg = Timed<ChanPressureMsg>;
+
 }  // namespace bmmidi
 
 #endif  // BMMIDI_MSG_HPP

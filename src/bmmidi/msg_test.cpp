@@ -591,4 +591,41 @@ TEST(ProgramChangeMsg, ShouldConvertFromMsg) {
   EXPECT_THAT(msg.data1().value(), Eq(56));
 }
 
+TEST(ChanPressureMsg, ShouldCreate) {
+  // (Channel Pressure, channel 3, pressure 56).
+  auto cpMsg = bmmidi::ChanPressureMsg{bmmidi::Channel::index(2), bmmidi::DataValue{56}};
+
+  EXPECT_THAT(cpMsg.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(cpMsg.pressure().value(), Eq(56));
+
+  // Can mutate:
+  cpMsg.setChannel(bmmidi::Channel::index(13));
+  cpMsg.setPressure(bmmidi::DataValue{22});
+
+  EXPECT_THAT(cpMsg.channel().displayNumber(), Eq(14));
+  EXPECT_THAT(cpMsg.pressure().value(), Eq(22));
+}
+
+TEST(ChanPressureMsg, ShouldConvertFromMsg) {
+  // A more generic Msg...
+  // (Channel Pressure, channel 3, pressure 56).
+  bmmidi::Msg<2> msg{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
+                                   bmmidi::Channel::index(2)),
+      bmmidi::DataValue{56}};
+  
+  // ...should convert to the more specific ChanPressureMsg...
+  auto cpMsg = msg.to<bmmidi::ChanPressureMsg>();
+
+  EXPECT_THAT(cpMsg.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(cpMsg.pressure().value(), Eq(56));
+
+  // ...and this converted copy should be mutable...
+  cpMsg.setPressure(bmmidi::DataValue{22});
+  EXPECT_THAT(cpMsg.pressure().value(), Eq(22));
+
+  // ...and changes to it should NOT affect original Msg.
+  EXPECT_THAT(msg.data1().value(), Eq(56));
+}
+
 }  // namespace
