@@ -10,6 +10,7 @@
 #include "bmmidi/control.hpp"
 #include "bmmidi/data_value.hpp"
 #include "bmmidi/key_number.hpp"
+#include "bmmidi/preset_number.hpp"
 #include "bmmidi/status.hpp"
 #include "bmmidi/time.hpp"
 
@@ -421,6 +422,50 @@ using TimedControlChangeMsgView = Timed<ControlChangeMsgView>;
 
 /** Alias for a timestamped read-write reference to a control change message. */
 using TimedControlChangeMsgRef = Timed<ControlChangeMsgRef>;
+
+/**
+ * A reference to a Program Change message stored as contiguous bytes (which
+ * must outlive this reference object). Can either be read-write (see
+ * ProgramChangeMsgRef alias) or read-only (see ProgramChangeMsgView alias),
+ * based on AccessType template parameter.
+ */
+template<MsgAccess AccessType>
+class ProgramChangeMsgReference : public ChanMsgReference<AccessType> {
+public:
+  using BytePointerType = typename ChanMsgReference<AccessType>::BytePointerType;
+
+  explicit ProgramChangeMsgReference(BytePointerType bytes, int numBytes)
+      : ChanMsgReference<AccessType>{bytes, numBytes} {
+    assert(this->type() == MsgType::kProgramChange);
+  }
+
+  /** Returns program number. */
+  PresetNumber program() const { return PresetNumber::index(this->data1().value()); }
+
+  /**
+   * Updates to the given program number, which must be in normal [0, 127] index
+   * range (not a special "none" value).
+   */
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setProgram(PresetNumber program) {
+    assert(program.isNormal());
+    this->setData1(DataValue{static_cast<std::int8_t>(program.index())});
+  }
+};
+
+/** Alias for a read-only ProgramChangeMsgReference. */
+using ProgramChangeMsgView = ProgramChangeMsgReference<MsgAccess::kReadOnly>;
+
+/** Alias for a read-write ProgramChangeMsgReference. */
+using ProgramChangeMsgRef = ProgramChangeMsgReference<MsgAccess::kReadWrite>;
+
+/** Alias for a timestamped read-only reference to a program change message. */
+using TimedProgramChangeMsgView = Timed<ProgramChangeMsgView>;
+
+/** Alias for a timestamped read-write reference to a program change message. */
+using TimedProgramChangeMsgRef = Timed<ProgramChangeMsgRef>;
 
 /**
  * Base class for an N-byte MIDI message that stores its own bytes contiguously.
@@ -844,6 +889,54 @@ static_assert(std::is_trivially_destructible<ControlChangeMsg>::value,
 
 /** Alias for a timestamped Control Change message. */
 using TimedControlChangeMsg = Timed<ControlChangeMsg>;
+
+/**
+ * A Program Change message that stores its own bytes contiguously.
+ *
+ * Memory layout is packed bytes, so it should be safe to use reinterpret_cast<>
+ * on existing memory (but see warnings in MsgReference documentation about
+ * interleaved System Realtime messages and running status).
+ */
+class ProgramChangeMsg : public ChanMsg<2> {
+public:
+  static ProgramChangeMsg fromMsg(const Msg<2>& msg) {
+    assert(msg.type() == MsgType::kProgramChange);
+    return ProgramChangeMsg{msg.status().channel(), PresetNumber::index(msg.data1().value())};
+  }
+
+  /**
+   * Returns a Program Change message with the given channel and program.
+   *
+   * Input channel must be a normal channel (not a special "none" or "omni"
+   * value).
+   *
+   * Input program must be a normal program (not a special "none" value).
+   */
+  explicit constexpr ProgramChangeMsg(Channel channel, PresetNumber program)
+      : ChanMsg<2>{Status::channelVoice(MsgType::kProgramChange, channel),
+                   DataValue{static_cast<std::int8_t>(program.index())}} {
+    assert(program.isNormal());
+  }
+
+  /** Returns program number. */
+  constexpr PresetNumber program() const { return PresetNumber::index(data1().value()); }
+
+  /**
+   * Updates to the given program number, which must be in normal [0, 127] index
+   * range (not a special "none" value).
+   */
+  void setProgram(PresetNumber program) {
+    assert(program.isNormal());
+    setData1(DataValue{static_cast<std::int8_t>(program.index())});
+  }
+};
+
+static_assert(sizeof(ProgramChangeMsg) == 2, "ProgramChangeMsg must be 2 bytes");
+static_assert(std::is_trivially_destructible<ProgramChangeMsg>::value,
+              "ProgramChangeMsg must be trivially destructible");
+
+/** Alias for a timestamped Program Change message. */
+using TimedProgramChangeMsg = Timed<ProgramChangeMsg>;
 
 }  // namespace bmmidi
 

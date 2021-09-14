@@ -546,6 +546,52 @@ TEST(ControlChangeMsgRef, CanReferToRawBytes) {
   EXPECT_THAT(srcBytes[2], Eq(0x16));
 }
 
+TEST(ProgramChangeMsgView, CanReferToRawBytes) {
+  // (Program Change, channel 3, program 57).
+  const std::uint8_t srcBytes[] = {0xC2, 0x38};
+  bmmidi::ProgramChangeMsgView pcMsgView{srcBytes, sizeof(srcBytes)};
+
+  // Can use ProgramChangeMsgView accessors:
+  EXPECT_THAT(pcMsgView.program().displayNumber(), Eq(57));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(pcMsgView.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(pcMsgView.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(pcMsgView.data1(), Eq(bmmidi::DataValue{56}));
+}
+
+TEST(ProgramChangeMsgRef, CanReferToRawBytes) {
+  // (Program Change, channel 3, program 57).
+  std::uint8_t srcBytes[] = {0xC2, 0x38};
+  bmmidi::ProgramChangeMsgRef pcMsgRef{srcBytes, sizeof(srcBytes)};
+
+  // Can use ProgramChangeMsgView accessors:
+  EXPECT_THAT(pcMsgRef.program().displayNumber(), Eq(57));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(pcMsgRef.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(pcMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(pcMsgRef.data1(), Eq(bmmidi::DataValue{56}));
+
+  // Can mutate:
+  pcMsgRef.setChannel(bmmidi::Channel::index(13));
+  pcMsgRef.setProgram(bmmidi::PresetNumber::index(22));
+
+  EXPECT_THAT(pcMsgRef.program().displayNumber(), Eq(23));
+  EXPECT_THAT(pcMsgRef.channel().displayNumber(), Eq(14));
+  EXPECT_THAT(pcMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
+                                      bmmidi::Channel::index(13))));
+  EXPECT_THAT(pcMsgRef.data1(), Eq(bmmidi::DataValue{22}));
+
+  EXPECT_THAT(srcBytes[0], Eq(0xCD));
+  EXPECT_THAT(srcBytes[1], Eq(0x16));
+}
+
 TEST(Msg, ProvidesNumBytesConstant) {
   EXPECT_THAT(bmmidi::Msg<1>::kNumBytes, Eq(1));
   EXPECT_THAT(bmmidi::Msg<2>::kNumBytes, Eq(2));
@@ -1080,6 +1126,44 @@ TEST(ControlChangeMsg, ShouldConvertFromMsg) {
 
   // ...and changes to it should NOT affect original Msg.
   EXPECT_THAT(msg.data1().value(), Eq(11));
+}
+
+TEST(ProgramChangeMsg, ShouldCreate) {
+  // (Program Change, channel 3, program 57).
+  auto pcMsg = bmmidi::ProgramChangeMsg{
+     bmmidi::Channel::index(2), bmmidi::PresetNumber::index(56)};
+
+  EXPECT_THAT(pcMsg.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(pcMsg.program().displayNumber(), Eq(57));
+
+  // Can mutate:
+  pcMsg.setChannel(bmmidi::Channel::index(13));
+  pcMsg.setProgram(bmmidi::PresetNumber::index(22));
+
+  EXPECT_THAT(pcMsg.channel().displayNumber(), Eq(14));
+  EXPECT_THAT(pcMsg.program().displayNumber(), Eq(23));
+}
+
+TEST(ProgramChangeMsg, ShouldConvertFromMsg) {
+  // A more generic Msg...
+  // (Program Change, channel 3, program 57).
+  bmmidi::Msg<2> msg{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
+                                   bmmidi::Channel::index(2)),
+      bmmidi::DataValue{56}};
+  
+  // ...should convert to the more specific ProgramChangeMsg...
+  auto pcMsg = msg.to<bmmidi::ProgramChangeMsg>();
+
+  EXPECT_THAT(pcMsg.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(pcMsg.program().displayNumber(), Eq(57));
+
+  // ...and this converted copy should be mutable...
+  pcMsg.setProgram(bmmidi::PresetNumber::index(22));
+  EXPECT_THAT(pcMsg.program().displayNumber(), Eq(23));
+
+  // ...and changes to it should NOT affect original Msg.
+  EXPECT_THAT(msg.data1().value(), Eq(56));
 }
 
 }  // namespace
