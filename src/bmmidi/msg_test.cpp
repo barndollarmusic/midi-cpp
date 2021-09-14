@@ -222,6 +222,43 @@ TEST(MsgRef, WorksForMsg) {
 
 // TODO: Add tests for MsgView and MsgRef referring to SysExMsg.
 
+TEST(ChanMsgView, CanReferToRawBytes) {
+  // (Note On, channel 3, key 69, velocity 90).
+  const std::uint8_t srcBytes[] = {0x92, 0x45, 0x5A};
+  bmmidi::ChanMsgView chanMsgView{srcBytes, sizeof(srcBytes)};
+
+  // Can use channel accessor:
+  EXPECT_THAT(chanMsgView.channel().displayNumber(), Eq(3));
+
+  // Can also still use MsgView accessors:
+  EXPECT_THAT(chanMsgView.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(chanMsgView.data1(), Eq(bmmidi::DataValue{69}));
+  EXPECT_THAT(chanMsgView.data2(), Eq(bmmidi::DataValue{90}));
+}
+
+TEST(ChanMsgRef, CanReferToRawBytes) {
+  // (Note On, channel 3, key 69, velocity 90).
+  std::uint8_t srcBytes[] = {0x92, 0x45, 0x5A};
+  bmmidi::ChanMsgRef chanMsgRef{srcBytes, sizeof(srcBytes)};
+
+  // Can use channel accessor:
+  EXPECT_THAT(chanMsgRef.channel().displayNumber(), Eq(3));
+
+  // Can also still use MsgRef accessors:
+  EXPECT_THAT(chanMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(chanMsgRef.data1(), Eq(bmmidi::DataValue{69}));
+  EXPECT_THAT(chanMsgRef.data2(), Eq(bmmidi::DataValue{90}));
+
+  // Can mutate the referenced bytes:
+  chanMsgRef.setChannel(bmmidi::Channel::index(13));
+  EXPECT_THAT(chanMsgRef.channel().displayNumber(), Eq(14));
+  EXPECT_THAT(srcBytes[0], Eq(0x9D));
+}
+
 TEST(NoteMsgView, ShouldConvertFromMsgView) {
   // A more generic MsgView...
   // (Note On, channel 3, key 69, velocity 90).
@@ -624,6 +661,123 @@ TEST(Msg, ProvidesReadWriteRawArrayAccess) {
   EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{27}));
 }
 
+TEST(ChanMsg, SupportsTwoByteMsgs) {
+  // (Program change, channel 13, program 57).
+  bmmidi::ChanMsg<2> chanMsg{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
+                                   bmmidi::Channel::index(12)),
+      bmmidi::DataValue{57}};
+  
+  // Can use channel accessor:
+  EXPECT_THAT(chanMsg.channel().displayNumber(), Eq(13));
+
+  // Can also still use Msg accessors:
+  EXPECT_THAT(chanMsg.type(), Eq(bmmidi::MsgType::kProgramChange));
+  EXPECT_THAT(chanMsg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
+                                      bmmidi::Channel::index(12))));
+  EXPECT_THAT(chanMsg.data1(), Eq(bmmidi::DataValue{57}));
+
+  // Can mutate channel:
+  chanMsg.setChannel(bmmidi::Channel::index(2));
+  
+  EXPECT_THAT(chanMsg.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(chanMsg.type(), Eq(bmmidi::MsgType::kProgramChange));
+  EXPECT_THAT(chanMsg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(chanMsg.data1(), Eq(bmmidi::DataValue{57}));
+}
+
+TEST(ChanMsg, SupportsThreeByteMsgs) {
+  // (Note On, channel 3, key 69, velocity 90).
+  bmmidi::ChanMsg<3> chanMsg{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                   bmmidi::Channel::index(2)),
+      bmmidi::DataValue{69},
+      bmmidi::DataValue{90}};
+
+  // Can use channel accessor:
+  EXPECT_THAT(chanMsg.channel().displayNumber(), Eq(3));
+
+  // Can also still use Msg accessors:
+  EXPECT_THAT(chanMsg.type(), Eq(bmmidi::MsgType::kNoteOn));
+  EXPECT_THAT(chanMsg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(chanMsg.data1(), Eq(bmmidi::DataValue{69}));
+  EXPECT_THAT(chanMsg.data2(), Eq(bmmidi::DataValue{90}));
+
+  // Can mutate channel:
+  chanMsg.setChannel(bmmidi::Channel::index(13));
+  
+  EXPECT_THAT(chanMsg.channel().displayNumber(), Eq(14));
+  EXPECT_THAT(chanMsg.type(), Eq(bmmidi::MsgType::kNoteOn));
+  EXPECT_THAT(chanMsg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                      bmmidi::Channel::index(13))));
+  EXPECT_THAT(chanMsg.data1(), Eq(bmmidi::DataValue{69}));
+  EXPECT_THAT(chanMsg.data2(), Eq(bmmidi::DataValue{90}));
+}
+
+TEST(ChanMsg, ShouldConvertFromTwoByteMsg) {
+  // A more generic Msg<2>...
+  // (Program change, channel 13, program 57).
+  bmmidi::Msg<2> msg{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
+                                   bmmidi::Channel::index(12)),
+      bmmidi::DataValue{57}};
+  
+  // ...should convert to the more specific ChanMsg<2>...
+  auto chanMsg = msg.to<bmmidi::ChanMsg<2>>();
+
+  EXPECT_THAT(chanMsg.channel().displayNumber(), Eq(13));
+  EXPECT_THAT(chanMsg.type(), Eq(bmmidi::MsgType::kProgramChange));
+  EXPECT_THAT(chanMsg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
+                                      bmmidi::Channel::index(12))));
+  EXPECT_THAT(chanMsg.data1(), Eq(bmmidi::DataValue{57}));
+
+  // ...and the new ChanMsg<2> copy should be mutable...
+  chanMsg.setChannel(bmmidi::Channel::index(2));
+  EXPECT_THAT(chanMsg.channel().displayNumber(), Eq(3));
+
+  // ...without affecting the original Msg<2>.
+  EXPECT_THAT(msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
+                                      bmmidi::Channel::index(12))));
+}
+
+TEST(ChanMsg, ShouldConvertFromThreeByteMsg) {
+  // A more generic Msg<3>...
+  // (Note On, channel 3, key 69, velocity 90).
+  bmmidi::Msg<3> msg{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                   bmmidi::Channel::index(2)),
+      bmmidi::DataValue{69},
+      bmmidi::DataValue{90}};
+  
+  // ...should convert to the more specific ChanMsg<3>...
+  auto chanMsg = msg.to<bmmidi::ChanMsg<3>>();
+
+  EXPECT_THAT(chanMsg.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(chanMsg.type(), Eq(bmmidi::MsgType::kNoteOn));
+  EXPECT_THAT(chanMsg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(chanMsg.data1(), Eq(bmmidi::DataValue{69}));
+  EXPECT_THAT(chanMsg.data2(), Eq(bmmidi::DataValue{90}));
+
+  // ...and the new ChanMsg<3> copy should be mutable...
+  chanMsg.setChannel(bmmidi::Channel::index(13));
+  EXPECT_THAT(chanMsg.channel().displayNumber(), Eq(14));
+
+  // ...without affecting the original Msg<3>.
+  EXPECT_THAT(msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                      bmmidi::Channel::index(2))));
+}
+
 TEST(NoteMsg, ShouldConvertFromMsg) {
   // A more generic Msg...
   // (Note On, channel 3, key 69, velocity 90).
@@ -651,9 +805,9 @@ TEST(NoteMsg, ShouldConvertFromMsg) {
 }
 
 // TODO: Add more thorough tests for:
-//   - ChanMsgView, ChanMsgRef
 //   - NoteMsgView, NoteMsgRef
-//   - ChanMsg<2>, ChanMsg<3>
 //   - NoteMsg
+
+// TODO: Add at least one test with TimedMsgView, TimedMsgRef.
 
 }  // namespace
