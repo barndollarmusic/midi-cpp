@@ -265,7 +265,7 @@ TEST(NoteMsgView, CanReferToRawBytes) {
   const std::uint8_t srcBytes[] = {0x92, 0x45, 0x5A};
   bmmidi::NoteMsgView noteMsgView{srcBytes, sizeof(srcBytes)};
 
-  // Can use NoteMsg accessors:
+  // Can use NoteMsgView accessors:
   EXPECT_THAT(noteMsgView.isNoteOn(), IsTrue());
   EXPECT_THAT(noteMsgView.isNoteOff(), IsFalse());
   EXPECT_THAT(noteMsgView.key().value(), Eq(69));
@@ -285,7 +285,7 @@ TEST(NoteMsgView, TreatsNoteOnZeroVelocityAsNoteOff) {
   const std::uint8_t srcBytes[] = {0x92, 0x45, 0x00};
   bmmidi::NoteMsgView noteMsgView{srcBytes, sizeof(srcBytes)};
 
-  // Can use NoteMsg accessors:
+  // Can use NoteMsgView accessors:
   EXPECT_THAT(noteMsgView.isNoteOn(), IsFalse());
   EXPECT_THAT(noteMsgView.isNoteOff(), IsTrue());  // Treats as note off!
   EXPECT_THAT(noteMsgView.key().value(), Eq(69));
@@ -352,66 +352,12 @@ TEST(NoteMsgView, ShouldConvertFromMsg) {
   EXPECT_THAT(noteOnView.velocity().value(), Eq(90));
 }
 
-TEST(NoteMsgView, ShouldYieldCorrectData) {
-  {
-    // Note Off, channel 13, key 61, velocity 0.
-    const std::uint8_t srcBytes[] = {0x8C, 0x3D, 0x00};
-    bmmidi::NoteMsgView view{srcBytes, sizeof(srcBytes)};
-
-    EXPECT_THAT(view.channel().displayNumber(), Eq(13));
-    EXPECT_THAT(view.isNoteOff(), IsTrue());
-    EXPECT_THAT(view.isNoteOn(), IsFalse());
-    EXPECT_THAT(view.key().value(), Eq(61));
-    EXPECT_THAT(view.velocity().value(), Eq(0));
-  }
-
-  {
-    // Note Off, channel 1, key 127, velocity 93.
-    const auto msg = bmmidi::NoteMsg::off(bmmidi::Channel::index(0),
-                                          bmmidi::KeyNumber::key(127),
-                                          bmmidi::DataValue{93});
-    auto view = msg.asView<bmmidi::NoteMsgView>();
-
-    EXPECT_THAT(view.channel().displayNumber(), Eq(1));
-    EXPECT_THAT(view.isNoteOff(), IsTrue());
-    EXPECT_THAT(view.isNoteOn(), IsFalse());
-    EXPECT_THAT(view.key().value(), Eq(127));
-    EXPECT_THAT(view.velocity().value(), Eq(93));
-  }
-
-  {
-    // Note On, channel 3, key 69, velocity 0 (should treat as Note Off).
-    const std::uint8_t srcBytes[] = {0x92, 0x45, 0x00};
-    bmmidi::NoteMsgView view{srcBytes, sizeof(srcBytes)};
-
-    EXPECT_THAT(view.channel().displayNumber(), Eq(3));
-    EXPECT_THAT(view.isNoteOff(), IsTrue());
-    EXPECT_THAT(view.isNoteOn(), IsFalse());
-    EXPECT_THAT(view.key().value(), Eq(69));
-    EXPECT_THAT(view.velocity().value(), Eq(0));
-  }
-
-  {
-    // Note On, channel 3, key 69, velocity 90.
-    const auto msg = bmmidi::NoteMsg::on(bmmidi::Channel::index(2),
-                                         bmmidi::KeyNumber::key(69),
-                                         bmmidi::DataValue{90});
-    auto view = msg.asView<bmmidi::NoteMsgView>();
-
-    EXPECT_THAT(view.channel().displayNumber(), Eq(3));
-    EXPECT_THAT(view.isNoteOff(), IsFalse());
-    EXPECT_THAT(view.isNoteOn(), IsTrue());
-    EXPECT_THAT(view.key().value(), Eq(69));
-    EXPECT_THAT(view.velocity().value(), Eq(90));
-  }
-}
-
 TEST(NoteMsgRef, CanReferToRawBytes) {
   // (Note Off, channel 3, key 69, velocity 90).
   std::uint8_t srcBytes[] = {0x82, 0x45, 0x5A};
   bmmidi::NoteMsgRef noteMsgRef{srcBytes, sizeof(srcBytes)};
 
-  // Can use NoteMsg accessors:
+  // Can use NoteMsgRef accessors:
   EXPECT_THAT(noteMsgRef.isNoteOn(), IsFalse());
   EXPECT_THAT(noteMsgRef.isNoteOff(), IsTrue());
   EXPECT_THAT(noteMsgRef.key().value(), Eq(69));
@@ -441,6 +387,10 @@ TEST(NoteMsgRef, CanReferToRawBytes) {
                                       bmmidi::Channel::index(13))));
   EXPECT_THAT(noteMsgRef.data1(), Eq(bmmidi::DataValue{60}));
   EXPECT_THAT(noteMsgRef.data2(), Eq(bmmidi::DataValue{22}));
+
+  EXPECT_THAT(srcBytes[0], Eq(0x9D));
+  EXPECT_THAT(srcBytes[1], Eq(0x3C));
+  EXPECT_THAT(srcBytes[2], Eq(0x16));
 }
 
 TEST(NoteMsgRef, ShouldConvertFromMsgRef) {
@@ -486,6 +436,60 @@ TEST(NoteMsgRef, ShouldConvertFromMsg) {
   noteOnRef.setVelocity(bmmidi::DataValue{23});
   EXPECT_THAT(noteOnRef.velocity().value(), Eq(23));
   EXPECT_THAT(msg.data2().value(), Eq(23));
+}
+
+TEST(KeyPressureMsgView, CanReferToRawBytes) {
+  // (Polyphonic Key Pressure, channel 3, key 69, pressure 90).
+  const std::uint8_t srcBytes[] = {0xA2, 0x45, 0x5A};
+  bmmidi::KeyPressureMsgView kpMsgView{srcBytes, sizeof(srcBytes)};
+
+  // Can use KeyPressureMsgView accessors:
+  EXPECT_THAT(kpMsgView.key().value(), Eq(69));
+  EXPECT_THAT(kpMsgView.pressure().value(), Eq(90));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(kpMsgView.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(kpMsgView.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(kpMsgView.data1(), Eq(bmmidi::DataValue{69}));
+  EXPECT_THAT(kpMsgView.data2(), Eq(bmmidi::DataValue{90}));
+}
+
+TEST(KeyPressureMsgRef, CanReferToRawBytes) {
+  // (Polyphonic Key Pressure, channel 3, key 69, pressure 90).
+  std::uint8_t srcBytes[] = {0xA2, 0x45, 0x5A};
+  bmmidi::KeyPressureMsgRef kpMsgRef{srcBytes, sizeof(srcBytes)};
+
+  // Can use KeyPressureMsgRef accessors:
+  EXPECT_THAT(kpMsgRef.key().value(), Eq(69));
+  EXPECT_THAT(kpMsgRef.pressure().value(), Eq(90));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(kpMsgRef.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(kpMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(kpMsgRef.data1(), Eq(bmmidi::DataValue{69}));
+  EXPECT_THAT(kpMsgRef.data2(), Eq(bmmidi::DataValue{90}));
+
+  // Can mutate:
+  kpMsgRef.setChannel(bmmidi::Channel::index(13));
+  kpMsgRef.setKey(bmmidi::KeyNumber::key(60));
+  kpMsgRef.setPressure(bmmidi::DataValue{22});
+
+  EXPECT_THAT(kpMsgRef.key().value(), Eq(60));
+  EXPECT_THAT(kpMsgRef.pressure().value(), Eq(22));
+  EXPECT_THAT(kpMsgRef.channel().displayNumber(), Eq(14));
+  EXPECT_THAT(kpMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
+                                      bmmidi::Channel::index(13))));
+  EXPECT_THAT(kpMsgRef.data1(), Eq(bmmidi::DataValue{60}));
+  EXPECT_THAT(kpMsgRef.data2(), Eq(bmmidi::DataValue{22}));
+
+  EXPECT_THAT(srcBytes[0], Eq(0xAD));
+  EXPECT_THAT(srcBytes[1], Eq(0x3C));
+  EXPECT_THAT(srcBytes[2], Eq(0x16));
 }
 
 TEST(Msg, ShouldBePackedSize) {
@@ -939,6 +943,49 @@ TEST(NoteMsg, ShouldConvertFromMsg) {
   // ...and this converted copy should be mutable...
   noteMsg.setVelocity(bmmidi::DataValue{23});
   EXPECT_THAT(noteMsg.velocity().value(), Eq(23));
+
+  // ...and changes to it should NOT affect original Msg.
+  EXPECT_THAT(msg.data2().value(), Eq(90));
+}
+
+TEST(KeyPressureMsg, ShouldCreate) {
+  // (Polyphonic Key Pressure, channel 3, key 69, pressure 90).
+  auto kpMsg = bmmidi::KeyPressureMsg{
+      bmmidi::Channel::index(2), bmmidi::KeyNumber::key(69), bmmidi::DataValue{90}};
+
+  EXPECT_THAT(kpMsg.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(kpMsg.key().value(), Eq(69));
+  EXPECT_THAT(kpMsg.pressure().value(), Eq(90));
+
+  // Can mutate:
+  kpMsg.setChannel(bmmidi::Channel::index(13));
+  kpMsg.setKey(bmmidi::KeyNumber::key(60));
+  kpMsg.setPressure(bmmidi::DataValue{22});
+
+  EXPECT_THAT(kpMsg.channel().displayNumber(), Eq(14));
+  EXPECT_THAT(kpMsg.key().value(), Eq(60));
+  EXPECT_THAT(kpMsg.pressure().value(), Eq(22));
+}
+
+TEST(KeyPressureMsg, ShouldConvertFromMsg) {
+  // A more generic Msg...
+  // (Polyphonic Key Pressure, channel 3, key 69, pressure 90).
+  bmmidi::Msg<3> msg{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
+                                   bmmidi::Channel::index(2)),
+      bmmidi::DataValue{69},
+      bmmidi::DataValue{90}};
+  
+  // ...should convert to the more specific KeyPressureMsg...
+  auto kpMsg = msg.to<bmmidi::KeyPressureMsg>();
+
+  EXPECT_THAT(kpMsg.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(kpMsg.key().value(), Eq(69));
+  EXPECT_THAT(kpMsg.pressure().value(), Eq(90));
+
+  // ...and this converted copy should be mutable...
+  kpMsg.setPressure(bmmidi::DataValue{23});
+  EXPECT_THAT(kpMsg.pressure().value(), Eq(23));
 
   // ...and changes to it should NOT affect original Msg.
   EXPECT_THAT(msg.data2().value(), Eq(90));

@@ -319,7 +319,58 @@ using TimedNoteMsgView = Timed<NoteMsgView>;
 /** Alias for a timestamped read-write reference to a Note On/Off message. */
 using TimedNoteMsgRef = Timed<NoteMsgRef>;
 
-// TODO: Add more specific MsgView/Ref classes.
+/**
+ * A reference to a Polyphonic Key Pressure message (a.k.a. per-key aftertouch)
+ * stored as contiguous bytes (which must outlive this reference object). Can
+ * either be read-write (see KeyPressureMsgRef alias) or read-only (see
+ * KeyPressureMsgView alias), based on AccessType template parameter.
+ */
+template<MsgAccess AccessType>
+class KeyPressureMsgReference : public ChanMsgReference<AccessType> {
+public:
+  using BytePointerType = typename ChanMsgReference<AccessType>::BytePointerType;
+
+  explicit KeyPressureMsgReference(BytePointerType bytes, int numBytes)
+      : ChanMsgReference<AccessType>{bytes, numBytes} {
+    assert(this->type() == MsgType::kPolyphonicKeyPressure);
+  }
+
+  /** Returns key that this key pressure applies to. */
+  KeyNumber key() const { return KeyNumber::key(this->data1().value()); }
+
+  /**
+   * Updates to the given key number, which must be a normal [0, 127] value
+   * (not a special "none" or "all" value).
+   */
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setKey(KeyNumber key) {
+    assert(key.isNormal());
+    this->setData1(DataValue{static_cast<std::int8_t>(key.value())});
+  }
+
+  /** Returns [0, 127] pressure value. */
+  DataValue pressure() const { return this->data2(); }
+
+  /** Updates to the given [0, 127] pressure value. */
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setPressure(DataValue pressure) { this->setData2(pressure); }
+};
+
+/** Alias for a read-only KeyPressureMsgReference. */
+using KeyPressureMsgView = KeyPressureMsgReference<MsgAccess::kReadOnly>;
+
+/** Alias for a read-write KeyPressureMsgReference. */
+using KeyPressureMsgRef = KeyPressureMsgReference<MsgAccess::kReadWrite>;
+
+/** Alias for a timestamped read-only reference to a key pressure message. */
+using TimedKeyPressureMsgView = Timed<KeyPressureMsgView>;
+
+/** Alias for a timestamped read-write reference to a key pressure message. */
+using TimedKeyPressureMsgRef = Timed<KeyPressureMsgRef>;
 
 /**
  * Base class for an N-byte MIDI message that stores its own bytes contiguously.
@@ -627,9 +678,9 @@ public:
 
 private:
   explicit constexpr NoteMsg(Status status, KeyNumber key, DataValue velocity)
-      : ChanMsg{status,
-                DataValue{static_cast<std::int8_t>(key.value())},
-                velocity} {
+      : ChanMsg<3>{status,
+                   DataValue{static_cast<std::int8_t>(key.value())},
+                   velocity} {
     assert(key.isNormal());
   }
 };
@@ -641,7 +692,63 @@ static_assert(std::is_trivially_destructible<NoteMsg>::value,
 /** Alias for a timestamped Note Off or Note On message. */
 using TimedNoteMsg = Timed<NoteMsg>;
 
-// TODO: Add SysExMsg and other more specific message classes.
+/**
+ * A Polyphonic Key Pressure message (a.k.a. per-key aftertouch) that stores its
+ * own bytes contiguously.
+ *
+ * Memory layout is packed bytes, so it should be safe to use reinterpret_cast<>
+ * on existing memory (but see warnings in MsgReference documentation about
+ * interleaved System Realtime messages and running status).
+ */
+class KeyPressureMsg : public ChanMsg<3> {
+public:
+  static KeyPressureMsg fromMsg(const Msg<3>& msg) {
+    assert(msg.type() == MsgType::kPolyphonicKeyPressure);
+    return KeyPressureMsg{msg.status().channel(), KeyNumber::key(msg.data1().value()), msg.data2()};
+  }
+
+  /**
+   * Returns a Polyphonic Key Pressure message with the given channel, key, and
+   * pressure value.
+   *
+   * Input channel must be a normal channel (not a special "none" or "omni"
+   * value).
+   *
+   * Input key must be a normal [0, 127] key number (not a special "none" or
+   * "all" value).
+   */
+  explicit constexpr KeyPressureMsg(Channel channel, KeyNumber key, DataValue pressure)
+      : ChanMsg<3>{Status::channelVoice(MsgType::kPolyphonicKeyPressure, channel),
+                   DataValue{static_cast<std::int8_t>(key.value())},
+                   pressure} {
+    assert(key.isNormal());
+  }
+
+  /** Returns key that this key pressure applies to. */
+  constexpr KeyNumber key() const { return KeyNumber::key(data1().value()); }
+
+  /**
+   * Updates to the given key number, which must be a normal [0, 127] value
+   * (not a special "none" or "all" value).
+   */
+  void setKey(KeyNumber key) {
+    assert(key.isNormal());
+    setData1(DataValue{static_cast<std::int8_t>(key.value())});
+  }
+
+  /** Returns [0, 127] pressure value. */
+  constexpr DataValue pressure() const { return data2(); }
+
+  /** Updates to the given [0, 127] pressure value. */
+  void setPressure(DataValue pressure) { setData2(pressure); }
+};
+
+static_assert(sizeof(KeyPressureMsg) == 3, "KeyPressureMsg must be 3 bytes");
+static_assert(std::is_trivially_destructible<KeyPressureMsg>::value,
+              "KeyPressureMsg must be trivially destructible");
+
+/** Alias for a timestamped Polyphonic Key Pressure message. */
+using TimedKeyPressureMsg = Timed<KeyPressureMsg>;
 
 }  // namespace bmmidi
 
