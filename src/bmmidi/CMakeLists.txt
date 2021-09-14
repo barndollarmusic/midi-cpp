@@ -3,6 +3,7 @@ include(BMMidiTargets)
 bmmidi_header_library(Lib
     bmmidi.hpp
     channel.hpp
+    cpp_features.hpp
     control.hpp
     data_value.hpp
     key_number.hpp

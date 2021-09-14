@@ -4,25 +4,9 @@
 #include <cassert>
 #include <cstdint>
 
+#include "bmmidi/cpp_features.hpp"
+
 namespace bmmidi {
-
-/**
- * Specific type of System Exclusive (SysEx) message, based on the first data
- * byte (the System Exclusive Sub-ID).
- */
-enum class SysExMessageType : std::uint8_t {
-  /** Specific to a manufacturer, identified by a registered manufacturer ID. */
-  kManufacturerSpecific = 0x00,
-
-  /** Reserved for non-public uses by schools, research projects, etc. */
-  kNonCommercial = 0x7D,
-
-  /** Standardized Universal System Exclusive Extensions (non-real time). */
-  kUniversalNonRealTime = 0x7E,
-
-  /** Standardized Universal System Exclusive Extensions (real time). */
-  kUniversalRealTime = 0x7F,
-};
 
 /**
  * ID for a registered MIDI manufacturer, which is either a 1-byte short ID
@@ -42,14 +26,13 @@ public:
    * Circuits has the short ID 0x01.
    */
   static constexpr Manufacturer shortId(std::uint8_t shortMfrId) {
-    assert((0x01 <= shortMfrId)
-        && (shortMfrId < static_cast<std::uint8_t>(SysExMessageType::kNonCommercial)));
+    assert((0x01 <= shortMfrId) && (shortMfrId < kNonCommercial));
     return Manufacturer{shortMfrId, 0x00, 0x00};
   }
 
   /**
    * Returns Manufacturer with given extended 2-byte ID (not including the leading 0x00
-   * SysEx Sub-ID).
+   * SysEx ID).
    *
    * For example, for Spectrasonics extByte1 would be 0x02 and extByte2 would be 0x2C.
    */
@@ -64,17 +47,17 @@ public:
    * schools, research projects, etc.
    */
   static constexpr Manufacturer nonCommercial() {
-    return Manufacturer{static_cast<std::uint8_t>(SysExMessageType::kNonCommercial), 0x00, 0x00};
+    return Manufacturer{kNonCommercial, 0x00, 0x00};
   }
 
   /** Returns true if this is an extended 2-byte manufacturer ID. */
-  constexpr bool isExtended() const { return (subId() == 0x00); }
+  constexpr bool isExtended() const { return (sysExId_ == 0x00); }
 
   /**
-   * Returns SysEx Sub-ID, which will be the short 1-byte manufacturer ID or
+   * Returns SysEx ID, which will be the short 1-byte manufacturer ID or
    * 0x00 if this is an extended manufacturer ID.
    */
-  constexpr std::uint8_t subId() const { return bytes_[0]; }
+  constexpr std::uint8_t sysExId() const { return sysExId_; }
 
   /**
    * Returns 1st byte of extended manufacturer ID (not including leading 0x00 of
@@ -82,7 +65,7 @@ public:
    */
   constexpr std::uint8_t extByte1() const {
     assert(isExtended());
-    return bytes_[1];
+    return extByte1_;
   }
 
   /**
@@ -91,27 +74,154 @@ public:
    */
   constexpr std::uint8_t extByte2() const {
     assert(isExtended());
-    return bytes_[2];
+    return extByte2_;
   }
 
   // Equality operations:
   friend constexpr bool operator==(Manufacturer lhs, Manufacturer rhs) {
-    return (lhs.bytes_[0] == rhs.bytes_[0])
-        && (lhs.bytes_[1] == rhs.bytes_[1])
-        && (lhs.bytes_[2] == rhs.bytes_[2]);
+    return (lhs.sysExId_ == rhs.sysExId_)
+        && (lhs.extByte1_ == rhs.extByte1_)
+        && (lhs.extByte2_ == rhs.extByte2_);
   }
 
   friend constexpr bool operator!=(Manufacturer lhs, Manufacturer rhs) { return !(lhs == rhs); }
 
 private:
-  constexpr explicit Manufacturer(
-      std::uint8_t subId, std::uint8_t extByte1, std::uint8_t extByte2)
-      : bytes_{subId, extByte1, extByte2} {}
+  static constexpr std::uint8_t kNonCommercial = 0x7D;
 
-  // [0] SysEx Sub-ID (0x00 if extended, 0x01-0x7D otherwise)
-  // [1] Extended Manufacturer ID byte 1 (or 0x00)
-  // [2] Extended Manufacturer ID byte 2 (or 0x00)
-  std::uint8_t bytes_[3];
+  constexpr explicit Manufacturer(
+      std::uint8_t sysExId, std::uint8_t extByte1, std::uint8_t extByte2)
+      : sysExId_{sysExId}, extByte1_{extByte1}, extByte2_{extByte2} {}
+
+  std::uint8_t sysExId_;
+  std::uint8_t extByte1_;
+  std::uint8_t extByte2_;
+};
+
+/**
+ * Category of Universal System Exclusive messages (Real Time or Non-Real Time).
+ *
+ * This serves as the SysEx ID number (first data byte after the F0 status byte).
+ */
+enum class UniversalCategory : std::uint8_t {
+  kNonRealTime = 0x7E,
+  kRealTime = 0x7F,
+};
+
+/**
+ * Represents the type of Universal SysEx message, with the SysEx ID (Non-Realtime or Realtime)
+ * and 1 or 2 Sub-IDs.
+ *
+ * See bmmidi::universal namespace for full list of constants defined by the MIDI standard.
+ */
+class UniversalType {
+public:
+  /** Creates a Non-Realtime UniversalType. */
+  static constexpr UniversalType nonRealTime(
+      std::uint8_t subId1, std::uint8_t subId2 = kUnusedSubId) {
+    return UniversalType{UniversalCategory::kNonRealTime, subId1, subId2};
+  }
+
+  /** Creates a Realtime UniversalType. */
+  static constexpr UniversalType realTime(
+      std::uint8_t subId1, std::uint8_t subId2 = kUnusedSubId) {
+    return UniversalType{UniversalCategory::kRealTime, subId1, subId2};
+  }
+
+  /** Returns whether this is a non-realtime or realtime type. */
+  constexpr UniversalCategory category() const { return category_; }
+
+  /**
+   * Returns sub-ID #1 that identifies this type of universal SysEx message
+   * (within its non-realtime or realtime category).
+   */
+  constexpr std::uint8_t subId1() const { return subId1_; }
+
+  /** Returns true if this type has a Sub-ID #2. */
+  constexpr bool hasSubId2() const { return (subId2_ != kUnusedSubId); }
+
+  /**
+   * Returns sub-ID #2 that further distinguishes this message type within its
+   * sub-ID #1. Only valid if hasSubId2().
+   */
+  constexpr std::uint8_t subId2() const {
+    assert(hasSubId2());
+    return subId2_;
+  }
+
+private:
+  static constexpr std::uint8_t kUnusedSubId = 0xFF;
+
+  explicit constexpr UniversalType(
+      UniversalCategory category, std::uint8_t subId1, std::uint8_t subId2)
+      : category_{category}, subId1_{subId1}, subId2_{subId2} {
+    assert(subId1 <= 0x7F);
+    assert((subId2 <= 0x7F) || (subId2 == kUnusedSubId));
+  }
+
+  UniversalCategory category_;
+  std::uint8_t subId1_;
+  std::uint8_t subId2_;
+};
+
+namespace universal {
+
+//==============================================================================
+// Non-Realtime (0x7E)
+//==============================================================================
+
+/** Non-Realtime Sample Dump Header. */
+BMMIDI_INLINE_VAR constexpr UniversalType kSampleDumpHeader = UniversalType::nonRealTime(0x01);
+
+// TODO: Add constants for rest of UniversalType non-realtime values.
+
+//==============================================================================
+// Realtime (0x7F)
+//==============================================================================
+
+/** Realtime MIDI Time Code (MTC) Full Message. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcFull = UniversalType::realTime(0x01, 0x01);
+
+/** Realtime MIDI Time Code (MTC) User Bits. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcUserBits = UniversalType::realTime(0x01, 0x02);
+
+// TODO: Add constants for rest of UniversalType realtime values.
+
+}  // namespace universal
+
+/**
+ * A [0, 127] identifier that can be used to address a specific device (or all
+ * devices) in System Exclusive messages.
+ */
+class Device {
+public:
+  /** Returns special "all call" Device that all devices should respond to. */
+  static constexpr Device all() { return Device{kAll}; }
+
+  /** Returns [0, 126] identifier for a specific device. */
+  static constexpr Device id(std::uint8_t deviceId) {
+    assert(deviceId != kAll);
+    return Device(deviceId);
+  }
+
+  /** Returns true if this is the special "all call" Device ID. */
+  constexpr bool isAll() const { return (value_ == kAll); }
+
+  /** Returns [0, 127] integer value (127 represents "all"). */
+  constexpr std::uint8_t value() const { return value_; }
+
+  // Equality operations:
+  friend constexpr bool operator==(Device lhs, Device rhs) { return lhs.value_ == rhs.value_; }
+  friend constexpr bool operator!=(Device lhs, Device rhs) { return lhs.value_ != rhs.value_; }
+
+private:
+  static constexpr std::uint8_t kAll = 0x7F;
+
+  explicit constexpr Device(std::uint8_t value) : value_{value} {
+    assert(value <= 0x7F);
+  }
+
+  std::uint8_t value_;
 };
 
 }  // namespace bmmidi

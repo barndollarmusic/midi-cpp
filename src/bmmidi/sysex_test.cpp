@@ -16,19 +16,19 @@ constexpr auto kNonCommercial = bmmidi::Manufacturer::nonCommercial();
 
 TEST(Manufacturer, SupportsShortId) {
   EXPECT_THAT(kSeqCircuits.isExtended(), IsFalse());
-  EXPECT_THAT(kSeqCircuits.subId(), Eq(0x01));
+  EXPECT_THAT(kSeqCircuits.sysExId(), Eq(0x01));
 }
 
 TEST(Manufacturer, SupportsExtendedId) {
   EXPECT_THAT(kSpectrasonics.isExtended(), IsTrue());
-  EXPECT_THAT(kSpectrasonics.subId(), Eq(0x00));
+  EXPECT_THAT(kSpectrasonics.sysExId(), Eq(0x00));
   EXPECT_THAT(kSpectrasonics.extByte1(), Eq(0x02));
   EXPECT_THAT(kSpectrasonics.extByte2(), Eq(0x2C));
 }
 
 TEST(Manufacturer, SupportsNonCommercial) {
   EXPECT_THAT(kNonCommercial.isExtended(), IsFalse());
-  EXPECT_THAT(kNonCommercial.subId(), Eq(0x7D));
+  EXPECT_THAT(kNonCommercial.sysExId(), Eq(0x7D));
 }
 
 TEST(Manufacturer, SupportsEqualityOperations) {
