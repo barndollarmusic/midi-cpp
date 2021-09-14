@@ -496,28 +496,28 @@ enum class Control : std::uint8_t {
 };
 
 /** Returns true if value is in valid [0, 127] Control range. */
-bool controlNumberIsInRange(int value) {
+constexpr bool controlNumberIsInRange(int value) {
   return (0 <= value) && (value <= 127);
 }
 
 /** Returns Control with the given [0, 127] numerical value. */
-Control controlFromNumber(int value) {
+constexpr Control controlFromNumber(int value) {
   assert(controlNumberIsInRange(value));
   return static_cast<Control>(value);
 }
 
 /** Returns [0, 127] numerical value of given Control. */
-std::int8_t controlToNumber(Control control) {
+constexpr std::int8_t controlToNumber(Control control) {
   return static_cast<std::int8_t>(control);
 }
 
 /** Returns Control from [0, 127] DataValue. */
-Control controlFromDataValue(DataValue dataValue) {
+constexpr Control controlFromDataValue(DataValue dataValue) {
   return static_cast<Control>(dataValue.value());
 }
 
 /** Returns [0, 127] as a DataValue. */
-DataValue controlToDataValue(Control control) {
+constexpr DataValue controlToDataValue(Control control) {
   return DataValue(controlToNumber(control));
 }
 

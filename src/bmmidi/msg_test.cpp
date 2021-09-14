@@ -492,10 +492,58 @@ TEST(KeyPressureMsgRef, CanReferToRawBytes) {
   EXPECT_THAT(srcBytes[2], Eq(0x16));
 }
 
-TEST(Msg, ShouldBePackedSize) {
-  EXPECT_THAT(sizeof(bmmidi::Msg<1>), Eq(1));
-  EXPECT_THAT(sizeof(bmmidi::Msg<2>), Eq(2));
-  EXPECT_THAT(sizeof(bmmidi::Msg<3>), Eq(3));
+TEST(ControlChangeMsgView, CanReferToRawBytes) {
+  // (Control Change, channel 3, CC #11 expression, value 90).
+  const std::uint8_t srcBytes[] = {0xB2, 0x0B, 0x5A};
+  bmmidi::ControlChangeMsgView ccMsgView{srcBytes, sizeof(srcBytes)};
+
+  // Can use ControlChangeMsgView accessors:
+  EXPECT_THAT(ccMsgView.control(), Eq(bmmidi::Control::kExpression));
+  EXPECT_THAT(ccMsgView.value(), Eq(bmmidi::DataValue{90}));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(ccMsgView.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(ccMsgView.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(ccMsgView.data1(), Eq(bmmidi::DataValue{11}));
+  EXPECT_THAT(ccMsgView.data2(), Eq(bmmidi::DataValue{90}));
+}
+
+TEST(ControlChangeMsgRef, CanReferToRawBytes) {
+  // (Control Change, channel 3, CC #11 expression, value 90).
+  std::uint8_t srcBytes[] = {0xB2, 0x0B, 0x5A};
+  bmmidi::ControlChangeMsgRef ccMsgRef{srcBytes, sizeof(srcBytes)};
+
+  // Can use ControlChangeMsgView accessors:
+  EXPECT_THAT(ccMsgRef.control(), Eq(bmmidi::Control::kExpression));
+  EXPECT_THAT(ccMsgRef.value(), Eq(bmmidi::DataValue{90}));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(ccMsgRef.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(ccMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(ccMsgRef.data1(), Eq(bmmidi::DataValue{11}));
+  EXPECT_THAT(ccMsgRef.data2(), Eq(bmmidi::DataValue{90}));
+
+  // Can mutate:
+  ccMsgRef.setChannel(bmmidi::Channel::index(13));
+  ccMsgRef.setControl(bmmidi::Control::kModWheel);
+  ccMsgRef.setValue(bmmidi::DataValue{22});
+
+  EXPECT_THAT(ccMsgRef.control(), Eq(bmmidi::Control::kModWheel));
+  EXPECT_THAT(ccMsgRef.value(), Eq(bmmidi::DataValue{22}));
+  EXPECT_THAT(ccMsgRef.channel().displayNumber(), Eq(14));
+  EXPECT_THAT(ccMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                      bmmidi::Channel::index(13))));
+  EXPECT_THAT(ccMsgRef.data1(), Eq(bmmidi::DataValue{1}));
+  EXPECT_THAT(ccMsgRef.data2(), Eq(bmmidi::DataValue{22}));
+
+  EXPECT_THAT(srcBytes[0], Eq(0xBD));
+  EXPECT_THAT(srcBytes[1], Eq(0x01));
+  EXPECT_THAT(srcBytes[2], Eq(0x16));
 }
 
 TEST(Msg, ProvidesNumBytesConstant) {
@@ -989,6 +1037,49 @@ TEST(KeyPressureMsg, ShouldConvertFromMsg) {
 
   // ...and changes to it should NOT affect original Msg.
   EXPECT_THAT(msg.data2().value(), Eq(90));
+}
+
+TEST(ControlChangeMsg, ShouldCreate) {
+  // (Control Change, channel 3, CC #11 expression, value 90).
+  auto ccMsg = bmmidi::ControlChangeMsg{
+     bmmidi::Channel::index(2), bmmidi::Control::kExpression, bmmidi::DataValue{90}};
+
+  EXPECT_THAT(ccMsg.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(ccMsg.control(), Eq(bmmidi::Control::kExpression));
+  EXPECT_THAT(ccMsg.value(), Eq(bmmidi::DataValue{90}));
+
+  // Can mutate:
+  ccMsg.setChannel(bmmidi::Channel::index(13));
+  ccMsg.setControl(bmmidi::Control::kModWheel);
+  ccMsg.setValue(bmmidi::DataValue{22});
+
+  EXPECT_THAT(ccMsg.channel().displayNumber(), Eq(14));
+  EXPECT_THAT(ccMsg.control(), Eq(bmmidi::Control::kModWheel));
+  EXPECT_THAT(ccMsg.value(), Eq(bmmidi::DataValue{22}));
+}
+
+TEST(ControlChangeMsg, ShouldConvertFromMsg) {
+  // A more generic Msg...
+  // (Control Change, channel 3, CC #11 expression, value 90).
+  bmmidi::Msg<3> msg{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                   bmmidi::Channel::index(2)),
+      bmmidi::DataValue{11},
+      bmmidi::DataValue{90}};
+  
+  // ...should convert to the more specific ControlChangeMsg...
+  auto ccMsg = msg.to<bmmidi::ControlChangeMsg>();
+
+  EXPECT_THAT(ccMsg.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(ccMsg.control(), Eq(bmmidi::Control::kExpression));
+  EXPECT_THAT(ccMsg.value(), Eq(bmmidi::DataValue{90}));
+
+  // ...and this converted copy should be mutable...
+  ccMsg.setControl(bmmidi::Control::kModWheel);
+  EXPECT_THAT(ccMsg.control(), Eq(bmmidi::Control::kModWheel));
+
+  // ...and changes to it should NOT affect original Msg.
+  EXPECT_THAT(msg.data1().value(), Eq(11));
 }
 
 }  // namespace

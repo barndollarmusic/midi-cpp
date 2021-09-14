@@ -7,6 +7,7 @@
 #include <type_traits>
 
 #include "bmmidi/channel.hpp"
+#include "bmmidi/control.hpp"
 #include "bmmidi/data_value.hpp"
 #include "bmmidi/key_number.hpp"
 #include "bmmidi/status.hpp"
@@ -371,6 +372,55 @@ using TimedKeyPressureMsgView = Timed<KeyPressureMsgView>;
 
 /** Alias for a timestamped read-write reference to a key pressure message. */
 using TimedKeyPressureMsgRef = Timed<KeyPressureMsgRef>;
+
+/**
+ * A reference to a Control Change message stored as contiguous bytes (which
+ * must outlive this reference object). Can either be read-write (see
+ * ControlChangeMsgRef alias) or read-only (see ControlChangeMsgView alias),
+ * based on AccessType template parameter.
+ */
+template<MsgAccess AccessType>
+class ControlChangeMsgReference : public ChanMsgReference<AccessType> {
+public:
+  using BytePointerType = typename ChanMsgReference<AccessType>::BytePointerType;
+
+  explicit ControlChangeMsgReference(BytePointerType bytes, int numBytes)
+      : ChanMsgReference<AccessType>{bytes, numBytes} {
+    assert(this->type() == MsgType::kControlChange);
+  }
+
+  /** Returns Control number being changed. */
+  Control control() const { return controlFromDataValue(this->data1()); }
+
+  /** Updates to the given Control number. */
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setControl(Control control) {
+    this->setData1(controlToDataValue(control));
+  }
+
+  /** Returns [0, 127] control value. */
+  DataValue value() const { return this->data2(); }
+
+  /** Updates to the given [0, 127] control value. */
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setValue(DataValue value) { this->setData2(value); }
+};
+
+/** Alias for a read-only ControlChangeMsgReference. */
+using ControlChangeMsgView = ControlChangeMsgReference<MsgAccess::kReadOnly>;
+
+/** Alias for a read-write ControlChangeMsgReference. */
+using ControlChangeMsgRef = ControlChangeMsgReference<MsgAccess::kReadWrite>;
+
+/** Alias for a timestamped read-only reference to a control change message. */
+using TimedControlChangeMsgView = Timed<ControlChangeMsgView>;
+
+/** Alias for a timestamped read-write reference to a control change message. */
+using TimedControlChangeMsgRef = Timed<ControlChangeMsgRef>;
 
 /**
  * Base class for an N-byte MIDI message that stores its own bytes contiguously.
@@ -749,6 +799,51 @@ static_assert(std::is_trivially_destructible<KeyPressureMsg>::value,
 
 /** Alias for a timestamped Polyphonic Key Pressure message. */
 using TimedKeyPressureMsg = Timed<KeyPressureMsg>;
+
+/**
+ * A Control Change message that stores its own bytes contiguously.
+ *
+ * Memory layout is packed bytes, so it should be safe to use reinterpret_cast<>
+ * on existing memory (but see warnings in MsgReference documentation about
+ * interleaved System Realtime messages and running status).
+ */
+class ControlChangeMsg : public ChanMsg<3> {
+public:
+  static ControlChangeMsg fromMsg(const Msg<3>& msg) {
+    assert(msg.type() == MsgType::kControlChange);
+    return ControlChangeMsg{msg.status().channel(), controlFromDataValue(msg.data1()), msg.data2()};
+  }
+
+  /**
+   * Returns a Control Change message with the given channel, control, and value.
+   *
+   * Input channel must be a normal channel (not a special "none" or "omni"
+   * value).
+   */
+  explicit constexpr ControlChangeMsg(Channel channel, Control control, DataValue value)
+      : ChanMsg<3>{Status::channelVoice(MsgType::kControlChange, channel),
+                   controlToDataValue(control),
+                   value} {}
+
+  /** Returns Control number being changed. */
+  constexpr Control control() const { return controlFromDataValue(data1()); }
+
+  /** Updates to the given Control number. */
+  void setControl(Control control) { setData1(controlToDataValue(control)); }
+
+  /** Returns [0, 127] control value. */
+  constexpr DataValue value() const { return data2(); }
+
+  /** Updates to the given [0, 127] control value. */
+  void setValue(DataValue value) { setData2(value); }
+};
+
+static_assert(sizeof(ControlChangeMsg) == 3, "ControlChangeMsg must be 3 bytes");
+static_assert(std::is_trivially_destructible<ControlChangeMsg>::value,
+              "ControlChangeMsg must be trivially destructible");
+
+/** Alias for a timestamped Control Change message. */
+using TimedControlChangeMsg = Timed<ControlChangeMsg>;
 
 }  // namespace bmmidi
 
