@@ -11,6 +11,7 @@ bmmidi_header_library(Lib
     pitch_bend.hpp
     preset_number.hpp
     status.hpp
+    sysex.hpp
     time.hpp)
 
 if(BMMidi_ENABLE_TESTING)
@@ -48,6 +49,10 @@ if(BMMidi_ENABLE_TESTING)
 
   bmmidi_gtest(StatusTest status_test.cpp)
   target_link_libraries(BMMidi_StatusTest
+      PRIVATE BMMidi::Lib)
+
+  bmmidi_gtest(SysExTest sysex_test.cpp)
+  target_link_libraries(BMMidi_SysExTest
       PRIVATE BMMidi::Lib)
 
   bmmidi_gtest(TimeTest time_test.cpp)

@@ -12,6 +12,7 @@
 #include "bmmidi/pitch_bend.hpp"
 #include "bmmidi/preset_number.hpp"
 #include "bmmidi/status.hpp"
+#include "bmmidi/sysex.hpp"
 #include "bmmidi/time.hpp"
 
 // TODO: Audit when library is finished to make sure this includes all
