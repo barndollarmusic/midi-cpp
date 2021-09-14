@@ -6,6 +6,7 @@ bmmidi_header_library(Lib
     control.hpp
     data_value.hpp
     key_number.hpp
+    msg_reference.hpp
     msg.hpp
     pitch_bend.hpp
     preset_number.hpp
@@ -27,6 +28,10 @@ if(BMMidi_ENABLE_TESTING)
 
   bmmidi_gtest(KeyNumberTest key_number_test.cpp)
   target_link_libraries(BMMidi_KeyNumberTest
+      PRIVATE BMMidi::Lib)
+
+  bmmidi_gtest(MsgReferenceTest msg_reference_test.cpp)
+  target_link_libraries(BMMidi_MsgReferenceTest
       PRIVATE BMMidi::Lib)
 
   bmmidi_gtest(MsgTest msg_test.cpp)
