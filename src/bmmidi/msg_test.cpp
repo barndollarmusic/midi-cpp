@@ -221,6 +221,7 @@ TEST(MsgRef, WorksForMsg) {
 }
 
 // TODO: Add tests for MsgView and MsgRef referring to SysExMsg.
+// TODO: Add at least one test with TimedMsgView, TimedMsgRef.
 
 TEST(ChanMsgView, CanReferToRawBytes) {
   // (Note On, channel 3, key 69, velocity 90).
@@ -257,6 +258,46 @@ TEST(ChanMsgRef, CanReferToRawBytes) {
   chanMsgRef.setChannel(bmmidi::Channel::index(13));
   EXPECT_THAT(chanMsgRef.channel().displayNumber(), Eq(14));
   EXPECT_THAT(srcBytes[0], Eq(0x9D));
+}
+
+TEST(NoteMsgView, CanReferToRawBytes) {
+  // (Note On, channel 3, key 69, velocity 90).
+  const std::uint8_t srcBytes[] = {0x92, 0x45, 0x5A};
+  bmmidi::NoteMsgView noteMsgView{srcBytes, sizeof(srcBytes)};
+
+  // Can use NoteMsg accessors:
+  EXPECT_THAT(noteMsgView.isNoteOn(), IsTrue());
+  EXPECT_THAT(noteMsgView.isNoteOff(), IsFalse());
+  EXPECT_THAT(noteMsgView.key().value(), Eq(69));
+  EXPECT_THAT(noteMsgView.velocity().value(), Eq(90));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(noteMsgView.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(noteMsgView.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(noteMsgView.data1(), Eq(bmmidi::DataValue{69}));
+  EXPECT_THAT(noteMsgView.data2(), Eq(bmmidi::DataValue{90}));
+}
+
+TEST(NoteMsgView, TreatsNoteOnZeroVelocityAsNoteOff) {
+  // (Note "On", channel 3, key 69, velocity 0).
+  const std::uint8_t srcBytes[] = {0x92, 0x45, 0x00};
+  bmmidi::NoteMsgView noteMsgView{srcBytes, sizeof(srcBytes)};
+
+  // Can use NoteMsg accessors:
+  EXPECT_THAT(noteMsgView.isNoteOn(), IsFalse());
+  EXPECT_THAT(noteMsgView.isNoteOff(), IsTrue());  // Treats as note off!
+  EXPECT_THAT(noteMsgView.key().value(), Eq(69));
+  EXPECT_THAT(noteMsgView.velocity().value(), Eq(0));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(noteMsgView.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(noteMsgView.status(),  // But status is still kNoteOn.
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(noteMsgView.data1(), Eq(bmmidi::DataValue{69}));
+  EXPECT_THAT(noteMsgView.data2(), Eq(bmmidi::DataValue{0}));
 }
 
 TEST(NoteMsgView, ShouldConvertFromMsgView) {
@@ -365,6 +406,64 @@ TEST(NoteMsgView, ShouldYieldCorrectData) {
   }
 }
 
+TEST(NoteMsgRef, CanReferToRawBytes) {
+  // (Note Off, channel 3, key 69, velocity 90).
+  std::uint8_t srcBytes[] = {0x82, 0x45, 0x5A};
+  bmmidi::NoteMsgRef noteMsgRef{srcBytes, sizeof(srcBytes)};
+
+  // Can use NoteMsg accessors:
+  EXPECT_THAT(noteMsgRef.isNoteOn(), IsFalse());
+  EXPECT_THAT(noteMsgRef.isNoteOff(), IsTrue());
+  EXPECT_THAT(noteMsgRef.key().value(), Eq(69));
+  EXPECT_THAT(noteMsgRef.velocity().value(), Eq(90));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(noteMsgRef.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(noteMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOff,
+                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(noteMsgRef.data1(), Eq(bmmidi::DataValue{69}));
+  EXPECT_THAT(noteMsgRef.data2(), Eq(bmmidi::DataValue{90}));
+
+  // Can mutate:
+  noteMsgRef.setType(bmmidi::MsgType::kNoteOn);
+  noteMsgRef.setChannel(bmmidi::Channel::index(13));
+  noteMsgRef.setKey(bmmidi::KeyNumber::key(60));
+  noteMsgRef.setVelocity(bmmidi::DataValue{22});
+
+  EXPECT_THAT(noteMsgRef.isNoteOn(), IsTrue());
+  EXPECT_THAT(noteMsgRef.isNoteOff(), IsFalse());
+  EXPECT_THAT(noteMsgRef.key().value(), Eq(60));
+  EXPECT_THAT(noteMsgRef.velocity().value(), Eq(22));
+  EXPECT_THAT(noteMsgRef.channel().displayNumber(), Eq(14));
+  EXPECT_THAT(noteMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                      bmmidi::Channel::index(13))));
+  EXPECT_THAT(noteMsgRef.data1(), Eq(bmmidi::DataValue{60}));
+  EXPECT_THAT(noteMsgRef.data2(), Eq(bmmidi::DataValue{22}));
+}
+
+TEST(NoteMsgRef, ShouldConvertFromMsgRef) {
+  // A more generic MsgRef (which is read-write)...
+  // (Note On, channel 3, key 69, velocity 90).
+  std::uint8_t srcBytes[] = {0x92, 0x45, 0x5A};
+  bmmidi::MsgRef msgRef{srcBytes, sizeof(srcBytes)};
+
+  // ...should be convertible to the more specific NoteMsgRef...
+  auto noteMsgRef = msgRef.asRef<bmmidi::NoteMsgRef>();
+
+  EXPECT_THAT(noteMsgRef.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(noteMsgRef.isNoteOff(), IsFalse());
+  EXPECT_THAT(noteMsgRef.isNoteOn(), IsTrue());
+  EXPECT_THAT(noteMsgRef.key().value(), Eq(69));
+  EXPECT_THAT(noteMsgRef.velocity().value(), Eq(90));
+
+  // ...which is also read-write.
+  noteMsgRef.setChannel(bmmidi::Channel::index(6));
+  EXPECT_THAT(noteMsgRef.channel().displayNumber(), Eq(7));
+  EXPECT_THAT(srcBytes[0], Eq(0x96));
+}
+
 TEST(NoteMsgRef, ShouldConvertFromMsg) {
   // A more generic Msg (which is read-write)...
   // (Note On, channel 3, key 69, velocity 90).
@@ -387,27 +486,6 @@ TEST(NoteMsgRef, ShouldConvertFromMsg) {
   noteOnRef.setVelocity(bmmidi::DataValue{23});
   EXPECT_THAT(noteOnRef.velocity().value(), Eq(23));
   EXPECT_THAT(msg.data2().value(), Eq(23));
-}
-
-TEST(NoteMsgRef, ShouldConvertFromMsgRef) {
-  // A more generic MsgRef (which is read-write)...
-  // (Note On, channel 3, key 69, velocity 90).
-  std::uint8_t srcBytes[] = {0x92, 0x45, 0x5A};
-  bmmidi::MsgRef msgRef{srcBytes, sizeof(srcBytes)};
-
-  // ...should be convertible to the more specific NoteMsgRef...
-  auto noteMsgRef = msgRef.asRef<bmmidi::NoteMsgRef>();
-
-  EXPECT_THAT(noteMsgRef.channel().displayNumber(), Eq(3));
-  EXPECT_THAT(noteMsgRef.isNoteOff(), IsFalse());
-  EXPECT_THAT(noteMsgRef.isNoteOn(), IsTrue());
-  EXPECT_THAT(noteMsgRef.key().value(), Eq(69));
-  EXPECT_THAT(noteMsgRef.velocity().value(), Eq(90));
-
-  // ...which is also read-write.
-  noteMsgRef.setChannel(bmmidi::Channel::index(6));
-  EXPECT_THAT(noteMsgRef.channel().displayNumber(), Eq(7));
-  EXPECT_THAT(srcBytes[0], Eq(0x96));
 }
 
 TEST(Msg, ShouldBePackedSize) {
@@ -778,6 +856,68 @@ TEST(ChanMsg, ShouldConvertFromThreeByteMsg) {
                                       bmmidi::Channel::index(2))));
 }
 
+TEST(NoteMsg, ShouldCreateNoteOn) {
+  // (Note On, channel 3, key 69, velocity 90).
+  auto noteMsg = bmmidi::NoteMsg::on(
+      bmmidi::Channel::index(2), bmmidi::KeyNumber::key(69), bmmidi::DataValue{90});
+
+  EXPECT_THAT(noteMsg.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(noteMsg.isNoteOff(), IsFalse());
+  EXPECT_THAT(noteMsg.isNoteOn(), IsTrue());
+  EXPECT_THAT(noteMsg.key().value(), Eq(69));
+  EXPECT_THAT(noteMsg.velocity().value(), Eq(90));
+
+  // Can then mutate this into a note off.
+  noteMsg.setType(bmmidi::MsgType::kNoteOff);
+  noteMsg.setChannel(bmmidi::Channel::index(13));
+  noteMsg.setKey(bmmidi::KeyNumber::key(60));
+  noteMsg.setVelocity(bmmidi::DataValue{22});
+
+  EXPECT_THAT(noteMsg.channel().displayNumber(), Eq(14));
+  EXPECT_THAT(noteMsg.isNoteOff(), IsTrue());
+  EXPECT_THAT(noteMsg.isNoteOn(), IsFalse());
+  EXPECT_THAT(noteMsg.key().value(), Eq(60));
+  EXPECT_THAT(noteMsg.velocity().value(), Eq(22));
+}
+
+TEST(NoteMsg, ShouldCreateNoteOffDefaultVelocity) {
+  // If no 3rd argument is given, should default to velocity 0.
+  // (Note Off, channel 3, key 69, velocity 0).
+  auto noteMsg =
+      bmmidi::NoteMsg::off(bmmidi::Channel::index(2), bmmidi::KeyNumber::key(69));
+
+  EXPECT_THAT(noteMsg.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(noteMsg.isNoteOff(), IsTrue());
+  EXPECT_THAT(noteMsg.isNoteOn(), IsFalse());
+  EXPECT_THAT(noteMsg.key().value(), Eq(69));
+  EXPECT_THAT(noteMsg.velocity().value(), Eq(0));
+
+  // Can then mutate this into a note on.
+  noteMsg.setType(bmmidi::MsgType::kNoteOn);
+  noteMsg.setChannel(bmmidi::Channel::index(13));
+  noteMsg.setKey(bmmidi::KeyNumber::key(60));
+  noteMsg.setVelocity(bmmidi::DataValue{22});
+
+  EXPECT_THAT(noteMsg.channel().displayNumber(), Eq(14));
+  EXPECT_THAT(noteMsg.isNoteOff(), IsFalse());
+  EXPECT_THAT(noteMsg.isNoteOn(), IsTrue());
+  EXPECT_THAT(noteMsg.key().value(), Eq(60));
+  EXPECT_THAT(noteMsg.velocity().value(), Eq(22));
+}
+
+TEST(NoteMsg, ShouldCreateNoteOffSpecificVelocity) {
+  // Can provide a 3rd argument for note off velocity.
+  // (Note Off, channel 3, key 69, velocity 88).
+  auto noteMsg = bmmidi::NoteMsg::off(
+      bmmidi::Channel::index(2), bmmidi::KeyNumber::key(69), bmmidi::DataValue{88});
+
+  EXPECT_THAT(noteMsg.channel().displayNumber(), Eq(3));
+  EXPECT_THAT(noteMsg.isNoteOff(), IsTrue());
+  EXPECT_THAT(noteMsg.isNoteOn(), IsFalse());
+  EXPECT_THAT(noteMsg.key().value(), Eq(69));
+  EXPECT_THAT(noteMsg.velocity().value(), Eq(88));
+}
+
 TEST(NoteMsg, ShouldConvertFromMsg) {
   // A more generic Msg...
   // (Note On, channel 3, key 69, velocity 90).
@@ -803,11 +943,5 @@ TEST(NoteMsg, ShouldConvertFromMsg) {
   // ...and changes to it should NOT affect original Msg.
   EXPECT_THAT(msg.data2().value(), Eq(90));
 }
-
-// TODO: Add more thorough tests for:
-//   - NoteMsgView, NoteMsgRef
-//   - NoteMsg
-
-// TODO: Add at least one test with TimedMsgView, TimedMsgRef.
 
 }  // namespace

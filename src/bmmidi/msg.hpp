@@ -294,7 +294,7 @@ public:
       typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setKey(KeyNumber key) {
     assert(key.isNormal());
-    this->setData1(DataValue{static_cast<std::int8_t>(this->key.value())});
+    this->setData1(DataValue{static_cast<std::int8_t>(key.value())});
   }
 
   /** Returns [0, 127] velocity value. */
