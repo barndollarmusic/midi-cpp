@@ -30,10 +30,14 @@ TEST(Msg, OneByteVersionHasStatus) {
   EXPECT_THAT(msg.status(),
       Eq(bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)));
 
+  EXPECT_THAT(msg.rawBytes()[0], Eq(0xF6));
+
   msg.setStatus(bmmidi::Status::system(bmmidi::MsgType::kSystemReset));
   EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kSystemReset));
   EXPECT_THAT(msg.status(),
       Eq(bmmidi::Status::system(bmmidi::MsgType::kSystemReset)));
+
+  EXPECT_THAT(msg.rawBytes()[0], Eq(0xFF));
 }
 
 TEST(Msg, TwoByteVersionHasData1) {
@@ -48,12 +52,18 @@ TEST(Msg, TwoByteVersionHasData1) {
                                       bmmidi::Channel::index(12))));
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{57}));
 
+  EXPECT_THAT(msg.rawBytes()[0], Eq(0xCC));
+  EXPECT_THAT(msg.rawBytes()[1], Eq(0x39));
+
   msg.setData1(bmmidi::DataValue{63});
   EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kProgramChange));
   EXPECT_THAT(msg.status(),
       Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
                                       bmmidi::Channel::index(12))));
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{63}));
+
+  EXPECT_THAT(msg.rawBytes()[0], Eq(0xCC));
+  EXPECT_THAT(msg.rawBytes()[1], Eq(0x3F));
 
   msg.setStatus(
       bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
@@ -63,6 +73,9 @@ TEST(Msg, TwoByteVersionHasData1) {
       Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
                                       bmmidi::Channel::index(3))));
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{63}));
+
+  EXPECT_THAT(msg.rawBytes()[0], Eq(0xD3));
+  EXPECT_THAT(msg.rawBytes()[1], Eq(0x3F));
 }
 
 TEST(Msg, ThreeByteVersionHasData2) {
@@ -79,6 +92,10 @@ TEST(Msg, ThreeByteVersionHasData2) {
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{11}));
   EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{76}));
 
+  EXPECT_THAT(msg.rawBytes()[0], Eq(0xB9));
+  EXPECT_THAT(msg.rawBytes()[1], Eq(0x0B));
+  EXPECT_THAT(msg.rawBytes()[2], Eq(0x4C));
+
   msg.setData2(bmmidi::DataValue{27});
   EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kControlChange));
   EXPECT_THAT(msg.status(),
@@ -87,6 +104,10 @@ TEST(Msg, ThreeByteVersionHasData2) {
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{11}));
   EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{27}));
 
+  EXPECT_THAT(msg.rawBytes()[0], Eq(0xB9));
+  EXPECT_THAT(msg.rawBytes()[1], Eq(0x0B));
+  EXPECT_THAT(msg.rawBytes()[2], Eq(0x1B));
+
   msg.setData1(bmmidi::controlToDataValue(bmmidi::Control::kModWheel));
   EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kControlChange));
   EXPECT_THAT(msg.status(),
@@ -94,6 +115,10 @@ TEST(Msg, ThreeByteVersionHasData2) {
                                       bmmidi::Channel::index(9))));
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{1}));
   EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{27}));
+
+  EXPECT_THAT(msg.rawBytes()[0], Eq(0xB9));
+  EXPECT_THAT(msg.rawBytes()[1], Eq(0x01));
+  EXPECT_THAT(msg.rawBytes()[2], Eq(0x1B));
 
   msg.setStatus(
       bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
@@ -104,6 +129,10 @@ TEST(Msg, ThreeByteVersionHasData2) {
                                       bmmidi::Channel::index(3))));
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{1}));
   EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{27}));
+
+  EXPECT_THAT(msg.rawBytes()[0], Eq(0xA3));
+  EXPECT_THAT(msg.rawBytes()[1], Eq(0x01));
+  EXPECT_THAT(msg.rawBytes()[2], Eq(0x1B));
 }
 
 TEST(Msg, OneByteVersionSupportsEqualityOperations) {
@@ -279,6 +308,9 @@ TEST(ChanMsg, SupportsTwoByteMsgs) {
                                       bmmidi::Channel::index(12))));
   EXPECT_THAT(chanMsg.data1(), Eq(bmmidi::DataValue{57}));
 
+  EXPECT_THAT(chanMsg.rawBytes()[0], Eq(0xCC));
+  EXPECT_THAT(chanMsg.rawBytes()[1], Eq(0x39));
+
   // Can mutate channel:
   chanMsg.setChannel(bmmidi::Channel::index(2));
   
@@ -288,6 +320,9 @@ TEST(ChanMsg, SupportsTwoByteMsgs) {
       Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
                                       bmmidi::Channel::index(2))));
   EXPECT_THAT(chanMsg.data1(), Eq(bmmidi::DataValue{57}));
+
+  EXPECT_THAT(chanMsg.rawBytes()[0], Eq(0xC2));
+  EXPECT_THAT(chanMsg.rawBytes()[1], Eq(0x39));
 }
 
 TEST(ChanMsg, SupportsThreeByteMsgs) {
@@ -309,6 +344,10 @@ TEST(ChanMsg, SupportsThreeByteMsgs) {
   EXPECT_THAT(chanMsg.data1(), Eq(bmmidi::DataValue{69}));
   EXPECT_THAT(chanMsg.data2(), Eq(bmmidi::DataValue{90}));
 
+  EXPECT_THAT(chanMsg.rawBytes()[0], Eq(0x92));
+  EXPECT_THAT(chanMsg.rawBytes()[1], Eq(0x45));
+  EXPECT_THAT(chanMsg.rawBytes()[2], Eq(0x5A));
+
   // Can mutate channel:
   chanMsg.setChannel(bmmidi::Channel::index(13));
   
@@ -319,6 +358,10 @@ TEST(ChanMsg, SupportsThreeByteMsgs) {
                                       bmmidi::Channel::index(13))));
   EXPECT_THAT(chanMsg.data1(), Eq(bmmidi::DataValue{69}));
   EXPECT_THAT(chanMsg.data2(), Eq(bmmidi::DataValue{90}));
+
+  EXPECT_THAT(chanMsg.rawBytes()[0], Eq(0x9D));
+  EXPECT_THAT(chanMsg.rawBytes()[1], Eq(0x45));
+  EXPECT_THAT(chanMsg.rawBytes()[2], Eq(0x5A));
 }
 
 TEST(ChanMsg, ShouldConvertFromTwoByteMsg) {
@@ -390,6 +433,10 @@ TEST(NoteMsg, ShouldCreateNoteOn) {
   EXPECT_THAT(noteMsg.key().value(), Eq(69));
   EXPECT_THAT(noteMsg.velocity().value(), Eq(90));
 
+  EXPECT_THAT(noteMsg.rawBytes()[0], Eq(0x92));
+  EXPECT_THAT(noteMsg.rawBytes()[1], Eq(0x45));
+  EXPECT_THAT(noteMsg.rawBytes()[2], Eq(0x5A));
+
   // Can then mutate this into a note off.
   noteMsg.setType(bmmidi::MsgType::kNoteOff);
   noteMsg.setChannel(bmmidi::Channel::index(13));
@@ -401,6 +448,10 @@ TEST(NoteMsg, ShouldCreateNoteOn) {
   EXPECT_THAT(noteMsg.isNoteOn(), IsFalse());
   EXPECT_THAT(noteMsg.key().value(), Eq(60));
   EXPECT_THAT(noteMsg.velocity().value(), Eq(22));
+
+  EXPECT_THAT(noteMsg.rawBytes()[0], Eq(0x8D));
+  EXPECT_THAT(noteMsg.rawBytes()[1], Eq(0x3C));
+  EXPECT_THAT(noteMsg.rawBytes()[2], Eq(0x16));
 }
 
 TEST(NoteMsg, ShouldCreateNoteOffDefaultVelocity) {
@@ -415,6 +466,10 @@ TEST(NoteMsg, ShouldCreateNoteOffDefaultVelocity) {
   EXPECT_THAT(noteMsg.key().value(), Eq(69));
   EXPECT_THAT(noteMsg.velocity().value(), Eq(0));
 
+  EXPECT_THAT(noteMsg.rawBytes()[0], Eq(0x82));
+  EXPECT_THAT(noteMsg.rawBytes()[1], Eq(0x45));
+  EXPECT_THAT(noteMsg.rawBytes()[2], Eq(0x00));
+
   // Can then mutate this into a note on.
   noteMsg.setType(bmmidi::MsgType::kNoteOn);
   noteMsg.setChannel(bmmidi::Channel::index(13));
@@ -426,6 +481,10 @@ TEST(NoteMsg, ShouldCreateNoteOffDefaultVelocity) {
   EXPECT_THAT(noteMsg.isNoteOn(), IsTrue());
   EXPECT_THAT(noteMsg.key().value(), Eq(60));
   EXPECT_THAT(noteMsg.velocity().value(), Eq(22));
+
+  EXPECT_THAT(noteMsg.rawBytes()[0], Eq(0x9D));
+  EXPECT_THAT(noteMsg.rawBytes()[1], Eq(0x3C));
+  EXPECT_THAT(noteMsg.rawBytes()[2], Eq(0x16));
 }
 
 TEST(NoteMsg, ShouldCreateNoteOffSpecificVelocity) {
@@ -439,6 +498,10 @@ TEST(NoteMsg, ShouldCreateNoteOffSpecificVelocity) {
   EXPECT_THAT(noteMsg.isNoteOn(), IsFalse());
   EXPECT_THAT(noteMsg.key().value(), Eq(69));
   EXPECT_THAT(noteMsg.velocity().value(), Eq(88));
+
+  EXPECT_THAT(noteMsg.rawBytes()[0], Eq(0x82));
+  EXPECT_THAT(noteMsg.rawBytes()[1], Eq(0x45));
+  EXPECT_THAT(noteMsg.rawBytes()[2], Eq(0x58));
 }
 
 TEST(NoteMsg, ShouldConvertFromMsg) {
@@ -476,6 +539,10 @@ TEST(KeyPressureMsg, ShouldCreate) {
   EXPECT_THAT(kpMsg.key().value(), Eq(69));
   EXPECT_THAT(kpMsg.pressure().value(), Eq(90));
 
+  EXPECT_THAT(kpMsg.rawBytes()[0], Eq(0xA2));
+  EXPECT_THAT(kpMsg.rawBytes()[1], Eq(0x45));
+  EXPECT_THAT(kpMsg.rawBytes()[2], Eq(0x5A));
+
   // Can mutate:
   kpMsg.setChannel(bmmidi::Channel::index(13));
   kpMsg.setKey(bmmidi::KeyNumber::key(60));
@@ -484,6 +551,10 @@ TEST(KeyPressureMsg, ShouldCreate) {
   EXPECT_THAT(kpMsg.channel().displayNumber(), Eq(14));
   EXPECT_THAT(kpMsg.key().value(), Eq(60));
   EXPECT_THAT(kpMsg.pressure().value(), Eq(22));
+
+  EXPECT_THAT(kpMsg.rawBytes()[0], Eq(0xAD));
+  EXPECT_THAT(kpMsg.rawBytes()[1], Eq(0x3C));
+  EXPECT_THAT(kpMsg.rawBytes()[2], Eq(0x16));
 }
 
 TEST(KeyPressureMsg, ShouldConvertFromMsg) {
@@ -519,6 +590,10 @@ TEST(ControlChangeMsg, ShouldCreate) {
   EXPECT_THAT(ccMsg.control(), Eq(bmmidi::Control::kExpression));
   EXPECT_THAT(ccMsg.value(), Eq(bmmidi::DataValue{90}));
 
+  EXPECT_THAT(ccMsg.rawBytes()[0], Eq(0xB2));
+  EXPECT_THAT(ccMsg.rawBytes()[1], Eq(0x0B));
+  EXPECT_THAT(ccMsg.rawBytes()[2], Eq(0x5A));
+
   // Can mutate:
   ccMsg.setChannel(bmmidi::Channel::index(13));
   ccMsg.setControl(bmmidi::Control::kModWheel);
@@ -527,6 +602,10 @@ TEST(ControlChangeMsg, ShouldCreate) {
   EXPECT_THAT(ccMsg.channel().displayNumber(), Eq(14));
   EXPECT_THAT(ccMsg.control(), Eq(bmmidi::Control::kModWheel));
   EXPECT_THAT(ccMsg.value(), Eq(bmmidi::DataValue{22}));
+
+  EXPECT_THAT(ccMsg.rawBytes()[0], Eq(0xBD));
+  EXPECT_THAT(ccMsg.rawBytes()[1], Eq(0x01));
+  EXPECT_THAT(ccMsg.rawBytes()[2], Eq(0x16));
 }
 
 TEST(ControlChangeMsg, ShouldConvertFromMsg) {
@@ -561,12 +640,18 @@ TEST(ProgramChangeMsg, ShouldCreate) {
   EXPECT_THAT(pcMsg.channel().displayNumber(), Eq(3));
   EXPECT_THAT(pcMsg.program().displayNumber(), Eq(57));
 
+  EXPECT_THAT(pcMsg.rawBytes()[0], Eq(0xC2));
+  EXPECT_THAT(pcMsg.rawBytes()[1], Eq(0x38));
+
   // Can mutate:
   pcMsg.setChannel(bmmidi::Channel::index(13));
   pcMsg.setProgram(bmmidi::PresetNumber::index(22));
 
   EXPECT_THAT(pcMsg.channel().displayNumber(), Eq(14));
   EXPECT_THAT(pcMsg.program().displayNumber(), Eq(23));
+
+  EXPECT_THAT(pcMsg.rawBytes()[0], Eq(0xCD));
+  EXPECT_THAT(pcMsg.rawBytes()[1], Eq(0x16));
 }
 
 TEST(ProgramChangeMsg, ShouldConvertFromMsg) {
@@ -598,12 +683,18 @@ TEST(ChanPressureMsg, ShouldCreate) {
   EXPECT_THAT(cpMsg.channel().displayNumber(), Eq(3));
   EXPECT_THAT(cpMsg.pressure().value(), Eq(56));
 
+  EXPECT_THAT(cpMsg.rawBytes()[0], Eq(0xD2));
+  EXPECT_THAT(cpMsg.rawBytes()[1], Eq(0x38));
+
   // Can mutate:
   cpMsg.setChannel(bmmidi::Channel::index(13));
   cpMsg.setPressure(bmmidi::DataValue{22});
 
   EXPECT_THAT(cpMsg.channel().displayNumber(), Eq(14));
   EXPECT_THAT(cpMsg.pressure().value(), Eq(22));
+
+  EXPECT_THAT(cpMsg.rawBytes()[0], Eq(0xDD));
+  EXPECT_THAT(cpMsg.rawBytes()[1], Eq(0x16));
 }
 
 TEST(ChanPressureMsg, ShouldConvertFromMsg) {
