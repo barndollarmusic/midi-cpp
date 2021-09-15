@@ -58,4 +58,73 @@ TEST(Manufacturer, SupportsEqualityOperations) {
   EXPECT_THAT(alsoSeqCircuits != kSeqCircuits, IsFalse());
 }
 
+TEST(UniversalType, ProvidesCategoryAndSubIds) {
+  EXPECT_THAT(bmmidi::universal::kSampleDumpHeader.category(),
+              Eq(bmmidi::UniversalCategory::kNonRealTime));
+  EXPECT_THAT(bmmidi::universal::kSampleDumpHeader.subId1(), Eq(0x01));
+  EXPECT_THAT(bmmidi::universal::kSampleDumpHeader.hasSubId2(), IsFalse());
+
+  EXPECT_THAT(bmmidi::universal::kTuningBulkDumpReq.category(),
+              Eq(bmmidi::UniversalCategory::kNonRealTime));
+  EXPECT_THAT(bmmidi::universal::kTuningBulkDumpReq.subId1(), Eq(0x08));
+  EXPECT_THAT(bmmidi::universal::kTuningBulkDumpReq.hasSubId2(), IsTrue());
+  EXPECT_THAT(bmmidi::universal::kTuningBulkDumpReq.subId2(), Eq(0x00));
+
+  EXPECT_THAT(bmmidi::universal::kMtcFull.category(),
+              Eq(bmmidi::UniversalCategory::kRealTime));
+  EXPECT_THAT(bmmidi::universal::kMtcFull.subId1(), Eq(0x01));
+  EXPECT_THAT(bmmidi::universal::kMtcFull.hasSubId2(), IsTrue());
+  EXPECT_THAT(bmmidi::universal::kMtcFull.subId2(), Eq(0x01));
+}
+
+TEST(Device, ProvidesAllCallDevice) {
+  const auto allDevice = bmmidi::Device::all();
+
+  EXPECT_THAT(allDevice.isAll(), IsTrue());
+  EXPECT_THAT(allDevice.value(), Eq(127));
+}
+
+TEST(Device, SupportsSpecificDeviceIds) {
+  const auto device32 = bmmidi::Device::id(32);
+
+  EXPECT_THAT(device32.isAll(), IsFalse());
+  EXPECT_THAT(device32.value(), Eq(32));
+}
+
+TEST(Device, SupportsEqualityOperations) {
+  const auto allDevice = bmmidi::Device::all();
+  const auto alsoAllDevice = bmmidi::Device::all();
+
+  const auto device32 = bmmidi::Device::id(32);
+  const auto alsoDevice32 = bmmidi::Device::id(32);
+
+  const auto device33 = bmmidi::Device::id(33);
+
+  EXPECT_THAT(allDevice == allDevice, IsTrue());
+  EXPECT_THAT(allDevice != allDevice, IsFalse());
+
+  EXPECT_THAT(device32 == device32, IsTrue());
+  EXPECT_THAT(device32 != device32, IsFalse());
+
+  EXPECT_THAT(allDevice == alsoAllDevice, IsTrue());
+  EXPECT_THAT(alsoAllDevice == allDevice, IsTrue());
+  EXPECT_THAT(allDevice != alsoAllDevice, IsFalse());
+  EXPECT_THAT(alsoAllDevice != allDevice, IsFalse());
+
+  EXPECT_THAT(device32 == alsoDevice32, IsTrue());
+  EXPECT_THAT(alsoDevice32 == device32, IsTrue());
+  EXPECT_THAT(device32 != alsoDevice32, IsFalse());
+  EXPECT_THAT(alsoDevice32 != device32, IsFalse());
+
+  EXPECT_THAT(device32 == allDevice, IsFalse());
+  EXPECT_THAT(allDevice == device32, IsFalse());
+  EXPECT_THAT(device32 != allDevice, IsTrue());
+  EXPECT_THAT(allDevice != device32, IsTrue());
+
+  EXPECT_THAT(device32 == device33, IsFalse());
+  EXPECT_THAT(device33 == device32, IsFalse());
+  EXPECT_THAT(device32 != device33, IsTrue());
+  EXPECT_THAT(device33 != device32, IsTrue());
+}
+
 }  // namespace
