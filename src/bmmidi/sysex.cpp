@@ -54,6 +54,15 @@ void writeUniversalHeaderBytes(UniversalType type, Device device, std::uint8_t* 
   }
 }
 
+bool hasSubId2(UniversalCategory category, std::uint8_t subId1) {
+  // See https://www.midi.org/specifications-old/item/table-4-universal-system-exclusive-messages.
+  if (category == UniversalCategory::kNonRealTime) {
+    return (0x03 < subId1) && (subId1 < 0x7B);
+  } else {
+    return (subId1 != 0x00);
+  }
+}
+
 }  // namespace
 
 MfrSysEx::MfrSysEx(Manufacturer manufacturer, int numPayloadBytes)
@@ -129,8 +138,7 @@ MfrSysEx MfrSysExBuilder::buildAsRefToBytes(std::uint8_t* rawMsgBytes, int numMs
 }
 
 UniversalSysEx::UniversalSysEx(UniversalType type, Device device, int numPayloadBytes)
-    : type_{type},
-      numMsgBytes_{numMsgBytesFor(type, numPayloadBytes)},
+    : numMsgBytes_{numMsgBytesFor(type, numPayloadBytes)},
       heapAllocatedBytes_{std::make_unique<std::uint8_t[]>(numMsgBytes_)},
       msgBytes_{heapAllocatedBytes_.get()} {
   // (Input arguments already validated by UniversalSysExBuilder).
@@ -141,8 +149,7 @@ UniversalSysEx::UniversalSysEx(UniversalType type, Device device, int numPayload
 
 UniversalSysEx::UniversalSysEx(
     UniversalType type, Device device, std::uint8_t* rawMsgBytes, int numMsgBytes)
-    : type_{type},
-      numMsgBytes_{numMsgBytes},
+    : numMsgBytes_{numMsgBytes},
       heapAllocatedBytes_{},
       msgBytes_{rawMsgBytes} {
   // (Input arguments already validated by UniversalSysExBuilder).
@@ -151,9 +158,31 @@ UniversalSysEx::UniversalSysEx(
   writeUniversalHeaderBytes(type, device, msgBytes_);
 }
 
+bool UniversalSysEx::typeHasSubId2() const {
+  return hasSubId2(category(), msgBytes_[3]);
+}
+
 int UniversalSysEx::numHeaderBytes() const {
   return kOneSysExHdrStatusByte
-      + (type_.hasSubId2() ? kNumUniversalHdrBytesTwoSubIds : kNumUniversalHdrBytesOneSubId);
+      + (typeHasSubId2() ? kNumUniversalHdrBytesTwoSubIds : kNumUniversalHdrBytesOneSubId);
+}
+
+UniversalCategory UniversalSysEx::category() const {
+  return static_cast<UniversalCategory>(msgBytes_[1]);
+}
+
+UniversalType UniversalSysEx::type() const {
+  const auto subId1 = msgBytes_[3];
+
+  if (category() == UniversalCategory::kNonRealTime) {
+    return typeHasSubId2()
+        ? UniversalType::nonRealTime(subId1, msgBytes_[4])
+        : UniversalType::nonRealTime(subId1);
+  } else {
+    return typeHasSubId2()
+        ? UniversalType::realTime(subId1, msgBytes_[4])
+        : UniversalType::realTime(subId1);
+  }
 }
 
 Device UniversalSysEx::device() const {

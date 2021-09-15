@@ -646,8 +646,11 @@ public:
   UniversalSysEx(UniversalSysEx&&) = default;
   UniversalSysEx& operator=(UniversalSysEx&&) = delete;
 
+  /** Returns the category of universal message this is (non-realtime or realtime). */
+  UniversalCategory category() const;
+
   /** Returns the type of universal message this is. */
-  UniversalType type() const { return type_; }
+  UniversalType type() const;
 
   /**
    * Returns the device that should respond to this message (or special "all"
@@ -712,9 +715,8 @@ private:
   explicit UniversalSysEx(
       UniversalType type, Device device, std::uint8_t* rawMsgBytes, int numMsgBytes);
 
+  bool typeHasSubId2() const;
   int numHeaderBytes() const;
-
-  UniversalType type_;
 
   int numMsgBytes_;
   std::unique_ptr<std::uint8_t[]> heapAllocatedBytes_;  // Only set if this instance owns storage.

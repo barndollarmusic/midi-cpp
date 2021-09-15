@@ -257,6 +257,7 @@ TEST(UniversalSysEx, WorksForOneSubIdTypeWithinBuffer) {
   std::uint8_t buffer[20] = {};
 
   auto msg = builder.buildAsRefToBytes(&buffer[3], 6);
+  EXPECT_THAT(msg.category(), Eq(bmmidi::UniversalCategory::kNonRealTime));
   EXPECT_THAT(msg.type(), Eq(bmmidi::universal::kAck));
   EXPECT_THAT(msg.device(), Eq(bmmidi::Device::all()));
 
@@ -278,6 +279,7 @@ TEST(UniversalSysEx, WorksForOneSubIdTypeWithinBuffer) {
 
   // Test read-only access through const reference:
   const auto& msgRef = msg;
+  EXPECT_THAT(msgRef.category(), Eq(bmmidi::UniversalCategory::kNonRealTime));
   EXPECT_THAT(msgRef.type(), Eq(bmmidi::universal::kAck));
   EXPECT_THAT(msgRef.device(), Eq(bmmidi::Device::all()));
 
@@ -301,6 +303,7 @@ TEST(UniversalSysEx, WorksForTwoSubIdTypeOnHeap) {
   EXPECT_THAT(builder.numMsgBytesIncludingEox(), Eq(7));
 
   auto msg = builder.buildOnHeap();
+  EXPECT_THAT(msg.category(), Eq(bmmidi::UniversalCategory::kNonRealTime));
   EXPECT_THAT(msg.type(), Eq(bmmidi::universal::kTuningBulkDumpReq));
   EXPECT_THAT(msg.device().value(), Eq(22));
 
@@ -318,6 +321,52 @@ TEST(UniversalSysEx, WorksForTwoSubIdTypeOnHeap) {
   EXPECT_THAT(msg.rawMsgBytes()[5], Eq(0x04));  // Payload [0] (tuning program #).
 
   EXPECT_THAT(msg.rawMsgBytes()[6], Eq(0xF7));  // EOX.
+}
+
+TEST(UniversalSysEx, WorksForRealtime) {
+  const auto type = bmmidi::universal::kTuningRtNoteChange;
+  const auto device22 = bmmidi::Device::id(22);  // 0x16.
+
+  auto builder = bmmidi::UniversalSysExBuilder{type, device22}.withNumPayloadBytes(6);
+  EXPECT_THAT(builder.numMsgBytesIncludingEox(), Eq(12));
+
+  auto msg = builder.buildOnHeap();
+  EXPECT_THAT(msg.category(), Eq(bmmidi::UniversalCategory::kRealTime));
+  EXPECT_THAT(msg.type(), Eq(bmmidi::universal::kTuningRtNoteChange));
+  EXPECT_THAT(msg.device().value(), Eq(22));
+
+  // Can fill in the payload bytes.
+  EXPECT_THAT(msg.numPayloadBytes(), Eq(6));
+  msg.rawPayloadBytes()[0] = 0x04;  // Tuning program number.
+  msg.rawPayloadBytes()[1] = 0x01;  // # of notes being changed.
+  msg.rawPayloadBytes()[2] = 0x3C;  // MIDI key (60 = middle C).
+
+  msg.rawPayloadBytes()[3] = 0x3B;  // MIDI key of nearest 12-tet below target (59).
+
+  // Next 2 bytes are fraction of 100 cents above the previous MIDI key,
+  // here 3427 * 100 / (2^14) = 20.916748... cents.
+  // With A4=440 Hz global tuning, the resultant frequency would be 249.94329294... Hz.
+  // LSB:            0b110 0011 (  0x63 = 99)
+  // MSB:   0b00 1101 0         (  0x1A = 26)
+  // Val: 0b  00 1101 0110 0011 (0x0D63 = 3427)
+  msg.rawPayloadBytes()[4] = 0x63;  // Fraction of 100 cents above (LSB).
+  msg.rawPayloadBytes()[5] = 0x1A;  // Fraction of 100 cents above (MSB).
+
+  EXPECT_THAT(msg.numMsgBytesIncludingEox(), Eq(12));
+  EXPECT_THAT(msg.rawMsgBytes()[0], Eq(0xF0));  // SysEx status byte.
+  EXPECT_THAT(msg.rawMsgBytes()[1], Eq(0x7F));  // SysEx ID (realtime universal).
+  EXPECT_THAT(msg.rawMsgBytes()[2], Eq(0x16));  // Device ID.
+  EXPECT_THAT(msg.rawMsgBytes()[3], Eq(0x08));  // Sub-ID #1 (0x08).
+  EXPECT_THAT(msg.rawMsgBytes()[4], Eq(0x02));  // Sub-ID #2 (0x02).
+
+  EXPECT_THAT(msg.rawMsgBytes()[5], Eq(0x04));  // Payload [0]
+  EXPECT_THAT(msg.rawMsgBytes()[6], Eq(0x01));  // Payload [1]
+  EXPECT_THAT(msg.rawMsgBytes()[7], Eq(0x3C));  // Payload [2]
+  EXPECT_THAT(msg.rawMsgBytes()[8], Eq(0x3B));  // Payload [3]
+  EXPECT_THAT(msg.rawMsgBytes()[9], Eq(0x63));  // Payload [4]
+  EXPECT_THAT(msg.rawMsgBytes()[10], Eq(0x1A)); // Payload [5]
+
+  EXPECT_THAT(msg.rawMsgBytes()[11], Eq(0xF7)); // EOX.
 }
 
 }  // namespace
