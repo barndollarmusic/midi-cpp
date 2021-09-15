@@ -154,6 +154,15 @@ public:
     return subId2_;
   }
 
+  // Equality operations:
+  friend constexpr bool operator==(UniversalType lhs, UniversalType rhs) {
+    return (lhs.category_ == rhs.category_)
+        && (lhs.subId1_ == rhs.subId1_)
+        && (lhs.subId2_ == rhs.subId2_);
+  }
+
+  friend constexpr bool operator!=(UniversalType lhs, UniversalType rhs) { return !(lhs == rhs); }
+
 private:
   static constexpr std::uint8_t kUnusedSubId = 0xFF;
 
@@ -465,7 +474,9 @@ private:
   std::uint8_t value_;
 };
 
+// Forward class declarations for friend access:
 class MfrSysExBuilder;
+class UniversalSysExBuilder;
 
 /**
  * Manufacturer-specific (or private non-commercial) System Exclusive (SysEx)
@@ -486,8 +497,6 @@ class MfrSysExBuilder;
  */
 class MfrSysEx {
 public:
-  ~MfrSysEx() = default;
-
   MfrSysEx(const MfrSysEx&) = delete;
   MfrSysEx& operator=(const MfrSysEx&) = delete;
 
@@ -612,7 +621,160 @@ private:
   int numPayloadBytes_ = kUnset;
 };
 
-// TODO: Add same pattern for UniversalSysEx[Builder].
+/**
+ * Non-Realtime or Realtime Universal System Exclusive (SysEx) message stored as
+ * contiguous bytes, which can NOT be resized after initialization. Create new
+ * instances with UniversalSysExBuilder.
+ *
+ * Either owns storage to message bytes allocated on the heap or references
+ * an existing span of bytes provided at initialization time (which must
+ * remain in scope for longer than this object for valid access).
+ *
+ * First byte of managed message data is the System Exclusive status byte (0xF0)
+ * and the last byte of managed data (inclusive) is an End of Exlusive EOX
+ * (0xF7) terminating status byte.
+ *
+ * After construction, all header and footer (EOX) bytes are written per the
+ * SysEx format and provided UniversalType and Device, and the client should
+ * fill in rawPayloadBytes() with the appropriate data for the specific message.
+ */
+class UniversalSysEx {
+public:
+  UniversalSysEx(const UniversalSysEx&) = delete;
+  UniversalSysEx& operator=(const UniversalSysEx&) = delete;
+
+  UniversalSysEx(UniversalSysEx&&) = default;
+  UniversalSysEx& operator=(UniversalSysEx&&) = delete;
+
+  /** Returns the type of universal message this is. */
+  UniversalType type() const { return type_; }
+
+  /**
+   * Returns the device that should respond to this message (or special "all"
+   * value that indicates message is for all receiving devices).
+   */
+  Device device() const;
+
+  /**
+   * Returns read-only pointer to span of raw payload bytes, after the SysEx ID,
+   * device ID, and 1 or 2 sub-ID bytes (and not including the terminating EOX
+   * byte).
+   *
+   * See numPayloadBytes() for size.
+   */
+  const std::uint8_t* rawPayloadBytes() const;
+
+  /**
+   * Returns read-write pointer to span of raw payload bytes, after the SysEx
+   * ID, device ID, and 1 or 2 sub-ID bytes (and not including the terminating
+   * EOX byte).
+   *
+   * See numPayloadBytes() for size.
+   */
+  std::uint8_t* rawPayloadBytes();
+
+  /**
+   * Returns the # of payload bytes accessible through rawPayloadBytes(),
+   * starting after the SysEx ID, device ID, and 1 or 2 sub-ID bytes (and not
+   * including the terminating EOX byte).
+   */
+  int numPayloadBytes() const;
+
+  /**
+   * Returns read-only pointer to all message bytes, starting from the first
+   * SysEx status byte (0xF0) and spanning through the terminating EOX (0xF7)
+   * byte (inclusive).
+   *
+   * See numMsgBytesIncludingEox() for size.
+   */
+  const std::uint8_t* rawMsgBytes() const { return msgBytes_; }
+
+  /**
+   * Returns read-write pointer to all message bytes, starting from the first
+   * SysEx status byte (0xF0) and spanning through the terminating EOX (0xF7)
+   * byte (inclusive).
+   *
+   * See numMsgBytesIncludingEox() for size.
+   */
+  std::uint8_t* rawMsgBytes() { return msgBytes_; }
+
+  /**
+   * Returns the total # of bytes managed by this UniversalSysEx message, from
+   * the first SysEx status byte (0xF0) through the terminating EOX (0xF7) byte
+   * (inclusive).
+   */
+  int numMsgBytesIncludingEox() const { return numMsgBytes_; }
+
+private:
+  friend class UniversalSysExBuilder;
+
+  explicit UniversalSysEx(UniversalType type, Device device, int numPayloadBytes);
+  explicit UniversalSysEx(
+      UniversalType type, Device device, std::uint8_t* rawMsgBytes, int numMsgBytes);
+
+  int numHeaderBytes() const;
+
+  UniversalType type_;
+
+  int numMsgBytes_;
+  std::unique_ptr<std::uint8_t[]> heapAllocatedBytes_;  // Only set if this instance owns storage.
+  std::uint8_t* msgBytes_;  // Pointer to first SysEx status byte (0xF0), within
+                            // heapAllocatedBytes_, or referencing caller-provided storage.
+};
+
+/** Builder for creating instances of UniversalSysEx messages. */
+class UniversalSysExBuilder {
+public:
+  explicit UniversalSysExBuilder(UniversalType type, Device device)
+      : type_{type}, device_{device} {}
+
+  /**
+   * Sets the # of payload bytes, starting after the SysEx ID, device ID, and 1
+   * or 2 sub-ID bytes (and not including the terminating EOX byte).
+   */
+  UniversalSysExBuilder withNumPayloadBytes(int numPayloadBytes);
+
+  /**
+   * Returns the total # of bytes that will be managed by the built UniversalSysEx
+   * message, from the first SysEx status byte (0xF0) through the terminating EOX
+   * (0xF7) byte (inclusive).
+   *
+   * Can only be called AFTER withNumPayloadBytes().
+   *
+   * This is provided so clients managing their own data buffers for MIDI
+   * message bytes can reserve the appropriate amount of storage, for use with
+   * buildAsRefToBytes().
+   */
+  int numMsgBytesIncludingEox() const;
+
+  /**
+   * Builds a new UniversalSysEx message for the configured type, device, and #
+   * of payload bytes, which will allocate and own storage for the full SysEx
+   * message on the heap.
+   *
+   * Can only be called AFTER withNumPayloadBytes().
+   */
+  UniversalSysEx buildOnHeap() const;
+
+  /**
+   * Builds a new UniversalSysEx message for the configured type, device, and #
+   * of payload bytes, which will reference the provided rawMsgBytes (which must
+   * remain in scope for longer than the built UniversalSysEx for access to be
+   * valid).
+   *
+   * The given numMsgBytes must be exactly equal to numMsgBytesIncludingEox().
+   *
+   * Can only be called AFTER withNumPayloadBytes().
+   */
+  UniversalSysEx buildAsRefToBytes(std::uint8_t* rawMsgBytes, int numMsgBytes) const;
+
+private:
+  static constexpr int kUnset = -1;
+
+  UniversalType type_;
+  Device device_;
+  int numPayloadBytes_ = kUnset;
+};
 
 }  // namespace bmmidi
 

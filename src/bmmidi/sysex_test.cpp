@@ -77,6 +77,23 @@ TEST(UniversalType, ProvidesCategoryAndSubIds) {
   EXPECT_THAT(bmmidi::universal::kMtcFull.subId2(), Eq(0x01));
 }
 
+TEST(UniversalType, SupportsEqualityOperations) {
+  const auto sampleDumpHeader = bmmidi::UniversalType::nonRealTime(0x01);
+
+  EXPECT_THAT(sampleDumpHeader == sampleDumpHeader, IsTrue());
+  EXPECT_THAT(sampleDumpHeader != sampleDumpHeader, IsFalse());
+
+  EXPECT_THAT(sampleDumpHeader == bmmidi::universal::kSampleDumpHeader, IsTrue());
+  EXPECT_THAT(bmmidi::universal::kSampleDumpHeader == sampleDumpHeader, IsTrue());
+  EXPECT_THAT(sampleDumpHeader != bmmidi::universal::kSampleDumpHeader, IsFalse());
+  EXPECT_THAT(bmmidi::universal::kSampleDumpHeader != sampleDumpHeader, IsFalse());
+
+  EXPECT_THAT(bmmidi::universal::kTuningNonRtOct1B == bmmidi::universal::kTuningRtOct1B, IsFalse());
+  EXPECT_THAT(bmmidi::universal::kTuningRtOct1B == bmmidi::universal::kTuningNonRtOct1B, IsFalse());
+  EXPECT_THAT(bmmidi::universal::kTuningNonRtOct1B != bmmidi::universal::kTuningRtOct1B, IsTrue());
+  EXPECT_THAT(bmmidi::universal::kTuningRtOct1B != bmmidi::universal::kTuningNonRtOct1B, IsTrue());
+}
+
 TEST(Device, ProvidesAllCallDevice) {
   const auto allDevice = bmmidi::Device::all();
 
@@ -227,6 +244,80 @@ TEST(MfrSysEx, WorksForExtIdOnHeap) {
   EXPECT_THAT(msg.rawMsgBytes()[7], Eq(0xA3));  // Payload [3]
 
   EXPECT_THAT(msg.rawMsgBytes()[8], Eq(0xF7));  // EOX.
+}
+
+TEST(UniversalSysEx, WorksForOneSubIdTypeWithinBuffer) {
+  const auto type = bmmidi::universal::kAck;
+  const auto allDevices = bmmidi::Device::all();
+
+  auto builder = bmmidi::UniversalSysExBuilder{type, allDevices}.withNumPayloadBytes(1);
+  EXPECT_THAT(builder.numMsgBytesIncludingEox(), Eq(6));
+
+  // Have UniversalSysEx message reference into buffer[3]..buffer[8].
+  std::uint8_t buffer[20] = {};
+
+  auto msg = builder.buildAsRefToBytes(&buffer[3], 6);
+  EXPECT_THAT(msg.type(), Eq(bmmidi::universal::kAck));
+  EXPECT_THAT(msg.device(), Eq(bmmidi::Device::all()));
+
+  // Can fill in 1 payload byte (here the packet #).
+  EXPECT_THAT(msg.numPayloadBytes(), Eq(1));
+  msg.rawPayloadBytes()[0] = 0x3D;
+
+  EXPECT_THAT(msg.numMsgBytesIncludingEox(), Eq(6));
+  EXPECT_THAT(msg.rawMsgBytes(), Eq(&buffer[3]));
+
+  EXPECT_THAT(buffer[3], Eq(0xF0));  // SysEx status byte.
+  EXPECT_THAT(buffer[4], Eq(0x7E));  // SysEx ID (non-realtime universal).
+  EXPECT_THAT(buffer[5], Eq(0x7F));  // Device ID ("all").
+  EXPECT_THAT(buffer[6], Eq(0x7F));  // Sub ID #1 (0x7F).
+
+  EXPECT_THAT(buffer[7], Eq(0x3D));  // Payload [0] (packet #).
+
+  EXPECT_THAT(buffer[8], Eq(0xF7));  // EOX.
+
+  // Test read-only access through const reference:
+  const auto& msgRef = msg;
+  EXPECT_THAT(msgRef.type(), Eq(bmmidi::universal::kAck));
+  EXPECT_THAT(msgRef.device(), Eq(bmmidi::Device::all()));
+
+  EXPECT_THAT(msgRef.numPayloadBytes(), Eq(1));
+  EXPECT_THAT(msgRef.rawPayloadBytes()[0], Eq(0x3D));
+
+  EXPECT_THAT(msgRef.numMsgBytesIncludingEox(), Eq(6));
+  EXPECT_THAT(msgRef.rawMsgBytes()[0], Eq(0xF0));
+  EXPECT_THAT(msgRef.rawMsgBytes()[1], Eq(0x7E));
+  EXPECT_THAT(msgRef.rawMsgBytes()[2], Eq(0x7F));
+  EXPECT_THAT(msgRef.rawMsgBytes()[3], Eq(0x7F));
+  EXPECT_THAT(msgRef.rawMsgBytes()[4], Eq(0x3D));
+  EXPECT_THAT(msgRef.rawMsgBytes()[5], Eq(0xF7));
+}
+
+TEST(UniversalSysEx, WorksForTwoSubIdTypeOnHeap) {
+  const auto type = bmmidi::universal::kTuningBulkDumpReq;
+  const auto device22 = bmmidi::Device::id(22);  // 0x16.
+
+  auto builder = bmmidi::UniversalSysExBuilder{type, device22}.withNumPayloadBytes(1);
+  EXPECT_THAT(builder.numMsgBytesIncludingEox(), Eq(7));
+
+  auto msg = builder.buildOnHeap();
+  EXPECT_THAT(msg.type(), Eq(bmmidi::universal::kTuningBulkDumpReq));
+  EXPECT_THAT(msg.device().value(), Eq(22));
+
+  // Can fill in the 1 payload byte (here the tuning program # being requested).
+  EXPECT_THAT(msg.numPayloadBytes(), Eq(1));
+  msg.rawPayloadBytes()[0] = 0x04;
+
+  EXPECT_THAT(msg.numMsgBytesIncludingEox(), Eq(7));
+  EXPECT_THAT(msg.rawMsgBytes()[0], Eq(0xF0));  // SysEx status byte.
+  EXPECT_THAT(msg.rawMsgBytes()[1], Eq(0x7E));  // SysEx ID (non-realtime universal).
+  EXPECT_THAT(msg.rawMsgBytes()[2], Eq(0x16));  // Device ID.
+  EXPECT_THAT(msg.rawMsgBytes()[3], Eq(0x08));  // Sub-ID #1 (0x08).
+  EXPECT_THAT(msg.rawMsgBytes()[4], Eq(0x00));  // Sub-ID #2 (0x00).
+
+  EXPECT_THAT(msg.rawMsgBytes()[5], Eq(0x04));  // Payload [0] (tuning program #).
+
+  EXPECT_THAT(msg.rawMsgBytes()[6], Eq(0xF7));  // EOX.
 }
 
 }  // namespace
