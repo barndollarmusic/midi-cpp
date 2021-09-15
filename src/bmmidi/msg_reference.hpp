@@ -13,6 +13,7 @@
 #include "bmmidi/pitch_bend.hpp"
 #include "bmmidi/preset_number.hpp"
 #include "bmmidi/status.hpp"
+#include "bmmidi/sysex.hpp"
 #include "bmmidi/time.hpp"
 
 namespace bmmidi {
@@ -26,8 +27,8 @@ enum class MsgAccess {kReadOnly, kReadWrite};
  * alias) or read-only (see MsgView alias), based on AccessType template
  * parameter.
  *
- * For example, this can refer to a Msg<N> instance, a SysExMsg, or to bytes
- * managed by any other MIDI framework.
+ * For example, this can refer to a Msg<N> instance, a MfrSysEx or
+ * UniversalSysEx message, or to bytes managed by any other MIDI framework.
  *
  * The refererenced message must be a complete message with status byte and
  * all data bytes following contiguously. A raw MIDI byte stream has 2 features
@@ -551,6 +552,68 @@ using TimedPitchBendMsgView = Timed<PitchBendMsgView>;
 
 /** Alias for a timestamped read-write reference to a pitch bend message. */
 using TimedPitchBendMsgRef = Timed<PitchBendMsgRef>;
+
+/**
+ * A reference to a System Exclusive (SysEx) message stored as contiguous bytes
+ * (which must outlive this reference object), including a terminating End of
+ * Exclusive (EOX) status byte. Can either be read-write (see SysExMsgRef
+ * alias) or read-only (see SysExMsgView alias), based on AccessType template
+ * parameter.
+ */
+template<MsgAccess AccessType>
+class SysExMsgReference : public MsgReference<AccessType> {
+public:
+  using BytePointerType = typename MsgReference<AccessType>::BytePointerType;
+
+  explicit SysExMsgReference(BytePointerType bytes, int numBytes)
+      : MsgReference<AccessType>{bytes, numBytes} {
+    assert(this->type() == MsgType::kSystemExclusive);
+    assert(bytes[numBytes - 1] == static_cast<std::uint8_t>(MsgType::kEndOfSystemExclusive));
+  }
+
+  /**
+   * Returns SysEx ID, the first data byte of this message (after the status
+   * byte), which determines whether this is a manufacturer-specific or
+   * universal message.
+   */
+  std::uint8_t sysExId() const { return this->rawBytes()[1]; }
+
+  // NOTE: NOT providing mutation for sysExId(), since some mutations would
+  // change the # of bytes in this message.
+
+  /**
+   * Returns true if this is a universal (non-realtime or realtime) SysEx
+   * message; otherwise, this is a manufacturer-specific (or private use
+   * non-commercial) SysEx message.
+   */
+  bool isUniversal() const {
+    return (sysExId() == static_cast<std::uint8_t>(UniversalCategory::kNonRealTime))
+        || (sysExId() == static_cast<std::uint8_t>(UniversalCategory::kRealTime));
+  }
+
+protected:
+  // Hide the more general mutation and access functions, which don't apply to
+  // SysEx messages.
+  using MsgReference<AccessType>::setStatus;
+
+  using MsgReference<AccessType>::data1;
+  using MsgReference<AccessType>::setData1;
+
+  using MsgReference<AccessType>::data2;
+  using MsgReference<AccessType>::setData2;
+};
+
+/** Alias for a read-only SysExMsgReference. */
+using SysExMsgView = SysExMsgReference<MsgAccess::kReadOnly>;
+
+/** Alias for a read-write SysExMsgReference. */
+using SysExMsgRef = SysExMsgReference<MsgAccess::kReadWrite>;
+
+/** Alias for a timestamped read-only reference to a SysEx message. */
+using TimedSysExMsgView = Timed<SysExMsgView>;
+
+/** Alias for a timestamped read-write reference to a SysEx message. */
+using TimedSysExMsgRef = Timed<SysExMsgRef>;
 
 }  // namespace bmmidi
 

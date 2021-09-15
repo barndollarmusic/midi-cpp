@@ -10,6 +10,7 @@
 #include "bmmidi/control.hpp"
 #include "bmmidi/data_value.hpp"
 #include "bmmidi/status.hpp"
+#include "bmmidi/sysex.hpp"
 
 namespace {
 
@@ -700,5 +701,67 @@ TEST(PitchBendMsgRef, CanReferToRawBytes) {
   EXPECT_THAT(srcBytes[1], Eq(0x01));
   EXPECT_THAT(srcBytes[2], Eq(0x00));
 }
+
+TEST(SysExMsgView, CanReferToRawBytes) {
+  // (SysEx Non-Realtime Universal ACK to device 22 for receiving packet #61).
+  std::uint8_t srcBytes[] = {0xF0, 0x7E, 0x16, 0x7F, 0x3D, 0xF7};
+  bmmidi::SysExMsgView sysExMsgView{srcBytes, sizeof(srcBytes)};
+
+  // Can use SysExMsgView accessors:
+  EXPECT_THAT(sysExMsgView.sysExId(), Eq(0x7E));
+  EXPECT_THAT(sysExMsgView.isUniversal(), IsTrue());
+
+  // Can use non-hidden MsgView accessors:
+  EXPECT_THAT(sysExMsgView.type(), Eq(bmmidi::MsgType::kSystemExclusive));
+  EXPECT_THAT(sysExMsgView.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kSystemExclusive)));
+  EXPECT_THAT(sysExMsgView.numBytes(), Eq(6));
+  EXPECT_THAT(sysExMsgView.rawBytes(), Eq(&srcBytes[0]));
+}
+
+TEST(SysExMsgView, CanReferToMfrSysEx) {
+  auto sysExMsg = bmmidi::MfrSysExBuilder{bmmidi::Manufacturer::nonCommercial()}
+      .withNumPayloadBytes(3)
+      .buildOnHeap();
+  sysExMsg.rawPayloadBytes()[0] = 0xA0;
+  sysExMsg.rawPayloadBytes()[1] = 0xA1;
+  sysExMsg.rawPayloadBytes()[2] = 0xA2;
+
+  bmmidi::SysExMsgView sysExMsgView{sysExMsg.rawMsgBytes(), sysExMsg.numMsgBytesIncludingEox()};
+
+  // Can use SysExMsgView accessors:
+  EXPECT_THAT(sysExMsgView.sysExId(), Eq(0x7D));
+  EXPECT_THAT(sysExMsgView.isUniversal(), IsFalse());
+
+  // Can use non-hidden MsgView accessors:
+  EXPECT_THAT(sysExMsgView.type(), Eq(bmmidi::MsgType::kSystemExclusive));
+  EXPECT_THAT(sysExMsgView.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kSystemExclusive)));
+  EXPECT_THAT(sysExMsgView.numBytes(), Eq(6));
+  EXPECT_THAT(sysExMsgView.rawBytes(), Eq(sysExMsg.rawMsgBytes()));
+}
+
+TEST(SysExMsgView, CanReferToUniversalSysEx) {
+  const auto type = bmmidi::universal::kTuningBulkDumpReq;
+  const auto device22 = bmmidi::Device::id(22);  // 0x16.
+
+  auto sysExMsg = bmmidi::UniversalSysExBuilder{type, device22}
+      .withNumPayloadBytes(1)
+      .buildOnHeap();
+  sysExMsg.rawPayloadBytes()[0] = 0x04;  // Tuning program #.
+
+  bmmidi::SysExMsgView sysExMsgView{sysExMsg.rawMsgBytes(), sysExMsg.numMsgBytesIncludingEox()};
+
+  // Can use SysExMsgView accessors:
+  EXPECT_THAT(sysExMsgView.sysExId(), Eq(0x7E));
+  EXPECT_THAT(sysExMsgView.isUniversal(), IsTrue());
+
+  // Can use non-hidden MsgView accessors:
+  EXPECT_THAT(sysExMsgView.type(), Eq(bmmidi::MsgType::kSystemExclusive));
+  EXPECT_THAT(sysExMsgView.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kSystemExclusive)));
+  EXPECT_THAT(sysExMsgView.numBytes(), Eq(7));
+  EXPECT_THAT(sysExMsgView.rawBytes(), Eq(sysExMsg.rawMsgBytes()));
+}
+
+// NOTE: Not testing SysExMsgRef directly, since there are no SysEx-specific
+// mutation functions provided.
 
 }  // namespace
