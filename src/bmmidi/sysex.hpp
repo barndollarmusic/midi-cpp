@@ -14,7 +14,7 @@ namespace bmmidi {
  * short IDs (so the value 0x01 as a short ID is distinct from the value
  * 0x00 0x01 as an extended ID).
  *
- * Also includes a special non-commercial value, for private use by schools,
+ * Also includes a special non-commercial value for private use by schools,
  * research projects, etc.
  *
  * See https://www.midi.org/specifications-old/item/manufacturer-id-numbers.
@@ -173,7 +173,172 @@ namespace universal {
 /** Non-Realtime Sample Dump Header. */
 BMMIDI_INLINE_VAR constexpr UniversalType kSampleDumpHeader = UniversalType::nonRealTime(0x01);
 
-// TODO: Add constants for rest of UniversalType non-realtime values.
+/** Non-Realtime Sample Data Packet. */
+BMMIDI_INLINE_VAR constexpr UniversalType kSampleDataPacket = UniversalType::nonRealTime(0x02);
+
+/** Non-Realtime Sample Dump Request. */
+BMMIDI_INLINE_VAR constexpr UniversalType kSampleDumpRequest = UniversalType::nonRealTime(0x03);
+
+/** Non-Realtime MIDI Time Code (MTC): Special. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcNonRtSpecial = UniversalType::nonRealTime(0x04, 0x00);
+
+/** Non-Realtime MIDI Time Code (MTC): Punch In Points. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcNonRtPunchInPoints = UniversalType::nonRealTime(0x04, 0x01);
+
+/** Non-Realtime MIDI Time Code (MTC): Punch Out Points. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcNonRtPunchOutPoints = UniversalType::nonRealTime(0x04, 0x02);
+
+/** Non-Realtime MIDI Time Code (MTC): Delete Punch In Point. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcNonRtDeletePunchInPoint = UniversalType::nonRealTime(0x04, 0x03);
+
+/** Non-Realtime MIDI Time Code (MTC): Delete Punch Out Point. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcNonRtDeletePunchOutPoint = UniversalType::nonRealTime(0x04, 0x04);
+
+/** Non-Realtime MIDI Time Code (MTC): Event Start Point. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcNonRtEventStartPoint = UniversalType::nonRealTime(0x04, 0x05);
+
+/** Non-Realtime MIDI Time Code (MTC): Event Stop Point. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcNonRtEventStopPoint = UniversalType::nonRealTime(0x04, 0x06);
+
+/** Non-Realtime MIDI Time Code (MTC): Event Start Points with Additional Info. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcNonRtEventStartsAddlInfo = UniversalType::nonRealTime(0x04, 0x07);
+
+/** Non-Realtime MIDI Time Code (MTC): Event Stop Points with Additional Info. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcNonRtEventStopsAddlInfo = UniversalType::nonRealTime(0x04, 0x08);
+
+/** Non-Realtime MIDI Time Code (MTC): Delete Event Start Point. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcNonRtDeleteEventStartPoint = UniversalType::nonRealTime(0x04, 0x09);
+
+/** Non-Realtime MIDI Time Code (MTC): Delete Event Stop Point. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcNonRtDeleteEventStopPoint = UniversalType::nonRealTime(0x04, 0x0A);
+
+/** Non-Realtime MIDI Time Code (MTC): Cue Points. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcNonRtCuePoints = UniversalType::nonRealTime(0x04, 0x0B);
+
+/** Non-Realtime MIDI Time Code (MTC): Cue Points with Additional Info. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcNonRtCuePointsAddlInfo = UniversalType::nonRealTime(0x04, 0x0C);
+
+/** Non-Realtime MIDI Time Code (MTC): Delete Cue Point. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcNonRtDeleteCuePoint = UniversalType::nonRealTime(0x04, 0x0D);
+
+/** Non-Realtime MIDI Time Code (MTC): Event Name in Additional Info. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcNonRtEventNameAddlInfo = UniversalType::nonRealTime(0x04, 0x0E);
+
+/** Non-Realtime Sample Dump: Loop Points Transmission. */
+BMMIDI_INLINE_VAR constexpr UniversalType kSampleDumpLoopPointsTrans = UniversalType::nonRealTime(0x05, 0x01);
+
+/** Non-Realtime Sample Dump: Loop Points Request. */
+BMMIDI_INLINE_VAR constexpr UniversalType kSampleDumpLoopPointsReq = UniversalType::nonRealTime(0x05, 0x02);
+
+/** Non-Realtime Sample Dump: Sample Name Transmission. */
+BMMIDI_INLINE_VAR constexpr UniversalType kSampleDumpSampleNameTrans = UniversalType::nonRealTime(0x05, 0x03);
+
+/** Non-Realtime Sample Dump: Sample Name Request. */
+BMMIDI_INLINE_VAR constexpr UniversalType kSampleDumpSampleNameReq = UniversalType::nonRealTime(0x05, 0x04);
+
+/** Non-Realtime Sample Dump: Extended Dump Header. */
+BMMIDI_INLINE_VAR constexpr UniversalType kSampleDumpExtHeader = UniversalType::nonRealTime(0x05, 0x05);
+
+/** Non-Realtime Sample Dump: Extended Loop Points Transmission. */
+BMMIDI_INLINE_VAR constexpr UniversalType kSampleDumpExtLoopPointsTrans = UniversalType::nonRealTime(0x05, 0x06);
+
+/** Non-Realtime Sample Dump: Extended Loop Points Request. */
+BMMIDI_INLINE_VAR constexpr UniversalType kSampleDumpExtLoopPointsReq = UniversalType::nonRealTime(0x05, 0x07);
+
+/** Non-Realtime General Information: Identity Request. */
+BMMIDI_INLINE_VAR constexpr UniversalType kIdentityReq = UniversalType::nonRealTime(0x06, 0x01);
+
+/** Non-Realtime General Information: Identity Reply. */
+BMMIDI_INLINE_VAR constexpr UniversalType kIdentityReply = UniversalType::nonRealTime(0x06, 0x02);
+
+/** Non-Realtime File Dump: Header. */
+BMMIDI_INLINE_VAR constexpr UniversalType kFileDumpHeader = UniversalType::nonRealTime(0x07, 0x01);
+
+/** Non-Realtime File Dump: Data Packet. */
+BMMIDI_INLINE_VAR constexpr UniversalType kFileDumpData = UniversalType::nonRealTime(0x07, 0x02);
+
+/** Non-Realtime File Dump: Request. */
+BMMIDI_INLINE_VAR constexpr UniversalType kFileDumpReq = UniversalType::nonRealTime(0x07, 0x03);
+
+/** Non-Realtime MIDI Tuning: Bulk Dump Request. */
+BMMIDI_INLINE_VAR constexpr UniversalType kTuningBulkDumpReq = UniversalType::nonRealTime(0x08, 0x00);
+
+/** Non-Realtime MIDI Tuning: Bulk Dump Reply. */
+BMMIDI_INLINE_VAR constexpr UniversalType kTuningBulkDumpReply = UniversalType::nonRealTime(0x08, 0x01);
+
+/** Non-Realtime MIDI Tuning: Dump Request. */
+BMMIDI_INLINE_VAR constexpr UniversalType kTuningDumpReq = UniversalType::nonRealTime(0x08, 0x03);
+
+/** Non-Realtime MIDI Tuning: Key-Based Tuning Dump. */
+BMMIDI_INLINE_VAR constexpr UniversalType kTuningKeyBasedDump = UniversalType::nonRealTime(0x08, 0x04);
+
+/** Non-Realtime MIDI Tuning: Scale/Octave Tuning Dump, 1 byte format. */
+BMMIDI_INLINE_VAR constexpr UniversalType kTuningNonRtOctDump1B = UniversalType::nonRealTime(0x08, 0x05);
+
+/** Non-Realtime MIDI Tuning: Scale/Octave Tuning Dump, 2 byte format. */
+BMMIDI_INLINE_VAR constexpr UniversalType kTuningNonRtOctDump2B = UniversalType::nonRealTime(0x08, 0x06);
+
+/** Non-Realtime MIDI Tuning: Single Note Tuning Change with Bank Select. */
+BMMIDI_INLINE_VAR constexpr UniversalType kTuningNonRtNoteChangeBank = UniversalType::nonRealTime(0x08, 0x07);
+
+/** Non-Realtime MIDI Tuning: Scale/Octave Tuning, 1 byte format. */
+BMMIDI_INLINE_VAR constexpr UniversalType kTuningNonRtOct1B = UniversalType::nonRealTime(0x08, 0x08);
+
+/** Non-Realtime MIDI Tuning: Scale/Octave Tuning, 2 byte format. */
+BMMIDI_INLINE_VAR constexpr UniversalType kTuningNonRtOct2B = UniversalType::nonRealTime(0x08, 0x09);
+
+/** Non-Realtime General MIDI: GM1 System On. */
+BMMIDI_INLINE_VAR constexpr UniversalType kGeneralMidi1SysOn = UniversalType::nonRealTime(0x09, 0x01);
+
+/** Non-Realtime General MIDI: System Off. */
+BMMIDI_INLINE_VAR constexpr UniversalType kGeneralMidiSysOff = UniversalType::nonRealTime(0x09, 0x02);
+
+/** Non-Realtime General MIDI: GM2 System On. */
+BMMIDI_INLINE_VAR constexpr UniversalType kGeneralMidi2SysOn = UniversalType::nonRealTime(0x09, 0x03);
+
+/** Non-Realtime Downloadable Sounds (DLS): Turn On. */
+BMMIDI_INLINE_VAR constexpr UniversalType kDlsTurnOn = UniversalType::nonRealTime(0x0A, 0x01);
+
+/** Non-Realtime Downloadable Sounds (DLS): Turn Off. */
+BMMIDI_INLINE_VAR constexpr UniversalType kDlsTurnOff = UniversalType::nonRealTime(0x0A, 0x02);
+
+/** Non-Realtime Downloadable Sounds (DLS): Turn Voice Allocation Off. */
+BMMIDI_INLINE_VAR constexpr UniversalType kDlsVoiceAllocOff = UniversalType::nonRealTime(0x0A, 0x03);
+
+/** Non-Realtime Downloadable Sounds (DLS): Turn Voice Allocation On. */
+BMMIDI_INLINE_VAR constexpr UniversalType kDlsVoiceAllocOn = UniversalType::nonRealTime(0x0A, 0x04);
+
+/** Non-Realtime File Reference Message: Open File. */
+BMMIDI_INLINE_VAR constexpr UniversalType kFileRefOpen = UniversalType::nonRealTime(0x0B, 0x01);
+
+/** Non-Realtime File Reference Message: Select or Reselect Contents. */
+BMMIDI_INLINE_VAR constexpr UniversalType kFileRefSelect = UniversalType::nonRealTime(0x0B, 0x02);
+
+/** Non-Realtime File Reference Message: Open File and Select Contents. */
+BMMIDI_INLINE_VAR constexpr UniversalType kFileRefOpenSelect = UniversalType::nonRealTime(0x0B, 0x03);
+
+/** Non-Realtime File Reference Message: Close File. */
+BMMIDI_INLINE_VAR constexpr UniversalType kFileRefClose = UniversalType::nonRealTime(0x0B, 0x04);
+
+/** Non-Realtime MIDI Visual Control (MVC): Command Set 1. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMvcCmdSet1 = UniversalType::nonRealTime(0x0C, 0x01);
+
+// NOTE: Not including MIDI 2.0 Capability Inquiry here yet.
+
+/** Non-Realtime End of File. */
+BMMIDI_INLINE_VAR constexpr UniversalType kEof = UniversalType::nonRealTime(0x7B);
+
+/** Non-Realtime Wait (requests pausing of data packet transmission until next ACK). */
+BMMIDI_INLINE_VAR constexpr UniversalType kWait = UniversalType::nonRealTime(0x7C);
+
+/** Non-Realtime Cancel (cancels request for data packet transmission). */
+BMMIDI_INLINE_VAR constexpr UniversalType kCancel = UniversalType::nonRealTime(0x7D);
+
+/** Non-Realtime NAK (requests retransmission of data packet). */
+BMMIDI_INLINE_VAR constexpr UniversalType kNak = UniversalType::nonRealTime(0x7E);
+
+/** Non-Realtime ACK (acknowledges receipt of data packet). */
+BMMIDI_INLINE_VAR constexpr UniversalType kAck = UniversalType::nonRealTime(0x7F);
 
 //==============================================================================
 // Realtime (0x7F)
@@ -185,7 +350,78 @@ BMMIDI_INLINE_VAR constexpr UniversalType kMtcFull = UniversalType::realTime(0x0
 /** Realtime MIDI Time Code (MTC) User Bits. */
 BMMIDI_INLINE_VAR constexpr UniversalType kMtcUserBits = UniversalType::realTime(0x01, 0x02);
 
-// TODO: Add constants for rest of UniversalType realtime values.
+// NOTE: Not including MIDI Show Control (MSC) commands.
+
+/** Realtime Notation Information: Bar Number. */
+BMMIDI_INLINE_VAR constexpr UniversalType kNotationBarNum = UniversalType::realTime(0x03, 0x01);
+
+/** Realtime Notation Information: Time Signature (Immediate). */
+BMMIDI_INLINE_VAR constexpr UniversalType kNotationTimeSigImmediate = UniversalType::realTime(0x03, 0x02);
+
+/** Realtime Notation Information: Time Signature (Delayed). */
+BMMIDI_INLINE_VAR constexpr UniversalType kNotationTimeSigDelayed = UniversalType::realTime(0x03, 0x42);
+
+/** Realtime MIDI Time Code (MTC): Special. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcRtSpecial = UniversalType::realTime(0x05, 0x00);
+
+/** Realtime MIDI Time Code (MTC): Punch In Points. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcRtPunchInPoints = UniversalType::realTime(0x05, 0x01);
+
+/** Realtime MIDI Time Code (MTC): Punch Out Points. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcRtPunchOutPoints = UniversalType::realTime(0x05, 0x02);
+
+/** Realtime MIDI Time Code (MTC): Event Start Points. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcRtEventStartPoints = UniversalType::realTime(0x05, 0x05);
+
+/** Realtime MIDI Time Code (MTC): Event Stop Points. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcRtEventStopPoints = UniversalType::realTime(0x05, 0x06);
+
+/** Realtime MIDI Time Code (MTC): Event Start Points with Additional Info. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcRtEventStartsAddlInfo = UniversalType::realTime(0x05, 0x07);
+
+/** Realtime MIDI Time Code (MTC): Event Stop Points with Additional Info. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcRtEventStopsAddlInfo = UniversalType::realTime(0x05, 0x08);
+
+/** Realtime MIDI Time Code (MTC): Cue Points. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcRtCuePoints = UniversalType::realTime(0x05, 0x0B);
+
+/** Realtime MIDI Time Code (MTC): Cue Points with Additional Info. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcRtCuePointsAddlInfo = UniversalType::realTime(0x05, 0x0C);
+
+/** Realtime MIDI Time Code (MTC): Event Name in Additional Info. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMtcRtEventNameAddlInfo = UniversalType::realTime(0x05, 0x0E);
+
+// NOTE: Not including MIDI Machine Control (MMC) commands or responses.
+
+/** Realtime MIDI Tuning: Single Note Tuning Change. */
+BMMIDI_INLINE_VAR constexpr UniversalType kTuningRtNoteChange = UniversalType::realTime(0x08, 0x02);
+
+/** Realtime MIDI Tuning: Single Note Tuning Change with Bank Select. */
+BMMIDI_INLINE_VAR constexpr UniversalType kTuningRtNoteChangeBank = UniversalType::realTime(0x08, 0x07);
+
+/** Realtime MIDI Tuning: Scale/Octave Tuning, 1 byte format. */
+BMMIDI_INLINE_VAR constexpr UniversalType kTuningRtOct1B = UniversalType::realTime(0x08, 0x08);
+
+/** Realtime MIDI Tuning: Scale/Octave Tuning, 2 byte format. */
+BMMIDI_INLINE_VAR constexpr UniversalType kTuningRtOct2B = UniversalType::realTime(0x08, 0x09);
+
+/** Realtime Controller Destination Setting: Channel Pressure (Aftertouch). */
+BMMIDI_INLINE_VAR constexpr UniversalType kControlDestChanPressure = UniversalType::realTime(0x09, 0x01);
+
+/** Realtime Controller Destination Setting: Polyphonic Key Pressure (Per-Key Aftertouch). */
+BMMIDI_INLINE_VAR constexpr UniversalType kControlDestPolyKeyPressure = UniversalType::realTime(0x09, 0x02);
+
+/** Realtime Controller Destination Setting: Controller (Control Change). */
+BMMIDI_INLINE_VAR constexpr UniversalType kControlDestCC = UniversalType::realTime(0x09, 0x03);
+
+/** Realtime Key-Based Instrument Control. */
+BMMIDI_INLINE_VAR constexpr UniversalType kKeyBasedInstrControl = UniversalType::realTime(0x0A, 0x01);
+
+/** Realtime Scalable Polyphony MIDI MIP Message. */
+BMMIDI_INLINE_VAR constexpr UniversalType kScalablePolyMip = UniversalType::realTime(0x0B, 0x01);
+
+/** Realtime Mobile Phone Control Message. */
+BMMIDI_INLINE_VAR constexpr UniversalType kMobilePhoneControl = UniversalType::realTime(0x0C, 0x00);
 
 }  // namespace universal
 
