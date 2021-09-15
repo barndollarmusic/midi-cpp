@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <memory>
 
 #include "bmmidi/cpp_features.hpp"
 
@@ -21,12 +22,18 @@ namespace bmmidi {
  */
 class Manufacturer {
 public:
+  /** SysEx ID byte denoting an extended multi-byte manufacturer ID. */
+  static constexpr std::uint8_t kExtendedSysExId = 0x00;
+
+  /** SysEx ID byte for a non-commercial manufacturer (for private use). */
+  static constexpr std::uint8_t kNonCommercialSysExId = 0x7D;
+
   /**
    * Returns Manufacturer with given short 1-byte ID. For example, Sequential
    * Circuits has the short ID 0x01.
    */
   static constexpr Manufacturer shortId(std::uint8_t shortMfrId) {
-    assert((0x01 <= shortMfrId) && (shortMfrId < kNonCommercial));
+    assert((0x01 <= shortMfrId) && (shortMfrId < kNonCommercialSysExId));
     return Manufacturer{shortMfrId, 0x00, 0x00};
   }
 
@@ -39,7 +46,7 @@ public:
   static constexpr Manufacturer extId(std::uint8_t extByte1, std::uint8_t extByte2) {
     assert(extByte1 <= 0x7F);
     assert(extByte2 <= 0x7F);
-    return Manufacturer{0x00, extByte1, extByte2};
+    return Manufacturer{kExtendedSysExId, extByte1, extByte2};
   }
 
   /**
@@ -47,15 +54,15 @@ public:
    * schools, research projects, etc.
    */
   static constexpr Manufacturer nonCommercial() {
-    return Manufacturer{kNonCommercial, 0x00, 0x00};
+    return Manufacturer{kNonCommercialSysExId, 0x00, 0x00};
   }
 
   /** Returns true if this is an extended 2-byte manufacturer ID. */
-  constexpr bool isExtended() const { return (sysExId_ == 0x00); }
+  constexpr bool isExtended() const { return (sysExId_ == kExtendedSysExId); }
 
   /**
    * Returns SysEx ID, which will be the short 1-byte manufacturer ID or
-   * 0x00 if this is an extended manufacturer ID.
+   * kExtendedSysExId (0x00) if this is an extended manufacturer ID.
    */
   constexpr std::uint8_t sysExId() const { return sysExId_; }
 
@@ -87,8 +94,6 @@ public:
   friend constexpr bool operator!=(Manufacturer lhs, Manufacturer rhs) { return !(lhs == rhs); }
 
 private:
-  static constexpr std::uint8_t kNonCommercial = 0x7D;
-
   constexpr explicit Manufacturer(
       std::uint8_t sysExId, std::uint8_t extByte1, std::uint8_t extByte2)
       : sysExId_{sysExId}, extByte1_{extByte1}, extByte2_{extByte2} {}
@@ -459,6 +464,155 @@ private:
 
   std::uint8_t value_;
 };
+
+class MfrSysExBuilder;
+
+/**
+ * Manufacturer-specific (or private non-commercial) System Exclusive (SysEx)
+ * message stored as contiguous bytes, which can NOT be resized after
+ * initialization. Create new instances with MfrSysExBuilder.
+ *
+ * Either owns storage to message bytes allocated on the heap or references
+ * an existing span of bytes provided at initialization time (which must
+ * remain in scope for longer than this object for valid access).
+ *
+ * First byte of managed message data is the System Exclusive status byte (0xF0)
+ * and the last byte of managed data (inclusive) is an End of Exlusive EOX
+ * (0xF7) terminating status byte.
+ *
+ * After construction, all header and footer (EOX) bytes are written per the
+ * SysEx format and provided Manufacturer ID, and the client should fill in
+ * rawPayloadBytes() with the appropriate manufacturer-specific data.
+ */
+class MfrSysEx {
+public:
+  ~MfrSysEx() = default;
+
+  MfrSysEx(const MfrSysEx&) = delete;
+  MfrSysEx& operator=(const MfrSysEx&) = delete;
+
+  MfrSysEx(MfrSysEx&&) = default;
+  MfrSysEx& operator=(MfrSysEx&&) = delete;
+
+  /** Returns the Manufacturer this SysEx message is for. */
+  Manufacturer manufacturer() const;
+
+  /**
+   * Returns read-only pointer to span of raw payload bytes, after the 1 or 3
+   * byte manufacturer ID (and not including the terminating EOX byte).
+   *
+   * See numPayloadBytes() for size.
+   */
+  const std::uint8_t* rawPayloadBytes() const;
+
+  /**
+   * Returns read-write pointer to span of raw payload bytes, after the 1 or 3
+   * byte manufacturer ID (and not including the terminating EOX byte).
+   *
+   * See numPayloadBytes() for size.
+   */
+  std::uint8_t* rawPayloadBytes();
+
+  /**
+   * Returns the # of payload bytes accessible through rawPayloadBytes(),
+   * starting after the 1 or 3 bytes manufacturer ID (and not including the
+   * terminating EOX byte).
+   */
+  int numPayloadBytes() const;
+
+  /**
+   * Returns read-only pointer to all message bytes, starting from the first
+   * SysEx status byte (0xF0) and spanning through the terminating EOX (0xF7)
+   * byte (inclusive).
+   *
+   * See numMsgBytesIncludingEox() for size.
+   */
+  const std::uint8_t* rawMsgBytes() const { return msgBytes_; }
+
+  /**
+   * Returns read-write pointer to all message bytes, starting from the first
+   * SysEx status byte (0xF0) and spanning through the terminating EOX (0xF7)
+   * byte (inclusive).
+   *
+   * See numMsgBytesIncludingEox() for size.
+   */
+  std::uint8_t* rawMsgBytes() { return msgBytes_; }
+
+  /**
+   * Returns the total # of bytes managed by this MfrSysEx message, from the
+   * first SysEx status byte (0xF0) through the terminating EOX (0xF7) byte
+   * (inclusive).
+   */
+  int numMsgBytesIncludingEox() const { return numMsgBytes_; }
+
+private:
+  friend class MfrSysExBuilder;
+
+  explicit MfrSysEx(Manufacturer manufacturer, int numPayloadBytes);
+  explicit MfrSysEx(Manufacturer manufacturer, std::uint8_t* rawMsgBytes, int numMsgBytes);
+
+  bool hasExtMfrId() const;
+  int numHeaderBytes() const;
+
+  int numMsgBytes_;
+  std::unique_ptr<std::uint8_t[]> heapAllocatedBytes_;  // Only set if this instance owns storage.
+  std::uint8_t* msgBytes_;  // Pointer to first SysEx status byte (0xF0), within
+                            // heapAllocatedBytes_, or referencing caller-provided storage.
+};
+
+/** Builder for creating instances of MfrSysEx messages. */
+class MfrSysExBuilder {
+public:
+  explicit MfrSysExBuilder(Manufacturer manufacturer)
+      : manufacturer_{manufacturer} {}
+
+  /**
+   * Sets the # of payload bytes, starting after the 1 or 3 bytes manufacturer
+   * ID (and not including the terminating EOX byte).
+   */
+  MfrSysExBuilder withNumPayloadBytes(int numPayloadBytes);
+
+  /**
+   * Returns the total # of bytes that will be managed by the built MfrSysEx
+   * message, from the first SysEx status byte (0xF0) through the terminating EOX
+   * (0xF7) byte (inclusive).
+   *
+   * Can only be called AFTER withNumPayloadBytes().
+   *
+   * This is provided so clients managing their own data buffers for MIDI
+   * message bytes can reserve the appropriate amount of storage, for use with
+   * buildAsRefToBytes().
+   */
+  int numMsgBytesIncludingEox() const;
+
+  /**
+   * Builds a new MfrSysEx message for the configured manufacturer and # of
+   * payload bytes, which will allocate and own storage for the full SysEx
+   * message on the heap.
+   *
+   * Can only be called AFTER withNumPayloadBytes().
+   */
+  MfrSysEx buildOnHeap() const;
+
+  /**
+   * Builds a new MfrSysEx message for the configured manufacturer and # of
+   * payload bytes, which will reference the provided rawMsgBytes (which must
+   * remain in scope for longer than the built MfrSysEx for access to be valid).
+   *
+   * The given numMsgBytes must be exactly equal to numMsgBytesIncludingEox().
+   *
+   * Can only be called AFTER withNumPayloadBytes().
+   */
+  MfrSysEx buildAsRefToBytes(std::uint8_t* rawMsgBytes, int numMsgBytes) const;
+
+private:
+  static constexpr int kUnset = -1;
+
+  Manufacturer manufacturer_;
+  int numPayloadBytes_ = kUnset;
+};
+
+// TODO: Add same pattern for UniversalSysEx[Builder].
 
 }  // namespace bmmidi
 

@@ -127,4 +127,106 @@ TEST(Device, SupportsEqualityOperations) {
   EXPECT_THAT(device33 != device32, IsTrue());
 }
 
+TEST(MfrSysEx, WorksForShortIdOnHeap) {
+  auto builder = bmmidi::MfrSysExBuilder{kSeqCircuits}.withNumPayloadBytes(4);
+  EXPECT_THAT(builder.numMsgBytesIncludingEox(), Eq(7));
+
+  auto msg = builder.buildOnHeap();
+  EXPECT_THAT(msg.manufacturer(), Eq(kSeqCircuits));
+
+  // Can fill in 4 payload bytes (with some fake payload data).
+  EXPECT_THAT(msg.numPayloadBytes(), Eq(4));
+  msg.rawPayloadBytes()[0] = 0xA0;
+  msg.rawPayloadBytes()[1] = 0xA1;
+  msg.rawPayloadBytes()[2] = 0xA2;
+  msg.rawPayloadBytes()[3] = 0xA3;
+
+  EXPECT_THAT(msg.numMsgBytesIncludingEox(), Eq(7));
+  EXPECT_THAT(msg.rawMsgBytes()[0], Eq(0xF0));  // SysEx status byte.
+  EXPECT_THAT(msg.rawMsgBytes()[1], Eq(0x01));  // SysEx ID (short manufacturer ID).
+
+  EXPECT_THAT(msg.rawMsgBytes()[2], Eq(0xA0));  // Payload [0]
+  EXPECT_THAT(msg.rawMsgBytes()[3], Eq(0xA1));  // Payload [1]
+  EXPECT_THAT(msg.rawMsgBytes()[4], Eq(0xA2));  // Payload [2]
+  EXPECT_THAT(msg.rawMsgBytes()[5], Eq(0xA3));  // Payload [3]
+
+  EXPECT_THAT(msg.rawMsgBytes()[6], Eq(0xF7));  // EOX.
+
+  // Test read-only access through const reference:
+  const auto& msgRef = msg;
+  EXPECT_THAT(msgRef.manufacturer(), Eq(kSeqCircuits));
+
+  EXPECT_THAT(msgRef.numPayloadBytes(), Eq(4));
+  EXPECT_THAT(msgRef.rawPayloadBytes()[0], Eq(0xA0));
+  EXPECT_THAT(msgRef.rawPayloadBytes()[1], Eq(0xA1));
+  EXPECT_THAT(msgRef.rawPayloadBytes()[2], Eq(0xA2));
+  EXPECT_THAT(msgRef.rawPayloadBytes()[3], Eq(0xA3));
+
+  EXPECT_THAT(msgRef.numMsgBytesIncludingEox(), Eq(7));
+  EXPECT_THAT(msgRef.rawMsgBytes()[0], Eq(0xF0));
+  EXPECT_THAT(msgRef.rawMsgBytes()[1], Eq(0x01));
+  EXPECT_THAT(msgRef.rawMsgBytes()[2], Eq(0xA0));
+  EXPECT_THAT(msgRef.rawMsgBytes()[3], Eq(0xA1));
+  EXPECT_THAT(msgRef.rawMsgBytes()[4], Eq(0xA2));
+  EXPECT_THAT(msgRef.rawMsgBytes()[5], Eq(0xA3));
+  EXPECT_THAT(msgRef.rawMsgBytes()[6], Eq(0xF7));
+}
+
+TEST(MfrSysEx, WorksForNonCommercialIdWithinBuffer) {
+  auto builder = bmmidi::MfrSysExBuilder{kNonCommercial}.withNumPayloadBytes(3);
+  EXPECT_THAT(builder.numMsgBytesIncludingEox(), Eq(6));
+
+  // Have MfrSysEx message reference into buffer[3]..buffer[8].
+  std::uint8_t buffer[20] = {};
+
+  auto msg = builder.buildAsRefToBytes(&buffer[3], 6);
+  EXPECT_THAT(msg.manufacturer(), Eq(kNonCommercial));
+
+  // Can fill in 3 payload bytes (with some fake payload data).
+  EXPECT_THAT(msg.numPayloadBytes(), Eq(3));
+  msg.rawPayloadBytes()[0] = 0xA0;
+  msg.rawPayloadBytes()[1] = 0xA1;
+  msg.rawPayloadBytes()[2] = 0xA2;
+
+  EXPECT_THAT(msg.numMsgBytesIncludingEox(), Eq(6));
+  EXPECT_THAT(msg.rawMsgBytes(), Eq(&buffer[3]));
+
+  EXPECT_THAT(buffer[3], Eq(0xF0));  // SysEx status byte.
+  EXPECT_THAT(buffer[4], Eq(0x7D));  // SysEx ID (non-commercial manufacturer ID).
+
+  EXPECT_THAT(buffer[5], Eq(0xA0));  // Payload [0]
+  EXPECT_THAT(buffer[6], Eq(0xA1));  // Payload [1]
+  EXPECT_THAT(buffer[7], Eq(0xA2));  // Payload [2]
+
+  EXPECT_THAT(buffer[8], Eq(0xF7));  // EOX.
+}
+
+TEST(MfrSysEx, WorksForExtIdOnHeap) {
+  auto builder = bmmidi::MfrSysExBuilder{kSpectrasonics}.withNumPayloadBytes(4);
+  EXPECT_THAT(builder.numMsgBytesIncludingEox(), Eq(9));
+
+  auto msg = builder.buildOnHeap();
+  EXPECT_THAT(msg.manufacturer(), Eq(kSpectrasonics));
+
+  // Can fill in 4 payload bytes (with some fake payload data).
+  EXPECT_THAT(msg.numPayloadBytes(), Eq(4));
+  msg.rawPayloadBytes()[0] = 0xA0;
+  msg.rawPayloadBytes()[1] = 0xA1;
+  msg.rawPayloadBytes()[2] = 0xA2;
+  msg.rawPayloadBytes()[3] = 0xA3;
+
+  EXPECT_THAT(msg.numMsgBytesIncludingEox(), Eq(9));
+  EXPECT_THAT(msg.rawMsgBytes()[0], Eq(0xF0));  // SysEx status byte.
+  EXPECT_THAT(msg.rawMsgBytes()[1], Eq(0x00));  // SysEx ID (extended manufacturer ID).
+  EXPECT_THAT(msg.rawMsgBytes()[2], Eq(0x02));  // Extended Manufacturer ID byte #1.
+  EXPECT_THAT(msg.rawMsgBytes()[3], Eq(0x2C));  // Extended Manufacturer ID byte #2.
+
+  EXPECT_THAT(msg.rawMsgBytes()[4], Eq(0xA0));  // Payload [0]
+  EXPECT_THAT(msg.rawMsgBytes()[5], Eq(0xA1));  // Payload [1]
+  EXPECT_THAT(msg.rawMsgBytes()[6], Eq(0xA2));  // Payload [2]
+  EXPECT_THAT(msg.rawMsgBytes()[7], Eq(0xA3));  // Payload [3]
+
+  EXPECT_THAT(msg.rawMsgBytes()[8], Eq(0xF7));  // EOX.
+}
+
 }  // namespace

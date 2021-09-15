@@ -1,6 +1,6 @@
 include(BMMidiTargets)
 
-bmmidi_header_library(Lib
+bmmidi_library(Lib
     bmmidi.hpp
     channel.hpp
     cpp_features.hpp
@@ -12,6 +12,7 @@ bmmidi_header_library(Lib
     pitch_bend.hpp
     preset_number.hpp
     status.hpp
+    sysex.cpp
     sysex.hpp
     time.hpp)
 
