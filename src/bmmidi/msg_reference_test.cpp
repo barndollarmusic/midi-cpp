@@ -764,4 +764,93 @@ TEST(SysExMsgView, CanReferToUniversalSysEx) {
 // NOTE: Not testing SysExMsgRef directly, since there are no SysEx-specific
 // mutation functions provided.
 
+TEST(MfrSysExMsgView, WorksForNonCommercialRawBytes) {
+  // (Non-Commercial SysEx with 3 payload bytes).
+  const std::uint8_t srcBytes[] = {0xF0, 0x7D, 0xA0, 0xA1, 0xA2, 0xF7};
+  bmmidi::MfrSysExMsgView mfrMsgView{srcBytes, sizeof(srcBytes)};
+
+  // Can use MfrSysExMsgView accessors:
+  EXPECT_THAT(mfrMsgView.manufacturer(), Eq(bmmidi::Manufacturer::nonCommercial()));
+  EXPECT_THAT(mfrMsgView.rawPayloadBytes(), Eq(&srcBytes[2]));
+  EXPECT_THAT(mfrMsgView.numPayloadBytes(), Eq(3));
+
+  // Can also still use (non-hidden) base accessors:
+  EXPECT_THAT(mfrMsgView.sysExId(), Eq(0x7D));
+  EXPECT_THAT(mfrMsgView.isUniversal(), IsFalse());
+
+  EXPECT_THAT(mfrMsgView.type(), Eq(bmmidi::MsgType::kSystemExclusive));
+  EXPECT_THAT(mfrMsgView.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kSystemExclusive)));
+  EXPECT_THAT(mfrMsgView.numBytes(), Eq(6));
+  EXPECT_THAT(mfrMsgView.rawBytes(), Eq(&srcBytes[0]));
+}
+
+TEST(MfrSysExMsgView, WorksForExtIdMfrSysExMsg) {
+  // (Fake Spectrasonics SysEx message format with 3 payload bytes).
+  auto sysExMsg = bmmidi::MfrSysExBuilder{bmmidi::Manufacturer::extId(0x02, 0x2C)}
+      .withNumPayloadBytes(3)
+      .buildOnHeap();
+  sysExMsg.rawPayloadBytes()[0] = 0xA0;
+  sysExMsg.rawPayloadBytes()[1] = 0xA1;
+  sysExMsg.rawPayloadBytes()[2] = 0xA2;
+
+  bmmidi::MfrSysExMsgView mfrMsgView{sysExMsg.rawMsgBytes(), sysExMsg.numMsgBytesIncludingEox()};
+
+  // Can use MfrSysExMsgView accessors:
+  EXPECT_THAT(mfrMsgView.manufacturer(), Eq(bmmidi::Manufacturer::extId(0x02, 0x2C)));
+  EXPECT_THAT(mfrMsgView.numPayloadBytes(), Eq(3));
+  EXPECT_THAT(mfrMsgView.rawPayloadBytes()[0], Eq(0xA0));
+  EXPECT_THAT(mfrMsgView.rawPayloadBytes()[1], Eq(0xA1));
+  EXPECT_THAT(mfrMsgView.rawPayloadBytes()[2], Eq(0xA2));
+
+  // Can also still use (non-hidden) base accessors:
+  EXPECT_THAT(mfrMsgView.sysExId(), Eq(0x00));
+  EXPECT_THAT(mfrMsgView.isUniversal(), IsFalse());
+
+  EXPECT_THAT(mfrMsgView.type(), Eq(bmmidi::MsgType::kSystemExclusive));
+  EXPECT_THAT(mfrMsgView.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kSystemExclusive)));
+  EXPECT_THAT(mfrMsgView.numBytes(), Eq(8));
+  EXPECT_THAT(mfrMsgView.rawBytes()[0], Eq(0xF0));  // SysEx status byte.
+  EXPECT_THAT(mfrMsgView.rawBytes()[1], Eq(0x00));  // SysEx ID (extended manufacturer ID).
+  EXPECT_THAT(mfrMsgView.rawBytes()[2], Eq(0x02));  // Extended Manufacturer ID byte #1.
+  EXPECT_THAT(mfrMsgView.rawBytes()[3], Eq(0x2C));  // Extended Manufacturer ID byte #2.
+
+  EXPECT_THAT(mfrMsgView.rawBytes()[4], Eq(0xA0));  // Payload [0]
+  EXPECT_THAT(mfrMsgView.rawBytes()[5], Eq(0xA1));  // Payload [1]
+  EXPECT_THAT(mfrMsgView.rawBytes()[6], Eq(0xA2));  // Payload [2]
+
+  EXPECT_THAT(mfrMsgView.rawBytes()[7], Eq(0xF7));  // EOX.
+}
+
+TEST(MfrSysExMsgRef, WorksForShortIdRawBytes) {
+  // (Fake Sequential Circuits SysEx message format with 4 payload bytes).
+  std::uint8_t srcBytes[] = {0xF0, 0x01, 0xA0, 0xA1, 0xA2, 0xA3, 0xF7};
+  bmmidi::MfrSysExMsgRef mfrMsgRef{srcBytes, sizeof(srcBytes)};
+
+  // Can use MfrSysExMsgRef accessors:
+  EXPECT_THAT(mfrMsgRef.manufacturer(), Eq(bmmidi::Manufacturer::shortId(0x01)));
+  EXPECT_THAT(mfrMsgRef.rawPayloadBytes(), Eq(&srcBytes[2]));
+  EXPECT_THAT(mfrMsgRef.numPayloadBytes(), Eq(4));
+
+  // Can also still use (non-hidden) base accessors:
+  EXPECT_THAT(mfrMsgRef.sysExId(), Eq(0x01));
+  EXPECT_THAT(mfrMsgRef.isUniversal(), IsFalse());
+
+  EXPECT_THAT(mfrMsgRef.type(), Eq(bmmidi::MsgType::kSystemExclusive));
+  EXPECT_THAT(mfrMsgRef.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kSystemExclusive)));
+  EXPECT_THAT(mfrMsgRef.numBytes(), Eq(7));
+  EXPECT_THAT(mfrMsgRef.rawBytes(), Eq(&srcBytes[0]));
+
+  // Can mutate payload bytes only (other mutators aren't provided, since they
+  // could end up changing the # of message bytes).
+  mfrMsgRef.rawPayloadBytes()[0] = 0xB0;
+  mfrMsgRef.rawPayloadBytes()[1] = 0xB1;
+  mfrMsgRef.rawPayloadBytes()[2] = 0xB2;
+  mfrMsgRef.rawPayloadBytes()[3] = 0xB3;
+
+  EXPECT_THAT(srcBytes[2], Eq(0xB0));
+  EXPECT_THAT(srcBytes[3], Eq(0xB1));
+  EXPECT_THAT(srcBytes[4], Eq(0xB2));
+  EXPECT_THAT(srcBytes[5], Eq(0xB3));
+}
+
 }  // namespace

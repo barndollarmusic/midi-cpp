@@ -615,6 +615,89 @@ using TimedSysExMsgView = Timed<SysExMsgView>;
 /** Alias for a timestamped read-write reference to a SysEx message. */
 using TimedSysExMsgRef = Timed<SysExMsgRef>;
 
+/**
+ * A reference to a manufacturer-specific (or private non-commercial) System
+ * Exclusive (SysEx) message stored as contiguous bytes (which must outlive
+ * this reference object), including a terminating End of Exclusive (EOX) status
+ * byte.
+ *
+ * Can either be read-write (see MfrSysExMsgRef alias) or read-only (see
+ * MfrSysExMsgView alias), based on AccessType template parameter.
+ */
+template<MsgAccess AccessType>
+class MfrSysExMsgReference : public SysExMsgReference<AccessType> {
+public:
+  using BytePointerType = typename SysExMsgReference<AccessType>::BytePointerType;
+
+  explicit MfrSysExMsgReference(BytePointerType bytes, int numBytes)
+      : SysExMsgReference<AccessType>{bytes, numBytes} {
+    assert(!this->isUniversal());
+  }
+
+  /** Returns the Manufacturer this SysEx message is for. */
+  Manufacturer manufacturer() const {
+    if (this->sysExId() == Manufacturer::kExtendedSysExId) {
+      return Manufacturer::extId(this->rawBytes()[2], this->rawBytes()[3]);
+    } else if (this->sysExId() == Manufacturer::kNonCommercialSysExId) {
+      return Manufacturer::nonCommercial();
+    } else {
+      return Manufacturer::shortId(this->sysExId());
+    }
+  }
+
+  // NOTE: No mutation provided for setting Manufacturer, since that could
+  // change the # of bytes this message requires.
+
+  /**
+   * Returns read-only pointer to span of raw payload bytes, after the 1 or 3
+   * byte manufacturer ID (and not including the terminating EOX byte).
+   *
+   * See numPayloadBytes() for size.
+   */
+  const std::uint8_t* rawPayloadBytes() const {
+    return &(this->rawBytes()[numHeaderBytes()]);
+  }
+
+  /**
+   * Returns read-write pointer to span of raw payload bytes, after the 1 or 3
+   * byte manufacturer ID (and not including the terminating EOX byte).
+   *
+   * See numPayloadBytes() for size.
+   */
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  std::uint8_t* rawPayloadBytes() {
+    return &(this->rawBytes()[numHeaderBytes()]);
+  }
+
+  /**
+   * Returns the # of payload bytes accessible through rawPayloadBytes(),
+   * starting after the 1 or 3 bytes manufacturer ID (and not including the
+   * terminating EOX byte).
+   */
+  int numPayloadBytes() const {
+    return this->numBytes() - numHeaderBytes() - 1;  // Last -1 for trailing EOX.
+  }
+
+private:
+  int numHeaderBytes() const {
+    return 1 + ((this->sysExId() == Manufacturer::kExtendedSysExId) ? 3 : 1);
+  }
+};
+
+/** Alias for a read-only MfrSysExMsgReference. */
+using MfrSysExMsgView = MfrSysExMsgReference<MsgAccess::kReadOnly>;
+
+/** Alias for a read-write MfrSysExMsgReference. */
+using MfrSysExMsgRef = MfrSysExMsgReference<MsgAccess::kReadWrite>;
+
+/** Alias for a timestamped read-only reference to a manufacturer-specific SysEx message. */
+using TimedMfrSysExMsgView = Timed<MfrSysExMsgView>;
+
+/** Alias for a timestamped read-write reference to a manufacturer-specific SysEx message. */
+using TimedMfrSysExMsgRef = Timed<MfrSysExMsgRef>;
+
 }  // namespace bmmidi
 
 #endif  // BMMIDI_MSG_REFERENCE_HPP
