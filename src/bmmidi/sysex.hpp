@@ -658,6 +658,9 @@ public:
    */
   Device device() const;
 
+  /** Sets the device (or special "all" value) that should respond. */
+  void setDevice(Device device);
+
   /**
    * Returns read-only pointer to span of raw payload bytes, after the SysEx ID,
    * device ID, and 1 or 2 sub-ID bytes (and not including the terminating EOX
@@ -778,6 +781,20 @@ private:
   int numPayloadBytes_ = kUnset;
 };
 
+namespace internal {
+
+static constexpr int kOneSysExHdrStatusByte = 1;
+static constexpr int kOneSysExTerminatingEoxByte = 1;
+
+static constexpr int kNumManufacturerIdShortBytes = 1;
+static constexpr int kNumManufacturerIdExtBytes = 3;
+
+static constexpr int kNumUniversalHdrBytesOneSubId = 3;
+static constexpr int kNumUniversalHdrBytesTwoSubIds = 4;
+
+bool typeHasSubId2(UniversalCategory category, std::uint8_t subId1);
+
+}  // namespace internal
 }  // namespace bmmidi
 
 #endif  // BMMIDI_SYSEX_HPP

@@ -682,7 +682,10 @@ public:
 
 private:
   int numHeaderBytes() const {
-    return 1 + ((this->sysExId() == Manufacturer::kExtendedSysExId) ? 3 : 1);
+    const auto numMfrBytes = (this->sysExId() == Manufacturer::kExtendedSysExId)
+        ? internal::kNumManufacturerIdExtBytes
+        : internal::kNumManufacturerIdShortBytes;
+    return internal::kOneSysExHdrStatusByte + numMfrBytes;
   }
 };
 
@@ -697,6 +700,121 @@ using TimedMfrSysExMsgView = Timed<MfrSysExMsgView>;
 
 /** Alias for a timestamped read-write reference to a manufacturer-specific SysEx message. */
 using TimedMfrSysExMsgRef = Timed<MfrSysExMsgRef>;
+
+/**
+ * A reference to a Non-Realtime or Realtime Universal System Exclusive (SysEx)
+ * message stored as contiguous bytes (which must outlive this reference object),
+ * including a terminating End of Exclusive (EOX) status byte.
+ *
+ * Can either be read-write (see UniversalSysExMsgRef alias) or read-only (see
+ * UniversalSysExMsgView alias), based on AccessType template parameter.
+ */
+template<MsgAccess AccessType>
+class UniversalSysExMsgReference : public SysExMsgReference<AccessType> {
+public:
+  using BytePointerType = typename SysExMsgReference<AccessType>::BytePointerType;
+
+  explicit UniversalSysExMsgReference(BytePointerType bytes, int numBytes)
+      : SysExMsgReference<AccessType>{bytes, numBytes} {
+    assert(this->isUniversal());
+  }
+
+  /** Returns the category of universal message this is (non-realtime or realtime). */
+  UniversalCategory category() const {
+    return static_cast<UniversalCategory>(this->sysExId());
+  }
+
+  /** Returns the type of universal message this is. */
+  UniversalType universalType() const {
+    const auto cat = category();
+    const auto subId1 = this->rawBytes()[3];
+
+    if (cat == UniversalCategory::kNonRealTime) {
+      return internal::typeHasSubId2(cat, subId1)
+          ? UniversalType::nonRealTime(subId1, this->rawBytes()[4])
+          : UniversalType::nonRealTime(subId1);
+    } else {
+      return internal::typeHasSubId2(cat, subId1)
+          ? UniversalType::realTime(subId1, this->rawBytes()[4])
+          : UniversalType::realTime(subId1);
+    }
+  }
+
+  // NOTE: No mutations provided for category or type, since those could change
+  // the # of bytes this message requires.
+
+  /**
+   * Returns the device that should respond to this message (or special "all"
+   * value that indicates message is for all receiving devices).
+   */
+  Device device() const {
+    return (this->rawBytes()[2] == Device::all().value())
+        ? Device::all()
+        : Device::id(this->rawBytes()[2]);
+  }
+
+  /** Sets the device (or special "all" value) that should respond. */
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setDevice(Device device) {
+    this->rawBytes()[2] = device.value();
+  }
+
+  /**
+   * Returns read-only pointer to span of raw payload bytes, after the SysEx ID,
+   * device ID, and 1 or 2 sub-ID bytes (and not including the terminating EOX
+   * byte).
+   *
+   * See numPayloadBytes() for size.
+   */
+  const std::uint8_t* rawPayloadBytes() const {
+    return &(this->rawBytes()[numHeaderBytes()]);
+  }
+
+  /**
+   * Returns read-write pointer to span of raw payload bytes, after the SysEx
+   * ID, device ID, and 1 or 2 sub-ID bytes (and not including the terminating
+   * EOX byte).
+   *
+   * See numPayloadBytes() for size.
+   */
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  std::uint8_t* rawPayloadBytes() {
+    return &(this->rawBytes()[numHeaderBytes()]);
+  }
+
+  /**
+   * Returns the # of payload bytes accessible through rawPayloadBytes(),
+   * starting after the SysEx ID, device ID, and 1 or 2 sub-ID bytes (and not
+   * including the terminating EOX byte).
+   */
+  int numPayloadBytes() const {
+    return this->numBytes() - numHeaderBytes() - 1;  // Last -1 for trailing EOX.
+  }
+
+private:
+  int numHeaderBytes() const {
+    const auto numUniversalHdrBytes = internal::typeHasSubId2(category(), this->rawBytes()[3])
+        ? internal::kNumUniversalHdrBytesTwoSubIds
+        : internal::kNumUniversalHdrBytesOneSubId;
+    return internal::kOneSysExHdrStatusByte + numUniversalHdrBytes;
+  }
+};
+
+/** Alias for a read-only UniversalSysExMsgReference. */
+using UniversalSysExMsgView = UniversalSysExMsgReference<MsgAccess::kReadOnly>;
+
+/** Alias for a read-write UniversalSysExMsgReference. */
+using UniversalSysExMsgRef = UniversalSysExMsgReference<MsgAccess::kReadWrite>;
+
+/** Alias for a timestamped read-only reference to a manufacturer-specific SysEx message. */
+using TimedUniversalSysExMsgView = Timed<UniversalSysExMsgView>;
+
+/** Alias for a timestamped read-write reference to a manufacturer-specific SysEx message. */
+using TimedUniversalSysExMsgRef = Timed<UniversalSysExMsgRef>;
 
 }  // namespace bmmidi
 

@@ -293,6 +293,11 @@ TEST(UniversalSysEx, WorksForOneSubIdTypeWithinBuffer) {
   EXPECT_THAT(msgRef.rawMsgBytes()[3], Eq(0x7F));
   EXPECT_THAT(msgRef.rawMsgBytes()[4], Eq(0x3D));
   EXPECT_THAT(msgRef.rawMsgBytes()[5], Eq(0xF7));
+
+  // Can also mutate device (since that can't ever change # of message bytes).
+  msg.setDevice(bmmidi::Device::id(22));  // 0x16.
+  EXPECT_THAT(msgRef.device(), Eq(bmmidi::Device::id(22)));
+  EXPECT_THAT(buffer[5], Eq(0x16));
 }
 
 TEST(UniversalSysEx, WorksForTwoSubIdTypeOnHeap) {

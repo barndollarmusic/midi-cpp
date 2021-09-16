@@ -3,33 +3,43 @@
 #include "bmmidi/status.hpp"
 
 namespace bmmidi {
+namespace internal {
+
+bool typeHasSubId2(UniversalCategory category, std::uint8_t subId1) {
+  // See https://www.midi.org/specifications-old/item/table-4-universal-system-exclusive-messages.
+  if (category == UniversalCategory::kNonRealTime) {
+    return (0x03 < subId1) && (subId1 < 0x7B);
+  } else {
+    return (subId1 != 0x00);
+  }
+}
+
+}  // namespace internal
+
 namespace {
-
-static constexpr int kOneSysExHdrStatusByte = 1;
-static constexpr int kOneSysExTerminatingEoxByte = 1;
-
-static constexpr int kNumManufacturerIdShortBytes = 1;
-static constexpr int kNumManufacturerIdExtBytes = 3;
-
-static constexpr int kNumUniversalHdrBytesOneSubId = 3;
-static constexpr int kNumUniversalHdrBytesTwoSubIds = 4;
 
 int numBytesForId(Manufacturer mfr) {
   return mfr.isExtended() ? 3 : 1;
 }
 
 int numMsgBytesFor(Manufacturer mfr, int numPayloadBytes) {
-  return kOneSysExHdrStatusByte
-      + (mfr.isExtended() ? kNumManufacturerIdExtBytes : kNumManufacturerIdShortBytes)
+  const auto numMfrBytes = mfr.isExtended()
+      ? internal::kNumManufacturerIdExtBytes
+      : internal::kNumManufacturerIdShortBytes;
+  return internal::kOneSysExHdrStatusByte
+      + numMfrBytes
       + numPayloadBytes
-      + kOneSysExTerminatingEoxByte;
+      + internal::kOneSysExTerminatingEoxByte;
 }
 
 int numMsgBytesFor(UniversalType type, int numPayloadBytes) {
-  return kOneSysExHdrStatusByte
-      + (type.hasSubId2() ? kNumUniversalHdrBytesTwoSubIds : kNumUniversalHdrBytesOneSubId)
+  const auto numUniversalHdrBytes = type.hasSubId2()
+      ? internal::kNumUniversalHdrBytesTwoSubIds
+      : internal::kNumUniversalHdrBytesOneSubId;
+  return internal::kOneSysExHdrStatusByte
+      + numUniversalHdrBytes
       + numPayloadBytes
-      + kOneSysExTerminatingEoxByte;
+      + internal::kOneSysExTerminatingEoxByte;
 }
 
 void writeSysExStatusBytes(std::uint8_t* rawMsgBytes, int numMsgBytes) {
@@ -51,15 +61,6 @@ void writeUniversalHeaderBytes(UniversalType type, Device device, std::uint8_t* 
   rawMsgBytes[3] = type.subId1();
   if (type.hasSubId2()) {
     rawMsgBytes[4] = type.subId2();
-  }
-}
-
-bool hasSubId2(UniversalCategory category, std::uint8_t subId1) {
-  // See https://www.midi.org/specifications-old/item/table-4-universal-system-exclusive-messages.
-  if (category == UniversalCategory::kNonRealTime) {
-    return (0x03 < subId1) && (subId1 < 0x7B);
-  } else {
-    return (subId1 != 0x00);
   }
 }
 
@@ -88,8 +89,10 @@ MfrSysEx::MfrSysEx(Manufacturer manufacturer, std::uint8_t* rawMsgBytes, int num
 bool MfrSysEx::hasExtMfrId() const { return (msgBytes_[1] == Manufacturer::kExtendedSysExId); }
 
 int MfrSysEx::numHeaderBytes() const {
-  return kOneSysExHdrStatusByte
-      + (hasExtMfrId() ? kNumManufacturerIdExtBytes : kNumManufacturerIdShortBytes);
+  const auto numMfrBytes = hasExtMfrId()
+      ? internal::kNumManufacturerIdExtBytes
+      : internal::kNumManufacturerIdShortBytes;
+  return internal::kOneSysExHdrStatusByte + numMfrBytes;
 }
 
 Manufacturer MfrSysEx::manufacturer() const {
@@ -110,7 +113,7 @@ std::uint8_t* MfrSysEx::rawPayloadBytes() {
 }
 
 int MfrSysEx::numPayloadBytes() const {
-  return numMsgBytes_ - numHeaderBytes() - kOneSysExTerminatingEoxByte;
+  return numMsgBytes_ - numHeaderBytes() - internal::kOneSysExTerminatingEoxByte;
 }
 
 MfrSysExBuilder MfrSysExBuilder::withNumPayloadBytes(int numPayloadBytes) {
@@ -159,12 +162,14 @@ UniversalSysEx::UniversalSysEx(
 }
 
 bool UniversalSysEx::typeHasSubId2() const {
-  return hasSubId2(category(), msgBytes_[3]);
+  return internal::typeHasSubId2(category(), msgBytes_[3]);
 }
 
 int UniversalSysEx::numHeaderBytes() const {
-  return kOneSysExHdrStatusByte
-      + (typeHasSubId2() ? kNumUniversalHdrBytesTwoSubIds : kNumUniversalHdrBytesOneSubId);
+  const auto numUniversalHdrBytes = typeHasSubId2()
+      ? internal::kNumUniversalHdrBytesTwoSubIds
+      : internal::kNumUniversalHdrBytesOneSubId;
+  return internal::kOneSysExHdrStatusByte + numUniversalHdrBytes;
 }
 
 UniversalCategory UniversalSysEx::category() const {
@@ -191,6 +196,10 @@ Device UniversalSysEx::device() const {
       : Device::id(msgBytes_[2]);
 }
 
+void UniversalSysEx::setDevice(Device device) {
+  msgBytes_[2] = device.value();
+}
+
 const std::uint8_t* UniversalSysEx::rawPayloadBytes() const {
   return &msgBytes_[numHeaderBytes()];
 }
@@ -200,7 +209,7 @@ std::uint8_t* UniversalSysEx::rawPayloadBytes() {
 }
 
 int UniversalSysEx::numPayloadBytes() const {
-  return numMsgBytes_ - numHeaderBytes() - kOneSysExTerminatingEoxByte;
+  return numMsgBytes_ - numHeaderBytes() - internal::kOneSysExTerminatingEoxByte;
 }
 
 UniversalSysExBuilder UniversalSysExBuilder::withNumPayloadBytes(int numPayloadBytes) {

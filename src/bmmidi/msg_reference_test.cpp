@@ -853,4 +853,125 @@ TEST(MfrSysExMsgRef, WorksForShortIdRawBytes) {
   EXPECT_THAT(srcBytes[5], Eq(0xB3));
 }
 
+TEST(UniversalSysExMsgView, WorksForOneSubIdTypeRawBytes) {
+  // (Non-Realtime Universal SysEx ACK to device 22 for packet #61).
+  const std::uint8_t srcBytes[] = {0xF0, 0x7E, 0x16, 0x7F, 0x3D, 0xF7};
+  bmmidi::UniversalSysExMsgView univMsgView{srcBytes, sizeof(srcBytes)};
+
+  // Can use UniversalSysExMsgView accessors:
+  EXPECT_THAT(univMsgView.category(), Eq(bmmidi::UniversalCategory::kNonRealTime));
+  EXPECT_THAT(univMsgView.universalType(), Eq(bmmidi::universal::kAck));
+  EXPECT_THAT(univMsgView.device(), Eq(bmmidi::Device::id(22)));
+  EXPECT_THAT(univMsgView.numPayloadBytes(), Eq(1));
+  EXPECT_THAT(univMsgView.rawPayloadBytes(), Eq(&srcBytes[4]));
+  EXPECT_THAT(univMsgView.rawPayloadBytes()[0], Eq(0x3D));  // Device 22.
+
+  // Can also still use (non-hidden) base accessors:
+  EXPECT_THAT(univMsgView.sysExId(), Eq(0x7E));
+  EXPECT_THAT(univMsgView.isUniversal(), IsTrue());
+
+  EXPECT_THAT(univMsgView.type(), Eq(bmmidi::MsgType::kSystemExclusive));
+  EXPECT_THAT(univMsgView.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kSystemExclusive)));
+  EXPECT_THAT(univMsgView.numBytes(), Eq(6));
+  EXPECT_THAT(univMsgView.rawBytes(), Eq(&srcBytes[0]));
+}
+
+TEST(UniversalSysExMsgView, WorksForRealtimeRawBytes) {
+  // (Realtime Universal SysEx Tuning Note Change for device 22, tuning program 0x04, key 60).
+  const std::uint8_t srcBytes[] =
+      {0xF0, 0x7F, 0x16, 0x08, 0x02, 0x04, 0x01, 0x3C, 0x3B, 0x63, 0x1A, 0xF7};
+  bmmidi::UniversalSysExMsgView univMsgView{srcBytes, sizeof(srcBytes)};
+
+  // Can use UniversalSysExMsgView accessors:
+  EXPECT_THAT(univMsgView.category(), Eq(bmmidi::UniversalCategory::kRealTime));
+  EXPECT_THAT(univMsgView.universalType(), Eq(bmmidi::universal::kTuningRtNoteChange));
+  EXPECT_THAT(univMsgView.device(), Eq(bmmidi::Device::id(22)));
+  EXPECT_THAT(univMsgView.numPayloadBytes(), Eq(6));
+  EXPECT_THAT(univMsgView.rawPayloadBytes(), Eq(&srcBytes[5]));
+
+  // Can also still use (non-hidden) base accessors:
+  EXPECT_THAT(univMsgView.sysExId(), Eq(0x7F));
+  EXPECT_THAT(univMsgView.isUniversal(), IsTrue());
+
+  EXPECT_THAT(univMsgView.type(), Eq(bmmidi::MsgType::kSystemExclusive));
+  EXPECT_THAT(univMsgView.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kSystemExclusive)));
+  EXPECT_THAT(univMsgView.numBytes(), Eq(12));
+  EXPECT_THAT(univMsgView.rawBytes(), Eq(&srcBytes[0]));
+
+  EXPECT_THAT(univMsgView.rawBytes()[0], Eq(0xF0));  // SysEx status byte.
+  EXPECT_THAT(univMsgView.rawBytes()[1], Eq(0x7F));  // SysEx ID (realtime universal).
+  EXPECT_THAT(univMsgView.rawBytes()[2], Eq(0x16));  // Device ID.
+  EXPECT_THAT(univMsgView.rawBytes()[3], Eq(0x08));  // Sub-ID #1 (0x08).
+  EXPECT_THAT(univMsgView.rawBytes()[4], Eq(0x02));  // Sub-ID #2 (0x02).
+
+  EXPECT_THAT(univMsgView.rawBytes()[5], Eq(0x04));  // Payload [0] (tuning program #).
+  EXPECT_THAT(univMsgView.rawBytes()[6], Eq(0x01));  // Payload [1] (# notes).
+  EXPECT_THAT(univMsgView.rawBytes()[7], Eq(0x3C));  // Payload [2] (key 60).
+  EXPECT_THAT(univMsgView.rawBytes()[8], Eq(0x3B));  // Payload [3] (key 59 below target freq).
+
+  // Next 2 bytes are fraction of 100 cents above the previous MIDI key,
+  // here 3427 * 100 / (2^14) = 20.916748... cents.
+  // With A4=440 Hz global tuning, the resultant frequency would be 249.94329294... Hz.
+  // LSB:            0b110 0011 (  0x63 = 99)
+  // MSB:   0b00 1101 0         (  0x1A = 26)
+  // Val: 0b  00 1101 0110 0011 (0x0D63 = 3427)
+  EXPECT_THAT(univMsgView.rawBytes()[9], Eq(0x63));  // Payload [4] (LSB fraction above)
+  EXPECT_THAT(univMsgView.rawBytes()[10], Eq(0x1A)); // Payload [5] (MSB fraction above)
+
+  EXPECT_THAT(univMsgView.rawBytes()[11], Eq(0xF7)); // EOX.
+}
+
+TEST(UniversalSysExMsgRef, WorksForTwoSubIdTypeUniversalSysExMsg) {
+  // (Non-Realtime Universal SysEx Tuning Bulk Dump Request, all devices, tuning program 0x04).
+  const auto type = bmmidi::universal::kTuningBulkDumpReq;
+  const auto allDevices = bmmidi::Device::all();
+
+  auto sysExMsg = bmmidi::UniversalSysExBuilder{type, allDevices}
+      .withNumPayloadBytes(1)
+      .buildOnHeap();
+  sysExMsg.rawPayloadBytes()[0] = 0x04;
+
+  bmmidi::UniversalSysExMsgRef univMsgRef{
+      sysExMsg.rawMsgBytes(), sysExMsg.numMsgBytesIncludingEox()};
+
+  // Can use UniversalSysExMsgRef accessors:
+  EXPECT_THAT(univMsgRef.category(), Eq(bmmidi::UniversalCategory::kNonRealTime));
+  EXPECT_THAT(univMsgRef.universalType(), Eq(bmmidi::universal::kTuningBulkDumpReq));
+  EXPECT_THAT(univMsgRef.device(), Eq(bmmidi::Device::all()));
+  EXPECT_THAT(univMsgRef.numPayloadBytes(), Eq(1));
+  EXPECT_THAT(univMsgRef.rawPayloadBytes()[0], Eq(0x04));  // Tuning program.
+
+  // Can also still use (non-hidden) base accessors:
+  EXPECT_THAT(univMsgRef.sysExId(), Eq(0x7E));
+  EXPECT_THAT(univMsgRef.isUniversal(), IsTrue());
+
+  EXPECT_THAT(univMsgRef.type(), Eq(bmmidi::MsgType::kSystemExclusive));
+  EXPECT_THAT(univMsgRef.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kSystemExclusive)));
+  EXPECT_THAT(univMsgRef.numBytes(), Eq(7));
+  EXPECT_THAT(univMsgRef.rawBytes()[0], Eq(0xF0));  // SysEx status byte.
+  EXPECT_THAT(univMsgRef.rawBytes()[1], Eq(0x7E));  // SysEx ID (non-realtime universal).
+  EXPECT_THAT(univMsgRef.rawBytes()[2], Eq(0x7F));  // Device ID ("all").
+  EXPECT_THAT(univMsgRef.rawBytes()[3], Eq(0x08));  // Sub-ID #1 (0x08).
+  EXPECT_THAT(univMsgRef.rawBytes()[4], Eq(0x00));  // Sub-ID #2 (0x00).
+
+  EXPECT_THAT(univMsgRef.rawBytes()[5], Eq(0x04));  // Payload [0] (tuning program #).
+
+  EXPECT_THAT(univMsgRef.rawBytes()[6], Eq(0xF7));  // EOX.
+
+  // Can mutate device and payload bytes only (other mutators aren't provided,
+  // since they could end up changing the # of message bytes).
+  univMsgRef.setDevice(bmmidi::Device::id(22));  // 0x16.
+  univMsgRef.rawPayloadBytes()[0] = 0x3D;  // Tuning program.
+
+  EXPECT_THAT(univMsgRef.rawBytes()[0], Eq(0xF0));  // SysEx status byte.
+  EXPECT_THAT(univMsgRef.rawBytes()[1], Eq(0x7E));  // SysEx ID (non-realtime universal).
+  EXPECT_THAT(univMsgRef.rawBytes()[2], Eq(0x16));  // Device ID (22).
+  EXPECT_THAT(univMsgRef.rawBytes()[3], Eq(0x08));  // Sub-ID #1 (0x08).
+  EXPECT_THAT(univMsgRef.rawBytes()[4], Eq(0x00));  // Sub-ID #2 (0x00).
+
+  EXPECT_THAT(univMsgRef.rawBytes()[5], Eq(0x3D));  // Payload [0] (tuning program #).
+
+  EXPECT_THAT(univMsgRef.rawBytes()[6], Eq(0xF7));  // EOX.
+}
+
 }  // namespace
