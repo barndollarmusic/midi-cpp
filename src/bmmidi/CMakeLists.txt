@@ -1,6 +1,7 @@
 include(BMMidiTargets)
 
 bmmidi_library(Lib
+    bitops.hpp
     bmmidi.hpp
     channel.hpp
     cpp_features.hpp
@@ -17,6 +18,10 @@ bmmidi_library(Lib
     time.hpp)
 
 if(BMMidi_ENABLE_TESTING)
+  bmmidi_gtest(BitOpsTest bitops_test.cpp)
+  target_link_libraries(BMMidi_BitOpsTest
+      PRIVATE BMMidi::Lib)
+
   bmmidi_gtest(ChannelTest channel_test.cpp)
   target_link_libraries(BMMidi_ChannelTest
       PRIVATE BMMidi::Lib)
