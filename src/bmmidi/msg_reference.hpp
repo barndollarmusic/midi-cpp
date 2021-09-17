@@ -16,8 +16,8 @@
 #include "bmmidi/preset_number.hpp"
 #include "bmmidi/status.hpp"
 #include "bmmidi/sysex.hpp"
-#include "bmmidi/time.hpp"
 #include "bmmidi/timecode.hpp"
+#include "bmmidi/timed.hpp"
 
 namespace bmmidi {
 

@@ -15,8 +15,8 @@
 #include "bmmidi/pitch_bend.hpp"
 #include "bmmidi/preset_number.hpp"
 #include "bmmidi/status.hpp"
-#include "bmmidi/time.hpp"
 #include "bmmidi/timecode.hpp"
+#include "bmmidi/timed.hpp"
 
 namespace bmmidi {
 

@@ -1,5 +1,5 @@
-#ifndef BMMIDI_TIME_HPP
-#define BMMIDI_TIME_HPP
+#ifndef BMMIDI_TIMED_HPP
+#define BMMIDI_TIMED_HPP
 
 #include <cassert>
 #include <utility>
@@ -53,4 +53,4 @@ inline bool operator!=(Timed<T> lhs, Timed<T> rhs) { return !(lhs == rhs); }
 
 }  // namespace bmmidi
 
-#endif  // BMMIDI_TIME_HPP
+#endif  // BMMIDI_TIMED_HPP

@@ -15,9 +15,9 @@ bmmidi_library(Lib
     status.hpp
     sysex.cpp
     sysex.hpp
-    time.hpp
     timecode.cpp
-    timecode.hpp)
+    timecode.hpp
+    timed.hpp)
 
 if(BMMidi_ENABLE_TESTING)
   bmmidi_gtest(BitOpsTest bitops_test.cpp)
@@ -64,11 +64,11 @@ if(BMMidi_ENABLE_TESTING)
   target_link_libraries(BMMidi_SysExTest
       PRIVATE BMMidi::Lib)
 
-  bmmidi_gtest(TimeTest time_test.cpp)
-  target_link_libraries(BMMidi_TimeTest
-      PRIVATE BMMidi::Lib)
-
   bmmidi_gtest(TimecodeTest timecode_test.cpp)
   target_link_libraries(BMMidi_TimecodeTest
+      PRIVATE BMMidi::Lib)
+
+  bmmidi_gtest(TimedTest timed_test.cpp)
+  target_link_libraries(BMMidi_TimedTest
       PRIVATE BMMidi::Lib)
 endif()

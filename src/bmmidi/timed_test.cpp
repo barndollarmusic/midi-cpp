@@ -1,4 +1,4 @@
-#include "bmmidi/time.hpp"
+#include "bmmidi/timed.hpp"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

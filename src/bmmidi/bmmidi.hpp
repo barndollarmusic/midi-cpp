@@ -13,8 +13,8 @@
 #include "bmmidi/preset_number.hpp"
 #include "bmmidi/status.hpp"
 #include "bmmidi/sysex.hpp"
-#include "bmmidi/time.hpp"
 #include "bmmidi/timecode.hpp"
+#include "bmmidi/timed.hpp"
 
 // TODO: Audit when library is finished to make sure this includes all
 // individual public headers.
