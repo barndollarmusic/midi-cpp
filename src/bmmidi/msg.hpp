@@ -764,6 +764,52 @@ static_assert(std::is_trivially_destructible<SongPosMsg>::value,
 /** Alias for a timestamped Song Position Pointer message. */
 using TimedSongPosMsg = Timed<SongPosMsg>;
 
+/**
+ * A Song Select message that stores its own bytes contiguously.
+ *
+ * Memory layout is packed bytes, so it should be safe to use reinterpret_cast<>
+ * on existing memory (but see warnings in MsgReference documentation about
+ * interleaved System Realtime messages and running status).
+ */
+class SongSelectMsg : public Msg<2> {
+public:
+  static SongSelectMsg fromMsg(const Msg<2>& msg) {
+    assert(msg.type() == MsgType::kSongSelect);
+    return SongSelectMsg{PresetNumber::index(msg.data1().value())};
+  }
+
+  /**
+   * Returns a Song Select message for the given song preset number.
+   *
+   * Input song must be a normal [0, 127] index preset (not a special "none"
+   * value).
+   */
+  explicit constexpr SongSelectMsg(PresetNumber song)
+      : Msg<2>{Status::system(MsgType::kSongSelect),
+               DataValue{static_cast<std::int8_t>(song.index())}} {
+    assert(song.isNormal());
+  }
+
+  /** Returns song number. */
+  constexpr PresetNumber song() const { return PresetNumber::index(data1().value()); }
+
+  /**
+   * Updates to the given song number, which must be in normal [0, 127] index
+   * range (not a special "none" value).
+   */
+  void setSong(PresetNumber song) {
+    assert(song.isNormal());
+    setData1(DataValue{static_cast<std::int8_t>(song.index())});
+  }
+};
+
+static_assert(sizeof(SongSelectMsg) == 2, "SongSelectMsg must be 2 bytes");
+static_assert(std::is_trivially_destructible<SongSelectMsg>::value,
+              "SongSelectMsg must be trivially destructible");
+
+/** Alias for a timestamped Song Select message. */
+using TimedSongSelectMsg = Timed<SongSelectMsg>;
+
 }  // namespace bmmidi
 
 #endif  // BMMIDI_MSG_HPP

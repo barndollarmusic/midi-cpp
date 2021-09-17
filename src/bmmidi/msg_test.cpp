@@ -908,4 +908,39 @@ TEST(SongPosMsg, ShouldConvertFromMsg) {
   EXPECT_THAT(msg.data2().value(), Eq(0x40));
 }
 
+TEST(SongSelectMsg, ShouldCreate) {
+  // (Song Select, song 57).
+  auto songMsg = bmmidi::SongSelectMsg{bmmidi::PresetNumber::index(56)};
+  EXPECT_THAT(songMsg.song().displayNumber(), Eq(57));
+
+  EXPECT_THAT(songMsg.rawBytes()[0], Eq(0xF3));
+  EXPECT_THAT(songMsg.rawBytes()[1], Eq(0x38));
+
+  // Can mutate:
+  songMsg.setSong(bmmidi::PresetNumber::index(22));
+
+  EXPECT_THAT(songMsg.song().displayNumber(), Eq(23));
+  EXPECT_THAT(songMsg.rawBytes()[0], Eq(0xF3));
+  EXPECT_THAT(songMsg.rawBytes()[1], Eq(0x16));
+}
+
+TEST(SongSelectMsg, ShouldConvertFromMsg) {
+  // A more generic Msg...
+  // (Song Select, song 57).
+  bmmidi::Msg<2> msg{
+      bmmidi::Status::system(bmmidi::MsgType::kSongSelect),
+      bmmidi::DataValue{56}};
+  
+  // ...should convert to the more specific SongSelectMsg...
+  auto songMsg = msg.to<bmmidi::SongSelectMsg>();
+  EXPECT_THAT(songMsg.song().displayNumber(), Eq(57));
+
+  // ...and this converted copy should be mutable...
+  songMsg.setSong(bmmidi::PresetNumber::index(22));
+  EXPECT_THAT(songMsg.song().displayNumber(), Eq(23));
+
+  // ...and changes to it should NOT affect original Msg.
+  EXPECT_THAT(msg.data1().value(), Eq(56));
+}
+
 }  // namespace

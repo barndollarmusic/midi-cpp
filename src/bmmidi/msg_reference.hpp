@@ -976,6 +976,50 @@ using TimedSongPosMsgView = Timed<SongPosMsgView>;
 /** Alias for a timestamped read-write reference to a song position message. */
 using TimedSongPosMsgRef = Timed<SongPosMsgRef>;
 
+/**
+ * A reference to a Song Select message stored as contiguous bytes (which
+ * must outlive this reference object). Can either be read-write (see
+ * SongSelectMsgRef alias) or read-only (see SongSelectMsgView alias),
+ * based on AccessType template parameter.
+ */
+template<MsgAccess AccessType>
+class SongSelectMsgReference : public MsgReference<AccessType> {
+public:
+  using BytePointerType = typename MsgReference<AccessType>::BytePointerType;
+
+  explicit SongSelectMsgReference(BytePointerType bytes, int numBytes)
+      : MsgReference<AccessType>{bytes, numBytes} {
+    assert(this->type() == MsgType::kSongSelect);
+  }
+
+  /** Returns song number. */
+  PresetNumber song() const { return PresetNumber::index(this->data1().value()); }
+
+  /**
+   * Updates to the given song number, which must be in normal [0, 127] index
+   * range (not a special "none" value).
+   */
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setSong(PresetNumber song) {
+    assert(song.isNormal());
+    this->setData1(DataValue{static_cast<std::int8_t>(song.index())});
+  }
+};
+
+/** Alias for a read-only SongSelectMsgReference. */
+using SongSelectMsgView = SongSelectMsgReference<MsgAccess::kReadOnly>;
+
+/** Alias for a read-write SongSelectMsgReference. */
+using SongSelectMsgRef = SongSelectMsgReference<MsgAccess::kReadWrite>;
+
+/** Alias for a timestamped read-only reference to a song select message. */
+using TimedSongSelectMsgView = Timed<SongSelectMsgView>;
+
+/** Alias for a timestamped read-write reference to a song select message. */
+using TimedSongSelectMsgRef = Timed<SongSelectMsgRef>;
+
 }  // namespace bmmidi
 
 #endif  // BMMIDI_MSG_REFERENCE_HPP

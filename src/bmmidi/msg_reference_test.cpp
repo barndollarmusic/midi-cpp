@@ -1088,4 +1088,43 @@ TEST(SongPosMsgRef, CanReferToRawBytes) {
   EXPECT_THAT(srcBytes[2], Eq(0x00));
 }
 
+TEST(SongSelectMsgView, CanReferToRawBytes) {
+  // (Song Select, song 57).
+  const std::uint8_t srcBytes[] = {0xF3, 0x38};
+  bmmidi::SongSelectMsgView songMsgView{srcBytes, sizeof(srcBytes)};
+
+  // Can use SongSelectMsgView accessors:
+  EXPECT_THAT(songMsgView.song().displayNumber(), Eq(57));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(songMsgView.status(),
+      Eq(bmmidi::Status::system(bmmidi::MsgType::kSongSelect)));
+  EXPECT_THAT(songMsgView.data1(), Eq(bmmidi::DataValue{56}));
+}
+
+TEST(SongSelectMsgRef, CanReferToRawBytes) {
+  // (Song Select, song 57).
+  std::uint8_t srcBytes[] = {0xF3, 0x38};
+  bmmidi::SongSelectMsgRef songMsgRef{srcBytes, sizeof(srcBytes)};
+
+  // Can use SongSelectMsgRef accessors:
+  EXPECT_THAT(songMsgRef.song().displayNumber(), Eq(57));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(songMsgRef.status(),
+      Eq(bmmidi::Status::system(bmmidi::MsgType::kSongSelect)));
+  EXPECT_THAT(songMsgRef.data1(), Eq(bmmidi::DataValue{56}));
+
+  // Can mutate:
+  songMsgRef.setSong(bmmidi::PresetNumber::index(22));
+
+  EXPECT_THAT(songMsgRef.song().displayNumber(), Eq(23));
+  EXPECT_THAT(songMsgRef.status(),
+      Eq(bmmidi::Status::system(bmmidi::MsgType::kSongSelect)));
+  EXPECT_THAT(songMsgRef.data1(), Eq(bmmidi::DataValue{22}));
+
+  EXPECT_THAT(srcBytes[0], Eq(0xF3));
+  EXPECT_THAT(srcBytes[1], Eq(0x16));
+}
+
 }  // namespace
