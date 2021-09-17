@@ -917,6 +917,65 @@ using TimedMtcQuarterFrameMsgView = Timed<MtcQuarterFrameMsgView>;
 /** Alias for a timestamped read-write reference to an MTC Quarter Frame message. */
 using TimedMtcQuarterFrameMsgRef = Timed<MtcQuarterFrameMsgRef>;
 
+/**
+ * A reference to a Song Position Pointer message stored as contiguous bytes
+ * (which must outlive this reference object). Can either be read-write (see
+ * SongPosMsgRef alias) or read-only (see SongPosMsgView alias), based on
+ * AccessType template parameter.
+ */
+template<MsgAccess AccessType>
+class SongPosMsgReference : public MsgReference<AccessType> {
+public:
+  using BytePointerType = typename MsgReference<AccessType>::BytePointerType;
+
+  explicit SongPosMsgReference(BytePointerType bytes, int numBytes)
+      : MsgReference<AccessType>{bytes, numBytes} {
+    assert(this->type() == MsgType::kSongPositionPointer);
+  }
+
+  /**
+   * Returns 14-bit [0, 16383] song position, measured as the number of sixteenth
+   * notes after the start of the song.
+   *
+   * Regardless of a sequencer's internal pulses per quarter note (PPQ), there
+   * are 24 "MIDI clock" pulses per quarter note, so this song position is
+   * measured in multiples of 6 MIDI clocks = 1 sixteenth note.
+   */
+  DoubleDataValue sixteenthsAfterStart() const {
+    return DoubleDataValue::fromLsbMsb(
+        static_cast<std::uint8_t>(this->data1().value()),
+        static_cast<std::uint8_t>(this->data2().value()));
+  }
+
+  /**
+   * Updates to the given 14-bit [0, 16383] song position, measured as the
+   * number of sixteenth notes after the start of the song.
+   *
+   * Regardless of a sequencer's internal pulses per quarter note (PPQ), there
+   * are 24 "MIDI clock" pulses per quarter note, so this song position is
+   * measured in multiples of 6 MIDI clocks = 1 sixteenth note.
+   */
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setSixteenthsAfterStart(DoubleDataValue soxteenthsAfterStart) {
+    this->setData1(DataValue{static_cast<std::int8_t>(soxteenthsAfterStart.lsb())});
+    this->setData2(DataValue{static_cast<std::int8_t>(soxteenthsAfterStart.msb())});
+  }
+};
+
+/** Alias for a read-only SongPosMsgReference. */
+using SongPosMsgView = SongPosMsgReference<MsgAccess::kReadOnly>;
+
+/** Alias for a read-write SongPosMsgReference. */
+using SongPosMsgRef = SongPosMsgReference<MsgAccess::kReadWrite>;
+
+/** Alias for a timestamped read-only reference to a song position message. */
+using TimedSongPosMsgView = Timed<SongPosMsgView>;
+
+/** Alias for a timestamped read-write reference to a song position message. */
+using TimedSongPosMsgRef = Timed<SongPosMsgRef>;
+
 }  // namespace bmmidi
 
 #endif  // BMMIDI_MSG_REFERENCE_HPP

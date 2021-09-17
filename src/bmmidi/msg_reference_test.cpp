@@ -1033,4 +1033,59 @@ TEST(MtcQuarterFrameMsgRef, CanReferToRawBytes) {
   EXPECT_THAT(srcBytes[1], Eq(0x11));
 }
 
+TEST(SongPosMsgView, CanReferToRawBytes) {
+  // (Song Position Pointer, 15243 sixteenths after start).
+  // LSB:            0b000 1011 (  0x0B = 11)
+  // MSB:   0b11 1011 1         (  0x77 = 119)
+  // Val: 0b  11 1011 1000 1011 (0x3B8B = 15243)
+  const std::uint8_t srcBytes[] = {0xF2, 0x0B, 0x77};
+  bmmidi::SongPosMsgView posMsgView{srcBytes, sizeof(srcBytes)};
+
+  // Can use SongPosMsgView accessors:
+  EXPECT_THAT(posMsgView.sixteenthsAfterStart().value(), Eq(15243));
+  EXPECT_THAT(posMsgView.sixteenthsAfterStart().lsb(), Eq(0x0B));
+  EXPECT_THAT(posMsgView.sixteenthsAfterStart().msb(), Eq(0x77));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(posMsgView.status(),
+      Eq(bmmidi::Status::system(bmmidi::MsgType::kSongPositionPointer)));
+  EXPECT_THAT(posMsgView.data1(), Eq(bmmidi::DataValue{0x0B}));
+  EXPECT_THAT(posMsgView.data2(), Eq(bmmidi::DataValue{0x77}));
+}
+
+TEST(SongPosMsgRef, CanReferToRawBytes) {
+  // (Song Position Pointer, 15243 sixteenths after start).
+  // LSB:            0b000 1011 (  0x0B = 11)
+  // MSB:   0b11 1011 1         (  0x77 = 119)
+  // Val: 0b  11 1011 1000 1011 (0x3B8B = 15243)
+  std::uint8_t srcBytes[] = {0xF2, 0x0B, 0x77};
+  bmmidi::SongPosMsgRef posMsgRef{srcBytes, sizeof(srcBytes)};
+
+  // Can use SongPosMsgRef accessors:
+  EXPECT_THAT(posMsgRef.sixteenthsAfterStart().value(), Eq(15243));
+  EXPECT_THAT(posMsgRef.sixteenthsAfterStart().lsb(), Eq(0x0B));
+  EXPECT_THAT(posMsgRef.sixteenthsAfterStart().msb(), Eq(0x77));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(posMsgRef.status(),
+      Eq(bmmidi::Status::system(bmmidi::MsgType::kSongPositionPointer)));
+  EXPECT_THAT(posMsgRef.data1(), Eq(bmmidi::DataValue{0x0B}));
+  EXPECT_THAT(posMsgRef.data2(), Eq(bmmidi::DataValue{0x77}));
+
+  // Can mutate:
+  posMsgRef.setSixteenthsAfterStart(bmmidi::DoubleDataValue::min());
+
+  EXPECT_THAT(posMsgRef.sixteenthsAfterStart().value(), Eq(0));
+  EXPECT_THAT(posMsgRef.sixteenthsAfterStart().lsb(), Eq(0x00));
+  EXPECT_THAT(posMsgRef.sixteenthsAfterStart().msb(), Eq(0x00));
+  EXPECT_THAT(posMsgRef.status(),
+      Eq(bmmidi::Status::system(bmmidi::MsgType::kSongPositionPointer)));
+  EXPECT_THAT(posMsgRef.data1(), Eq(bmmidi::DataValue{0x00}));
+  EXPECT_THAT(posMsgRef.data2(), Eq(bmmidi::DataValue{0x00}));
+
+  EXPECT_THAT(srcBytes[0], Eq(0xF2));
+  EXPECT_THAT(srcBytes[1], Eq(0x00));
+  EXPECT_THAT(srcBytes[2], Eq(0x00));
+}
+
 }  // namespace

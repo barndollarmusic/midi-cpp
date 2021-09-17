@@ -694,6 +694,76 @@ static_assert(std::is_trivially_destructible<MtcQuarterFrameMsg>::value,
 /** Alias for a timestamped MTC Quarter Frame message. */
 using TimedMtcQuarterFrameMsg = Timed<MtcQuarterFrameMsg>;
 
+/**
+ * A Song Position Pointer message that stores its own bytes contiguously.
+ *
+ * Memory layout is packed bytes, so it should be safe to use reinterpret_cast<>
+ * on existing memory (but see warnings in MsgReference documentation about
+ * interleaved System Realtime messages and running status).
+ */
+class SongPosMsg : public Msg<3> {
+public:
+  static SongPosMsg fromMsg(const Msg<3>& msg) {
+    assert(msg.type() == MsgType::kSongPositionPointer);
+    return SongPosMsg{
+        DoubleDataValue::fromLsbMsb(
+            static_cast<std::uint8_t>(msg.data1().value()),
+            static_cast<std::uint8_t>(msg.data2().value()))};
+  }
+
+  /**
+   * Returns a Song Position Pointer message starting the given number of
+   * sixteenth notes after the start of the song.
+   *
+   * Regardless of a sequencer's internal pulses per quarter note (PPQ), there
+   * are 24 "MIDI clock" pulses per quarter note, so this song position is
+   * measured in multiples of 6 MIDI clocks = 1 sixteenth note.
+   */
+  static constexpr SongPosMsg atSixteenthsAfterStart(DoubleDataValue sixteenthsAfterStart) {
+    return SongPosMsg{sixteenthsAfterStart};
+  }
+
+  /**
+   * Returns 14-bit [0, 16383] song position, measured as the number of sixteenth
+   * notes after the start of the song.
+   *
+   * Regardless of a sequencer's internal pulses per quarter note (PPQ), there
+   * are 24 "MIDI clock" pulses per quarter note, so this song position is
+   * measured in multiples of 6 MIDI clocks = 1 sixteenth note.
+   */
+  constexpr DoubleDataValue sixteenthsAfterStart() const {
+    return DoubleDataValue::fromLsbMsb(
+        static_cast<std::uint8_t>(data1().value()),
+        static_cast<std::uint8_t>(data2().value()));
+  }
+
+  /**
+   * Updates to the given 14-bit [0, 16383] song position, measured as the
+   * number of sixteenth notes after the start of the song.
+   *
+   * Regardless of a sequencer's internal pulses per quarter note (PPQ), there
+   * are 24 "MIDI clock" pulses per quarter note, so this song position is
+   * measured in multiples of 6 MIDI clocks = 1 sixteenth note.
+   */
+  void setSixteenthsAfterStart(DoubleDataValue soxteenthsAfterStart) {
+    setData1(DataValue{static_cast<std::int8_t>(soxteenthsAfterStart.lsb())});
+    setData2(DataValue{static_cast<std::int8_t>(soxteenthsAfterStart.msb())});
+  }
+
+private:
+  explicit constexpr SongPosMsg(DoubleDataValue sixteenthsAfterStart)
+      : Msg<3>{Status::system(MsgType::kSongPositionPointer),
+               DataValue{static_cast<std::int8_t>(sixteenthsAfterStart.lsb())},
+               DataValue{static_cast<std::int8_t>(sixteenthsAfterStart.msb())}} {}
+};
+
+static_assert(sizeof(SongPosMsg) == 3, "SongPosMsg must be 3 bytes");
+static_assert(std::is_trivially_destructible<SongPosMsg>::value,
+              "SongPosMsg must be trivially destructible");
+
+/** Alias for a timestamped Song Position Pointer message. */
+using TimedSongPosMsg = Timed<SongPosMsg>;
+
 }  // namespace bmmidi
 
 #endif  // BMMIDI_MSG_HPP

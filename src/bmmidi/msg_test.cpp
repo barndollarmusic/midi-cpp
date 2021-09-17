@@ -860,4 +860,52 @@ TEST(MtcQuarterFrameMsg, ShouldConvertFromMsg) {
   EXPECT_THAT(msg.data1().value(), Eq(0x4B));
 }
 
+TEST(SongPosMsg, ShouldCreate) {
+  // (Song Position Pointer, 3427 sixteenths after start).
+  // LSB:            0b110 0011 (  0x63 = 99)
+  // MSB:   0b00 1101 0         (  0x1A = 26)
+  // Val: 0b  00 1101 0110 0011 (0x0D63 = 3427)
+  auto posMsg = bmmidi::SongPosMsg::atSixteenthsAfterStart(bmmidi::DoubleDataValue{3427});
+
+  EXPECT_THAT(posMsg.sixteenthsAfterStart().value(), Eq(3427));
+
+  EXPECT_THAT(posMsg.rawBytes()[0], Eq(0xF2));
+  EXPECT_THAT(posMsg.rawBytes()[1], Eq(0x63));
+  EXPECT_THAT(posMsg.rawBytes()[2], Eq(0x1A));
+
+  // Can mutate:
+  posMsg.setSixteenthsAfterStart(bmmidi::DoubleDataValue::max());
+
+  EXPECT_THAT(posMsg.sixteenthsAfterStart().value(), Eq(16383));
+
+  EXPECT_THAT(posMsg.rawBytes()[0], Eq(0xF2));
+  EXPECT_THAT(posMsg.rawBytes()[1], Eq(0x7F));
+  EXPECT_THAT(posMsg.rawBytes()[2], Eq(0x7F));
+}
+
+TEST(SongPosMsg, ShouldConvertFromMsg) {
+  // A more generic Msg...
+  // (Song Position Pointer, 8192 sixteenths after start).
+  // LSB:            0b000 0000 (  0x00 = 0)
+  // MSB:   0b10 0000 0         (  0x40 = 64)
+  // Val: 0b  10 0000 0000 0000 (0x2000 = 8192)
+  bmmidi::Msg<3> msg{
+      bmmidi::Status::system(bmmidi::MsgType::kSongPositionPointer),
+      bmmidi::DataValue{0x00},
+      bmmidi::DataValue{0x40}};
+
+  // ...should convert to the more specific SongPosMsg...
+  auto posMsg = msg.to<bmmidi::SongPosMsg>();
+
+  EXPECT_THAT(posMsg.sixteenthsAfterStart().value(), Eq(8192));
+
+  // ...and this converted copy should be mutable...
+  posMsg.setSixteenthsAfterStart(bmmidi::DoubleDataValue{22});
+  EXPECT_THAT(posMsg.sixteenthsAfterStart().value(), Eq(22));
+
+  // ...and changes to it should NOT affect original Msg.
+  EXPECT_THAT(msg.data1().value(), Eq(0x00));
+  EXPECT_THAT(msg.data2().value(), Eq(0x40));
+}
+
 }  // namespace
