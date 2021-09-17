@@ -118,16 +118,6 @@ public:
   MsgT to() const { return MsgT::fromMsg(*this); }
 
   /**
-   * Returns read-write reference of RefType to this Msg; check type() to ensure
-   * that the conversion is valid before calling (in debug mode, assertions will
-   * check).
-   */
-  template<
-      typename RefType,
-      typename = std::enable_if_t<RefType::kAccessType == MsgAccess::kReadWrite>>
-  RefType asRef() { return RefType{bytes_, N}; }
-
-  /**
    * Returns read-only reference of ViewType to this Msg; check type() to ensure
    * that the conversion is valid before calling (in debug mode, assertions will
    * check).
@@ -136,6 +126,16 @@ public:
       typename ViewType,
       typename = std::enable_if_t<ViewType::kAccessType == MsgAccess::kReadOnly>>
   ViewType asView() const { return ViewType{bytes_, N}; }
+
+  /**
+   * Returns read-write reference of RefType to this Msg; check type() to ensure
+   * that the conversion is valid before calling (in debug mode, assertions will
+   * check).
+   */
+  template<
+      typename RefType,
+      typename = std::enable_if_t<RefType::kAccessType == MsgAccess::kReadWrite>>
+  RefType asRef() { return RefType{bytes_, N}; }
 
 private:
   ByteArray bytes_;
@@ -173,10 +173,6 @@ inline constexpr bool operator==(Msg<3> lhs, Msg<3> rhs) {
 
 template<std::size_t N>
 inline constexpr bool operator!=(Msg<N> lhs, Msg<N> rhs) { return !(lhs == rhs); }
-
-/** Alias for a timestamped N-byte MIDI message. */
-template<std::size_t N>
-using TimedMsg = Timed<Msg<N>>;
 
 /**
  * Parent class for an N-byte Channel message that stores its own bytes
@@ -240,10 +236,6 @@ static_assert(std::is_trivially_destructible<ChanMsg<2>>::value,
               "ChanMsg<2> must be trivially destructible");
 static_assert(std::is_trivially_destructible<ChanMsg<3>>::value,
               "ChanMsg<3> must be trivially destructible");
-
-/** Alias for a timestamped N-byte Channel message. */
-template<std::size_t N>
-using TimedChanMsg = Timed<ChanMsg<N>>;
 
 /**
  * A Note Off or Note On message that stores its own bytes contiguously.
@@ -338,7 +330,7 @@ static_assert(std::is_trivially_destructible<NoteMsg>::value,
               "NoteMsg must be trivially destructible");
 
 /** Alias for a timestamped Note Off or Note On message. */
-using TimedNoteMsg = Timed<NoteMsg>;
+using TimedNoteMsg = TimedMsg<NoteMsg>;
 
 /**
  * A Polyphonic Key Pressure message (a.k.a. per-key aftertouch) that stores its
@@ -396,7 +388,7 @@ static_assert(std::is_trivially_destructible<KeyPressureMsg>::value,
               "KeyPressureMsg must be trivially destructible");
 
 /** Alias for a timestamped Polyphonic Key Pressure message. */
-using TimedKeyPressureMsg = Timed<KeyPressureMsg>;
+using TimedKeyPressureMsg = TimedMsg<KeyPressureMsg>;
 
 /**
  * A Control Change message that stores its own bytes contiguously.
@@ -441,7 +433,7 @@ static_assert(std::is_trivially_destructible<ControlChangeMsg>::value,
               "ControlChangeMsg must be trivially destructible");
 
 /** Alias for a timestamped Control Change message. */
-using TimedControlChangeMsg = Timed<ControlChangeMsg>;
+using TimedControlChangeMsg = TimedMsg<ControlChangeMsg>;
 
 /**
  * A Program Change message that stores its own bytes contiguously.
@@ -489,7 +481,7 @@ static_assert(std::is_trivially_destructible<ProgramChangeMsg>::value,
               "ProgramChangeMsg must be trivially destructible");
 
 /** Alias for a timestamped Program Change message. */
-using TimedProgramChangeMsg = Timed<ProgramChangeMsg>;
+using TimedProgramChangeMsg = TimedMsg<ProgramChangeMsg>;
 
 /**
  * A Channel Pressure message (non-polyphonic aftertouch that affects all keys)
@@ -527,7 +519,7 @@ static_assert(std::is_trivially_destructible<ChanPressureMsg>::value,
               "ChanPressureMsg must be trivially destructible");
 
 /** Alias for a timestamped Channel Pressure message. */
-using TimedChanPressureMsg = Timed<ChanPressureMsg>;
+using TimedChanPressureMsg = TimedMsg<ChanPressureMsg>;
 
 /**
  * A Pitch Bend Change message that stores its own bytes contiguously.
@@ -577,7 +569,7 @@ static_assert(std::is_trivially_destructible<PitchBendMsg>::value,
               "PitchBendMsg must be trivially destructible");
 
 /** Alias for a timestamped Pitch Bend message. */
-using TimedPitchBendMsg = Timed<PitchBendMsg>;
+using TimedPitchBendMsg = TimedMsg<PitchBendMsg>;
 
 // NOTE: See sysex.hpp for MfrSysEx and UniversalSysEx, which behave differently
 // from the Msg<N> classes in this file.
@@ -692,7 +684,7 @@ static_assert(std::is_trivially_destructible<MtcQuarterFrameMsg>::value,
               "MtcQuarterFrameMsg must be trivially destructible");
 
 /** Alias for a timestamped MTC Quarter Frame message. */
-using TimedMtcQuarterFrameMsg = Timed<MtcQuarterFrameMsg>;
+using TimedMtcQuarterFrameMsg = TimedMsg<MtcQuarterFrameMsg>;
 
 /**
  * A Song Position Pointer message that stores its own bytes contiguously.
@@ -762,7 +754,7 @@ static_assert(std::is_trivially_destructible<SongPosMsg>::value,
               "SongPosMsg must be trivially destructible");
 
 /** Alias for a timestamped Song Position Pointer message. */
-using TimedSongPosMsg = Timed<SongPosMsg>;
+using TimedSongPosMsg = TimedMsg<SongPosMsg>;
 
 /**
  * A Song Select message that stores its own bytes contiguously.
@@ -808,7 +800,7 @@ static_assert(std::is_trivially_destructible<SongSelectMsg>::value,
               "SongSelectMsg must be trivially destructible");
 
 /** Alias for a timestamped Song Select message. */
-using TimedSongSelectMsg = Timed<SongSelectMsg>;
+using TimedSongSelectMsg = TimedMsg<SongSelectMsg>;
 
 // NOTE: NOT defining specific classes for messages with no data bytes
 // (Oscillator Tune Request and all System Realtime messages), since the status

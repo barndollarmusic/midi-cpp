@@ -199,10 +199,10 @@ using MsgView = MsgReference<MsgAccess::kReadOnly>;
 using MsgRef = MsgReference<MsgAccess::kReadWrite>;
 
 /** Alias for a timestamped read-only reference to a MIDI message. */
-using TimedMsgView = Timed<MsgView>;
+using TimedMsgView = TimedMsg<MsgView>;
 
 /** Alias for a timestamped read-write reference to a MIDI message. */
-using TimedMsgRef = Timed<MsgRef>;
+using TimedMsgRef = TimedMsg<MsgRef>;
 
 /**
  * A reference to a Channel message stored as contiguous bytes (which
@@ -251,10 +251,10 @@ using ChanMsgView = ChanMsgReference<MsgAccess::kReadOnly>;
 using ChanMsgRef = ChanMsgReference<MsgAccess::kReadWrite>;
 
 /** Alias for a timestamped read-only reference to a Channel message. */
-using TimedChanMsgView = Timed<ChanMsgView>;
+using TimedChanMsgView = TimedMsg<ChanMsgView>;
 
 /** Alias for a timestamped read-write reference to a Channel message. */
-using TimedChanMsgRef = Timed<ChanMsgRef>;
+using TimedChanMsgRef = TimedMsg<ChanMsgRef>;
 
 /**
  * A reference to a Note Off or Note On message stored as contiguous bytes
@@ -321,10 +321,10 @@ using NoteMsgView = NoteMsgReference<MsgAccess::kReadOnly>;
 using NoteMsgRef = NoteMsgReference<MsgAccess::kReadWrite>;
 
 /** Alias for a timestamped read-only reference to a Note On/Off message. */
-using TimedNoteMsgView = Timed<NoteMsgView>;
+using TimedNoteMsgView = TimedMsg<NoteMsgView>;
 
 /** Alias for a timestamped read-write reference to a Note On/Off message. */
-using TimedNoteMsgRef = Timed<NoteMsgRef>;
+using TimedNoteMsgRef = TimedMsg<NoteMsgRef>;
 
 /**
  * A reference to a Polyphonic Key Pressure message (a.k.a. per-key aftertouch)
@@ -374,10 +374,10 @@ using KeyPressureMsgView = KeyPressureMsgReference<MsgAccess::kReadOnly>;
 using KeyPressureMsgRef = KeyPressureMsgReference<MsgAccess::kReadWrite>;
 
 /** Alias for a timestamped read-only reference to a key pressure message. */
-using TimedKeyPressureMsgView = Timed<KeyPressureMsgView>;
+using TimedKeyPressureMsgView = TimedMsg<KeyPressureMsgView>;
 
 /** Alias for a timestamped read-write reference to a key pressure message. */
-using TimedKeyPressureMsgRef = Timed<KeyPressureMsgRef>;
+using TimedKeyPressureMsgRef = TimedMsg<KeyPressureMsgRef>;
 
 /**
  * A reference to a Control Change message stored as contiguous bytes (which
@@ -423,10 +423,10 @@ using ControlChangeMsgView = ControlChangeMsgReference<MsgAccess::kReadOnly>;
 using ControlChangeMsgRef = ControlChangeMsgReference<MsgAccess::kReadWrite>;
 
 /** Alias for a timestamped read-only reference to a control change message. */
-using TimedControlChangeMsgView = Timed<ControlChangeMsgView>;
+using TimedControlChangeMsgView = TimedMsg<ControlChangeMsgView>;
 
 /** Alias for a timestamped read-write reference to a control change message. */
-using TimedControlChangeMsgRef = Timed<ControlChangeMsgRef>;
+using TimedControlChangeMsgRef = TimedMsg<ControlChangeMsgRef>;
 
 /**
  * A reference to a Program Change message stored as contiguous bytes (which
@@ -467,10 +467,10 @@ using ProgramChangeMsgView = ProgramChangeMsgReference<MsgAccess::kReadOnly>;
 using ProgramChangeMsgRef = ProgramChangeMsgReference<MsgAccess::kReadWrite>;
 
 /** Alias for a timestamped read-only reference to a program change message. */
-using TimedProgramChangeMsgView = Timed<ProgramChangeMsgView>;
+using TimedProgramChangeMsgView = TimedMsg<ProgramChangeMsgView>;
 
 /** Alias for a timestamped read-write reference to a program change message. */
-using TimedProgramChangeMsgRef = Timed<ProgramChangeMsgRef>;
+using TimedProgramChangeMsgRef = TimedMsg<ProgramChangeMsgRef>;
 
 /**
  * A reference to a Channel Pressure message (non-polyphonic aftertouch which
@@ -506,10 +506,10 @@ using ChanPressureMsgView = ChanPressureMsgReference<MsgAccess::kReadOnly>;
 using ChanPressureMsgRef = ChanPressureMsgReference<MsgAccess::kReadWrite>;
 
 /** Alias for a timestamped read-only reference to a channel pressure message. */
-using TimedChanPressureMsgView = Timed<ChanPressureMsgView>;
+using TimedChanPressureMsgView = TimedMsg<ChanPressureMsgView>;
 
 /** Alias for a timestamped read-write reference to a channel pressure message. */
-using TimedChanPressureMsgRef = Timed<ChanPressureMsgRef>;
+using TimedChanPressureMsgRef = TimedMsg<ChanPressureMsgRef>;
 
 /**
  * A reference to a Pitch Bend Change message stored as contiguous bytes (which
@@ -551,10 +551,10 @@ using PitchBendMsgView = PitchBendMsgReference<MsgAccess::kReadOnly>;
 using PitchBendMsgRef = PitchBendMsgReference<MsgAccess::kReadWrite>;
 
 /** Alias for a timestamped read-only reference to a pitch bend message. */
-using TimedPitchBendMsgView = Timed<PitchBendMsgView>;
+using TimedPitchBendMsgView = TimedMsg<PitchBendMsgView>;
 
 /** Alias for a timestamped read-write reference to a pitch bend message. */
-using TimedPitchBendMsgRef = Timed<PitchBendMsgRef>;
+using TimedPitchBendMsgRef = TimedMsg<PitchBendMsgRef>;
 
 /**
  * A reference to a System Exclusive (SysEx) message stored as contiguous bytes
@@ -613,10 +613,10 @@ using SysExMsgView = SysExMsgReference<MsgAccess::kReadOnly>;
 using SysExMsgRef = SysExMsgReference<MsgAccess::kReadWrite>;
 
 /** Alias for a timestamped read-only reference to a SysEx message. */
-using TimedSysExMsgView = Timed<SysExMsgView>;
+using TimedSysExMsgView = TimedMsg<SysExMsgView>;
 
 /** Alias for a timestamped read-write reference to a SysEx message. */
-using TimedSysExMsgRef = Timed<SysExMsgRef>;
+using TimedSysExMsgRef = TimedMsg<SysExMsgRef>;
 
 /**
  * A reference to a manufacturer-specific (or private non-commercial) System
@@ -699,10 +699,10 @@ using MfrSysExMsgView = MfrSysExMsgReference<MsgAccess::kReadOnly>;
 using MfrSysExMsgRef = MfrSysExMsgReference<MsgAccess::kReadWrite>;
 
 /** Alias for a timestamped read-only reference to a manufacturer-specific SysEx message. */
-using TimedMfrSysExMsgView = Timed<MfrSysExMsgView>;
+using TimedMfrSysExMsgView = TimedMsg<MfrSysExMsgView>;
 
 /** Alias for a timestamped read-write reference to a manufacturer-specific SysEx message. */
-using TimedMfrSysExMsgRef = Timed<MfrSysExMsgRef>;
+using TimedMfrSysExMsgRef = TimedMsg<MfrSysExMsgRef>;
 
 /**
  * A reference to a Non-Realtime or Realtime Universal System Exclusive (SysEx)
@@ -814,10 +814,10 @@ using UniversalSysExMsgView = UniversalSysExMsgReference<MsgAccess::kReadOnly>;
 using UniversalSysExMsgRef = UniversalSysExMsgReference<MsgAccess::kReadWrite>;
 
 /** Alias for a timestamped read-only reference to a manufacturer-specific SysEx message. */
-using TimedUniversalSysExMsgView = Timed<UniversalSysExMsgView>;
+using TimedUniversalSysExMsgView = TimedMsg<UniversalSysExMsgView>;
 
 /** Alias for a timestamped read-write reference to a manufacturer-specific SysEx message. */
-using TimedUniversalSysExMsgRef = Timed<UniversalSysExMsgRef>;
+using TimedUniversalSysExMsgRef = TimedMsg<UniversalSysExMsgRef>;
 
 /**
  * A reference to an MTC Quarter Frame message stored as contiguous bytes (which
@@ -912,10 +912,10 @@ using MtcQuarterFrameMsgView = MtcQuarterFrameMsgReference<MsgAccess::kReadOnly>
 using MtcQuarterFrameMsgRef = MtcQuarterFrameMsgReference<MsgAccess::kReadWrite>;
 
 /** Alias for a timestamped read-only reference to an MTC Quarter Frame message. */
-using TimedMtcQuarterFrameMsgView = Timed<MtcQuarterFrameMsgView>;
+using TimedMtcQuarterFrameMsgView = TimedMsg<MtcQuarterFrameMsgView>;
 
 /** Alias for a timestamped read-write reference to an MTC Quarter Frame message. */
-using TimedMtcQuarterFrameMsgRef = Timed<MtcQuarterFrameMsgRef>;
+using TimedMtcQuarterFrameMsgRef = TimedMsg<MtcQuarterFrameMsgRef>;
 
 /**
  * A reference to a Song Position Pointer message stored as contiguous bytes
@@ -971,10 +971,10 @@ using SongPosMsgView = SongPosMsgReference<MsgAccess::kReadOnly>;
 using SongPosMsgRef = SongPosMsgReference<MsgAccess::kReadWrite>;
 
 /** Alias for a timestamped read-only reference to a song position message. */
-using TimedSongPosMsgView = Timed<SongPosMsgView>;
+using TimedSongPosMsgView = TimedMsg<SongPosMsgView>;
 
 /** Alias for a timestamped read-write reference to a song position message. */
-using TimedSongPosMsgRef = Timed<SongPosMsgRef>;
+using TimedSongPosMsgRef = TimedMsg<SongPosMsgRef>;
 
 /**
  * A reference to a Song Select message stored as contiguous bytes (which
@@ -1015,10 +1015,10 @@ using SongSelectMsgView = SongSelectMsgReference<MsgAccess::kReadOnly>;
 using SongSelectMsgRef = SongSelectMsgReference<MsgAccess::kReadWrite>;
 
 /** Alias for a timestamped read-only reference to a song select message. */
-using TimedSongSelectMsgView = Timed<SongSelectMsgView>;
+using TimedSongSelectMsgView = TimedMsg<SongSelectMsgView>;
 
 /** Alias for a timestamped read-write reference to a song select message. */
-using TimedSongSelectMsgRef = Timed<SongSelectMsgRef>;
+using TimedSongSelectMsgRef = TimedMsg<SongSelectMsgRef>;
 
 // NOTE: NOT defining specific reference types for messages with no data bytes
 // (Oscillator Tune Request and all System Realtime messages), since the status
