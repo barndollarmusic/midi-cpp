@@ -974,4 +974,63 @@ TEST(UniversalSysExMsgRef, WorksForTwoSubIdTypeUniversalSysExMsg) {
   EXPECT_THAT(univMsgRef.rawBytes()[6], Eq(0xF7));  // EOX.
 }
 
+TEST(MtcQuarterFrameMsgView, CanReferToRawBytes) {
+  // (MTC Quarter Frame, MM lower 4 bits of 0b1011).
+  // Upper bits identifying piece are 100. Lower bits encode value (for MM lower 4 bits).
+  const std::uint8_t srcBytes[] = {0xF1, 0b0100'1011};  // 0x4B.
+  bmmidi::MtcQuarterFrameMsgView qfMsgView{srcBytes, sizeof(srcBytes)};
+
+  // Can use MtcQuarterFrameMsgView accessors:
+  EXPECT_THAT(qfMsgView.dataByte(), Eq(0x4B));
+  EXPECT_THAT(qfMsgView.piece(), Eq(bmmidi::MtcQuarterFramePiece::k4MinLowerBits));
+  EXPECT_THAT(qfMsgView.valueInLower4Bits(), Eq(0x0B));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(qfMsgView.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kMtcQuarterFrame)));
+  EXPECT_THAT(qfMsgView.data1(), Eq(bmmidi::DataValue{0x4B}));
+}
+
+TEST(MtcQuarterFrameMsgRef, CanReferToRawBytes) {
+  // (MTC Quarter Frame, MM lower 4 bits of 0b1011).
+  // Upper bits identifying piece are 100. Lower bits encode value (for MM lower 4 bits).
+  std::uint8_t srcBytes[] = {0xF1, 0b0100'1011};  // 0x4B.
+  bmmidi::MtcQuarterFrameMsgRef qfMsgRef{srcBytes, sizeof(srcBytes)};
+
+  // Can use MtcQuarterFrameMsgRef accessors:
+  EXPECT_THAT(qfMsgRef.dataByte(), Eq(0x4B));
+  EXPECT_THAT(qfMsgRef.piece(), Eq(bmmidi::MtcQuarterFramePiece::k4MinLowerBits));
+  EXPECT_THAT(qfMsgRef.valueInLower4Bits(), Eq(0x0B));
+
+  // Can also still use base accessors:
+  EXPECT_THAT(qfMsgRef.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kMtcQuarterFrame)));
+  EXPECT_THAT(qfMsgRef.data1(), Eq(bmmidi::DataValue{0x4B}));
+
+  // Can mutate whole data byte:
+  // (Rate + HH 0rrh upper 4 bits of 0b0011).
+  qfMsgRef.setDataByte(0b0111'0011);  // 0x73.
+
+  EXPECT_THAT(qfMsgRef.dataByte(), Eq(0x73));
+  EXPECT_THAT(qfMsgRef.piece(), Eq(bmmidi::MtcQuarterFramePiece::k7RateHourUpperBits));
+  EXPECT_THAT(qfMsgRef.valueInLower4Bits(), Eq(0x03));
+  EXPECT_THAT(qfMsgRef.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kMtcQuarterFrame)));
+  EXPECT_THAT(qfMsgRef.data1(), Eq(bmmidi::DataValue{0x73}));
+
+  EXPECT_THAT(srcBytes[0], Eq(0xF1));
+  EXPECT_THAT(srcBytes[1], Eq(0x73));
+
+  // Or can set piece and value individually:
+  // (FF upper 1 bit of 0b0001).
+  qfMsgRef.setPiece(bmmidi::MtcQuarterFramePiece::k1FrameUpperBits);  // 0x10.
+  qfMsgRef.setValueFromLower4Bits(0b0000'0001);  // 0x01.
+
+  EXPECT_THAT(qfMsgRef.dataByte(), Eq(0x11));
+  EXPECT_THAT(qfMsgRef.piece(), Eq(bmmidi::MtcQuarterFramePiece::k1FrameUpperBits));
+  EXPECT_THAT(qfMsgRef.valueInLower4Bits(), Eq(0x01));
+  EXPECT_THAT(qfMsgRef.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kMtcQuarterFrame)));
+  EXPECT_THAT(qfMsgRef.data1(), Eq(bmmidi::DataValue{0x11}));
+
+  EXPECT_THAT(srcBytes[0], Eq(0xF1));
+  EXPECT_THAT(srcBytes[1], Eq(0x11));
+}
+
 }  // namespace

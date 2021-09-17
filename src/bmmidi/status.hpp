@@ -96,7 +96,7 @@ enum class MsgType : std::uint8_t {
    * System Common: MIDI Time Code (MTC) Quarter Frame.
    *
    * 1 byte data value (lower 4 bits are value and upper 3 bits are MTC message
-   * type).
+   * type, describing which piece of the timecode is being sent).
    */
   kMtcQuarterFrame = 0xF1,
 

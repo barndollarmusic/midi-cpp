@@ -1,11 +1,13 @@
 #ifndef BMMIDI_MSG_HPP
 #define BMMIDI_MSG_HPP
 
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
 
+#include "bmmidi/bitops.hpp"
 #include "bmmidi/channel.hpp"
 #include "bmmidi/control.hpp"
 #include "bmmidi/data_value.hpp"
@@ -14,6 +16,7 @@
 #include "bmmidi/preset_number.hpp"
 #include "bmmidi/status.hpp"
 #include "bmmidi/time.hpp"
+#include "bmmidi/timecode.hpp"
 
 namespace bmmidi {
 
@@ -93,7 +96,7 @@ public:
   }
 
   /** Returns read-only reference to raw byte array (including Status byte). */
-  ConstByteArray& rawBytes() const { return bytes_; }
+  constexpr ConstByteArray& rawBytes() const { return bytes_; }
 
   /**
    * Returns read-write pointer to first byte.
@@ -102,7 +105,7 @@ public:
    * status and data bytes that do not represent a valid MIDI message (which
    * would cause undefined behavior for this bmmidi library).
    */
-  ByteArray& rawBytes() { return bytes_; }
+  constexpr ByteArray& rawBytes() { return bytes_; }
 
   /**
    * Returns a copy of this Msg as more specific subclass MsgT; check type() to
@@ -575,6 +578,121 @@ static_assert(std::is_trivially_destructible<PitchBendMsg>::value,
 
 /** Alias for a timestamped Pitch Bend message. */
 using TimedPitchBendMsg = Timed<PitchBendMsg>;
+
+// NOTE: See sysex.hpp for MfrSysEx and UniversalSysEx, which behave differently
+// from the Msg<N> classes in this file.
+
+/**
+ * A MIDI Time Code (MTC) Quarter Frame message that stores its own bytes
+ * contiguously.
+ *
+ * Memory layout is packed bytes, so it should be safe to use reinterpret_cast<>
+ * on existing memory (but see warnings in MsgReference documentation about
+ * interleaved System Realtime messages and running status).
+ */
+class MtcQuarterFrameMsg : public Msg<2> {
+public:
+  static MtcQuarterFrameMsg fromMsg(const Msg<2>& msg) {
+    assert(msg.type() == MsgType::kMtcQuarterFrame);
+    return MtcQuarterFrameMsg::withDataByte(msg.data1().value());
+  }
+
+  /**
+   * Creates an MtcQuarterFrameMsg representing the given piece of the given
+   * full timecode value tc.
+   */
+  static MtcQuarterFrameMsg pieceOf(MtcFullFrame tc, MtcQuarterFramePiece piece) {
+    return MtcQuarterFrameMsg{tc.quarterFrameDataByteFor(piece)};
+  }
+
+  /**
+   * Creates an MtcQuarterFrameMsg with the given data byte, which should be
+   * encoded as bits 0b0nnn'dddd, where nnn denotes which quarter frame piece
+   * this is (see MtcQuarterFramePiece) and dddd encodes the data value for that
+   * piece.
+   */
+  static constexpr MtcQuarterFrameMsg withDataByte(std::uint8_t dataByte) {
+    return MtcQuarterFrameMsg{dataByte};
+  }
+
+  /**
+   * Returns full 7-bit data byte value, which can be used with
+   * MtcFullFrame::setPieceFromQuarterFrameDataByte().
+   *
+   * Encoded as bits 0b0nnn'dddd, where nnn denotes which quarter frame piece
+   * his is (see MtcQuarterFramePiece) and dddd encodes the data value for that
+   * piece.
+   */
+  constexpr std::uint8_t dataByte() const { return rawBytes()[1]; }
+
+  /**
+   * Sets full 7-bit data byte value, e.g. as obtained from
+   * MtcFullFrame::quarterFrameDataByteFor().
+   *
+   * Should be encoded as bits 0b0nnn'dddd, where nnn denotes which quarter
+   * frame piece this is (see MtcQuarterFramePiece) and dddd encodes the data
+   * value for that piece.
+   */
+  void setDataByte(std::uint8_t dataByte) {
+    assert(dataByte <= static_cast<int>(DataValue::max().value()));
+    rawBytes()[1] = dataByte;
+  }
+
+  /**
+   * Returns the piece of the full timecode value that this quarter frame
+   * message provides a value for.
+   */
+  constexpr MtcQuarterFramePiece piece() const {
+    return static_cast<MtcQuarterFramePiece>(
+        internal::getBits(dataByte(), internal::kMtcQuarterFramePieceBits));
+  }
+
+  /**
+   * Sets the piece of the full timecode value that this quarter frame message
+   * provides a value for.
+   */
+  void setPiece(MtcQuarterFramePiece piece) {
+    setDataByte(internal::setBits(dataByte(), static_cast<std::uint8_t>(piece),
+                internal::kMtcQuarterFramePieceBits));
+  }
+
+  /**
+   * Provides the value for the piece of timecode this quarter frame message is
+   * setting, encoded in the lower 4 bits of the returned value (the upper 4
+   * bits will always be 0s).
+   */
+  constexpr std::uint8_t valueInLower4Bits() const {
+    return internal::getBits(dataByte(), internal::kMtcQuarterFrameValueBits);
+  }
+
+  /**
+   * Sets the value for the piece of timecode this quarter frame message is
+   * settings, encoded in the lower 4 bits of the given value (the upper 4
+   * bits must be 0s).
+   */
+  void setValueFromLower4Bits(std::uint8_t value) {
+    assert(value <= 0b0000'1111);
+    setDataByte(internal::setBits(dataByte(), value, internal::kMtcQuarterFrameValueBits));
+  }
+
+private:
+  explicit constexpr MtcQuarterFrameMsg(std::uint8_t dataByte)
+      : Msg<2>{Status::system(MsgType::kMtcQuarterFrame),
+               DataValue{static_cast<std::int8_t>(dataByte)}} {
+    assert(dataByte <= static_cast<int>(DataValue::max().value()));
+  }
+
+  // Hide the more general mutation functions, to limit correct mutations.
+  using Msg<2>::setStatus;
+  using Msg<2>::setData1;
+};
+
+static_assert(sizeof(MtcQuarterFrameMsg) == 2, "MtcQuarterFrameMsg must be 2 bytes");
+static_assert(std::is_trivially_destructible<MtcQuarterFrameMsg>::value,
+              "MtcQuarterFrameMsg must be trivially destructible");
+
+/** Alias for a timestamped MTC Quarter Frame message. */
+using TimedMtcQuarterFrameMsg = Timed<MtcQuarterFrameMsg>;
 
 }  // namespace bmmidi
 

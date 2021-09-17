@@ -10,6 +10,7 @@
 #include "bmmidi/control.hpp"
 #include "bmmidi/data_value.hpp"
 #include "bmmidi/status.hpp"
+#include "bmmidi/timecode.hpp"
 
 namespace {
 
@@ -770,6 +771,93 @@ TEST(PitchBendMsg, ShouldConvertFromMsg) {
   // ...and changes to it should NOT affect original Msg.
   EXPECT_THAT(msg.data1().value(), Eq(0x00));
   EXPECT_THAT(msg.data2().value(), Eq(0x40));
+}
+
+TEST(MtcQuarterFrameMsg, ShouldCreateAsPieceOfFullTC) {
+  // Set timecode of:
+  //   - Rate: 25.000 fps (rr       = 01      )
+  //   - HH: 23           (  h'hhhh =   1'0111)
+  //   - MM: 59           ( mm'mmmm =  11'1011)
+  //   - SS: 07           ( ss'ssss =  00'0111)
+  //   - FF: 24           (  f'ffff =   1'1000)
+  auto tc = bmmidi::MtcFullFrame::zero(bmmidi::MtcFrameRateStandard::k25NonDrop);
+  tc.setHH(23);
+  tc.setMM(59);
+  tc.setSS(7);
+  tc.setFF(24);
+
+  auto qfMsg =
+      bmmidi::MtcQuarterFrameMsg::pieceOf(tc, bmmidi::MtcQuarterFramePiece::k4MinLowerBits);
+
+  EXPECT_THAT(qfMsg.dataByte(), Eq(0x4B));
+  EXPECT_THAT(qfMsg.piece(), Eq(bmmidi::MtcQuarterFramePiece::k4MinLowerBits));
+  EXPECT_THAT(qfMsg.valueInLower4Bits(), Eq(0x0B));
+
+  EXPECT_THAT(qfMsg.rawBytes()[0], Eq(0xF1));
+  EXPECT_THAT(qfMsg.rawBytes()[1], Eq(0x4B));
+}
+
+TEST(MtcQuarterFrameMsg, ShouldCreateFromDataByte) {
+  // (MTC Quarter Frame, MM lower 4 bits of 0b1011).
+  // Upper bits identifying piece are 100. Lower bits encode value (for MM lower 4 bits).
+  auto qfMsg = bmmidi::MtcQuarterFrameMsg::withDataByte(0b0100'1011);  // 0x4B.
+
+  EXPECT_THAT(qfMsg.dataByte(), Eq(0x4B));
+  EXPECT_THAT(qfMsg.piece(), Eq(bmmidi::MtcQuarterFramePiece::k4MinLowerBits));
+  EXPECT_THAT(qfMsg.valueInLower4Bits(), Eq(0x0B));
+
+  EXPECT_THAT(qfMsg.rawBytes()[0], Eq(0xF1));
+  EXPECT_THAT(qfMsg.rawBytes()[1], Eq(0x4B));
+
+  // Can mutate whole data byte:
+  // (Rate + HH 0rrh upper 4 bits of 0b0011).
+  qfMsg.setDataByte(0b0111'0011);  // 0x73.
+
+  EXPECT_THAT(qfMsg.dataByte(), Eq(0x73));
+  EXPECT_THAT(qfMsg.piece(), Eq(bmmidi::MtcQuarterFramePiece::k7RateHourUpperBits));
+  EXPECT_THAT(qfMsg.valueInLower4Bits(), Eq(0x03));
+
+  EXPECT_THAT(qfMsg.rawBytes()[0], Eq(0xF1));
+  EXPECT_THAT(qfMsg.rawBytes()[1], Eq(0x73));
+
+  // Or can set piece and value individually:
+  // (FF upper 1 bit of 0b0001).
+  qfMsg.setPiece(bmmidi::MtcQuarterFramePiece::k1FrameUpperBits);  // 0x10.
+  qfMsg.setValueFromLower4Bits(0b0000'0001);  // 0x01.
+
+  EXPECT_THAT(qfMsg.dataByte(), Eq(0x11));
+  EXPECT_THAT(qfMsg.piece(), Eq(bmmidi::MtcQuarterFramePiece::k1FrameUpperBits));
+  EXPECT_THAT(qfMsg.valueInLower4Bits(), Eq(0x01));
+
+  EXPECT_THAT(qfMsg.rawBytes()[0], Eq(0xF1));
+  EXPECT_THAT(qfMsg.rawBytes()[1], Eq(0x11));
+}
+
+TEST(MtcQuarterFrameMsg, ShouldConvertFromMsg) {
+  // A more generic Msg...
+  // (MTC Quarter Frame, MM lower 4 bits of 0b1011).
+  // Upper bits identifying piece are 100. Lower bits encode value (for MM lower 4 bits).
+  bmmidi::Msg<2> msg{
+      bmmidi::Status::system(bmmidi::MsgType::kMtcQuarterFrame),
+      bmmidi::DataValue{0b0100'1011}};  // 0x4B.
+  
+  // ...should convert to the more specific MtcQuarterFrameMsg...
+  auto qfMsg = msg.to<bmmidi::MtcQuarterFrameMsg>();
+
+  EXPECT_THAT(qfMsg.dataByte(), Eq(0x4B));
+  EXPECT_THAT(qfMsg.piece(), Eq(bmmidi::MtcQuarterFramePiece::k4MinLowerBits));
+  EXPECT_THAT(qfMsg.valueInLower4Bits(), Eq(0x0B));
+
+  EXPECT_THAT(qfMsg.rawBytes()[0], Eq(0xF1));
+  EXPECT_THAT(qfMsg.rawBytes()[1], Eq(0x4B));
+
+  // ...and this converted copy should be mutable...
+  // (Rate + HH 0rrh upper 4 bits of 0b0011).
+  qfMsg.setDataByte(0x73);
+  EXPECT_THAT(qfMsg.dataByte(), Eq(0x73));
+
+  // ...and changes to it should NOT affect original Msg.
+  EXPECT_THAT(msg.data1().value(), Eq(0x4B));
 }
 
 }  // namespace

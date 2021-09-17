@@ -1,11 +1,13 @@
 #ifndef BMMIDI_MSG_REFERENCE_HPP
 #define BMMIDI_MSG_REFERENCE_HPP
 
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
 
+#include "bmmidi/bitops.hpp"
 #include "bmmidi/channel.hpp"
 #include "bmmidi/control.hpp"
 #include "bmmidi/data_value.hpp"
@@ -15,6 +17,7 @@
 #include "bmmidi/status.hpp"
 #include "bmmidi/sysex.hpp"
 #include "bmmidi/time.hpp"
+#include "bmmidi/timecode.hpp"
 
 namespace bmmidi {
 
@@ -815,6 +818,104 @@ using TimedUniversalSysExMsgView = Timed<UniversalSysExMsgView>;
 
 /** Alias for a timestamped read-write reference to a manufacturer-specific SysEx message. */
 using TimedUniversalSysExMsgRef = Timed<UniversalSysExMsgRef>;
+
+/**
+ * A reference to an MTC Quarter Frame message stored as contiguous bytes (which
+ * must outlive this reference object). Can either be read-write (see
+ * MtcQuarterFrameMsgRef alias) or read-only (see MtcQuarterFrameMsgView alias),
+ * based on AccessType template parameter.
+ */
+template<MsgAccess AccessType>
+class MtcQuarterFrameMsgReference : public MsgReference<AccessType> {
+public:
+  using BytePointerType = typename MsgReference<AccessType>::BytePointerType;
+
+  explicit MtcQuarterFrameMsgReference(BytePointerType bytes, int numBytes)
+      : MsgReference<AccessType>{bytes, numBytes} {
+    assert(this->type() == MsgType::kMtcQuarterFrame);
+  }
+
+  /**
+   * Returns full 7-bit data byte value, which can be used with
+   * MtcFullFrame::setPieceFromQuarterFrameDataByte().
+   *
+   * Encoded as bits 0b0nnn'dddd, where nnn denotes which quarter frame piece
+   * his is (see MtcQuarterFramePiece) and dddd encodes the data value for that
+   * piece.
+   */
+  std::uint8_t dataByte() const { return this->rawBytes()[1]; }
+
+  /**
+   * Sets full 7-bit data byte value, e.g. as obtained from
+   * MtcFullFrame::quarterFrameDataByteFor().
+   *
+   * Should be encoded as bits 0b0nnn'dddd, where nnn denotes which quarter
+   * frame piece this is (see MtcQuarterFramePiece) and dddd encodes the data
+   * value for that piece.
+   */
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setDataByte(std::uint8_t dataByte) {
+    assert(dataByte <= static_cast<int>(DataValue::max().value()));
+    this->rawBytes()[1] = dataByte;
+  }
+
+  /**
+   * Returns the piece of the full timecode value that this quarter frame
+   * message provides a value for.
+   */
+  MtcQuarterFramePiece piece() const {
+    return static_cast<MtcQuarterFramePiece>(
+        internal::getBits(dataByte(), internal::kMtcQuarterFramePieceBits));
+  }
+
+  /**
+   * Sets the piece of the full timecode value that this quarter frame message
+   * provides a value for.
+   */
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setPiece(MtcQuarterFramePiece piece) {
+    setDataByte(internal::setBits(dataByte(), static_cast<std::uint8_t>(piece),
+                internal::kMtcQuarterFramePieceBits));
+  }
+
+  /**
+   * Provides the value for the piece of timecode this quarter frame message is
+   * setting, encoded in the lower 4 bits of the returned value (the upper 4
+   * bits will always be 0s).
+   */
+  std::uint8_t valueInLower4Bits() const {
+    return internal::getBits(dataByte(), internal::kMtcQuarterFrameValueBits);
+  }
+
+  /**
+   * Sets the value for the piece of timecode this quarter frame message is
+   * settings, encoded in the lower 4 bits of the given value (the upper 4
+   * bits must be 0s).
+   */
+  template<
+      MsgAccess AccessT = AccessType,
+      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setValueFromLower4Bits(std::uint8_t value) {
+    assert(value <= 0b0000'1111);
+    setDataByte(internal::setBits(dataByte(), value, internal::kMtcQuarterFrameValueBits));
+  }
+};
+
+/** Alias for a read-only MtcQuarterFrameMsgReference. */
+using MtcQuarterFrameMsgView = MtcQuarterFrameMsgReference<MsgAccess::kReadOnly>;
+
+/** Alias for a read-write MtcQuarterFrameMsgReference. */
+using MtcQuarterFrameMsgRef = MtcQuarterFrameMsgReference<MsgAccess::kReadWrite>;
+
+/** Alias for a timestamped read-only reference to an MTC Quarter Frame message. */
+using TimedMtcQuarterFrameMsgView = Timed<MtcQuarterFrameMsgView>;
+
+/** Alias for a timestamped read-write reference to an MTC Quarter Frame message. */
+using TimedMtcQuarterFrameMsgRef = Timed<MtcQuarterFrameMsgRef>;
 
 }  // namespace bmmidi
 
