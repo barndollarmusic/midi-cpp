@@ -286,7 +286,7 @@ public:
   /** Sets type of this message to Note On or Note Off. */
   void setType(MsgType type) {
     assert((type == MsgType::kNoteOff) || (type == MsgType::kNoteOn));
-    setStatus(Status::channelVoice(type, this->channel()));
+    this->setStatus(Status::channelVoice(type, this->channel()));
   }
 
   /** Returns key of note that was pressed or released. */

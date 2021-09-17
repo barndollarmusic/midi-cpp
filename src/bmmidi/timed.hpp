@@ -72,7 +72,7 @@ public:
    */
   template<typename SubMsgT>
   TimedMsg<SubMsgT> to() const {
-    return TimedMsg<SubMsgT>{timestamp(), value().to<SubMsgT>()};
+    return TimedMsg<SubMsgT>{this->timestamp(), this->value().template to<SubMsgT>()};
   }
 
   /**
@@ -82,7 +82,7 @@ public:
    */
   template<typename ViewType>
   TimedMsg<ViewType> asView() {
-    return TimedMsg<ViewType>{timestamp(), value().asView<ViewType>()};
+    return TimedMsg<ViewType>{this->timestamp(), this->value().template asView<ViewType>()};
   }
 
   /**
@@ -99,7 +99,7 @@ public:
    */
   template<typename RefType>
   TimedMsg<RefType> asRef() {
-    return TimedMsg<RefType>{timestamp(), value().asRef<RefType>()};
+    return TimedMsg<RefType>{this->timestamp(), this->value().template asRef<RefType>()};
   }
 };
 
