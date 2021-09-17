@@ -10,7 +10,7 @@ function(bmmidi_header_library name)
   add_library(BMMidi_${name} INTERFACE)
   add_library(BMMidi::${name} ALIAS BMMidi_${name})
   set_target_properties(BMMidi_${name} PROPERTIES
-      EXPORT_NAME ${name})
+      EXPORT_NAME BMMidi_${name})
 
   target_sources(BMMidi_${name} INTERFACE ${ARGN})
 
@@ -44,8 +44,8 @@ function(bmmidi_library name)
   add_library(BMMidi_${name} ${ARGN})
   add_library(BMMidi::${name} ALIAS BMMidi_${name})
   set_target_properties(BMMidi_${name} PROPERTIES
-      OUTPUT_NAME ${name}
-      EXPORT_NAME ${name})
+      OUTPUT_NAME BMMidi_${name}
+      EXPORT_NAME BMMidi_${name})
 
   # Always include the src/ dir as a base include path.
   target_include_directories(BMMidi_${name}
