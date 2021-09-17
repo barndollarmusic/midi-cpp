@@ -132,19 +132,19 @@ enum class MsgType : std::uint8_t {
   kTimingClock = 0xF8,
 
   /**
-   * System Real Time: Start playback.
+   * System Real Time: Start Playback.
    * 0 data bytes.
    */
   kStart = 0xFA,
 
   /**
-   * System Real Time: Continue playback.
+   * System Real Time: Continue Playback.
    * 0 data bytes.
    */
   kContinue = 0xFB,
 
   /**
-   * System Real Time: Stop playback.
+   * System Real Time: Stop Playback.
    * 0 data bytes.
    */
   kStop = 0xFC,

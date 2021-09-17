@@ -1127,24 +1127,4 @@ TEST(SongSelectMsgRef, CanReferToRawBytes) {
   EXPECT_THAT(srcBytes[1], Eq(0x16));
 }
 
-TEST(OscTuneMsgView, CanReferToRawBytes) {
-  // (Oscillator Tune Request).
-  const std::uint8_t srcBytes[] = {0xF6};
-  bmmidi::OscTuneMsgView tuneMsgView{srcBytes, sizeof(srcBytes)};
-
-  EXPECT_THAT(tuneMsgView.status(),
-      Eq(bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)));
-}
-
-TEST(OscTuneMsgRef, CanReferToRawBytes) {
-  // (Oscillator Tune Request).
-  std::uint8_t srcBytes[] = {0xF6};
-  bmmidi::OscTuneMsgRef tuneMsgRef{srcBytes, sizeof(srcBytes)};
-
-  EXPECT_THAT(tuneMsgRef.status(),
-      Eq(bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)));
-
-  // (No mutations).
-}
-
 }  // namespace

@@ -943,28 +943,42 @@ TEST(SongSelectMsg, ShouldConvertFromMsg) {
   EXPECT_THAT(msg.data1().value(), Eq(56));
 }
 
-TEST(OscTuneMsg, ShouldCreate) {
+TEST(StatusOnlyMsgs, ShouldCreate) {
   // (Oscillator Tune Request).
-  auto tuneMsg = bmmidi::OscTuneMsg{};
+  const auto tuneMsg = bmmidi::oscTuneMsg();
   EXPECT_THAT(tuneMsg.status(),
       Eq(bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)));
   EXPECT_THAT(tuneMsg.rawBytes()[0], Eq(0xF6));
 
-  // (No mutations).
-}
+  // (Timing Clock).
+  const auto clockMsg = bmmidi::timingClockMsg();
+  EXPECT_THAT(clockMsg.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kTimingClock)));
+  EXPECT_THAT(clockMsg.rawBytes()[0], Eq(0xF8));
 
-TEST(OscTuneMsg, ShouldConvertFromMsg) {
-  // A more generic Msg...
-  // (Oscillator Tune Request).
-  bmmidi::Msg<1> msg{bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)};
-  
-  // ...should convert to the more specific OscTuneMsg...
-  auto tuneMsg = msg.to<bmmidi::OscTuneMsg>();
-  EXPECT_THAT(tuneMsg.status(),
-      Eq(bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)));
-  EXPECT_THAT(tuneMsg.rawBytes()[0], Eq(0xF6));
+  // (Start Playback).
+  const auto playMsg = bmmidi::startPlaybackMsg();
+  EXPECT_THAT(playMsg.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kStart)));
+  EXPECT_THAT(playMsg.rawBytes()[0], Eq(0xFA));
 
-  // (No mutations).
+  // (Continue Playback).
+  const auto contMsg = bmmidi::continuePlaybackMsg();
+  EXPECT_THAT(contMsg.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kContinue)));
+  EXPECT_THAT(contMsg.rawBytes()[0], Eq(0xFB));
+
+  // (Stop Playback).
+  const auto stopMsg = bmmidi::stopPlaybackMsg();
+  EXPECT_THAT(stopMsg.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kStop)));
+  EXPECT_THAT(stopMsg.rawBytes()[0], Eq(0xFC));
+
+  // (Active Sensing).
+  const auto senseMsg = bmmidi::activeSensingMsg();
+  EXPECT_THAT(senseMsg.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kActiveSensing)));
+  EXPECT_THAT(senseMsg.rawBytes()[0], Eq(0xFE));
+
+  // (System Reset).
+  const auto resetMsg = bmmidi::systemResetMsg();
+  EXPECT_THAT(resetMsg.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kSystemReset)));
+  EXPECT_THAT(resetMsg.rawBytes()[0], Eq(0xFF));
 }
 
 }  // namespace

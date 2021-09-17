@@ -810,31 +810,31 @@ static_assert(std::is_trivially_destructible<SongSelectMsg>::value,
 /** Alias for a timestamped Song Select message. */
 using TimedSongSelectMsg = Timed<SongSelectMsg>;
 
-/**
- * A Oscillator Tune Request message that stores its own bytes contiguously.
- *
- * Memory layout is packed bytes, so it should be safe to use reinterpret_cast<>
- * on existing memory (but see warnings in MsgReference documentation about
- * interleaved System Realtime messages and running status).
- */
-class OscTuneMsg : public Msg<1> {
-public:
-  static OscTuneMsg fromMsg(const Msg<1>& msg) {
-    assert(msg.type() == MsgType::kOscillatorTuneRequest);
-    return OscTuneMsg{};
-  }
+// NOTE: NOT defining specific classes for messages with no data bytes
+// (Oscillator Tune Request and all System Realtime messages), since the status
+// already provides all needed information. Factory functions to create them are
+// provided below:
 
-  /** Creates an Oscillator Tune Request message. */
-  explicit constexpr OscTuneMsg()
-      : Msg<1>{Status::system(MsgType::kOscillatorTuneRequest)} {}
-};
+/** Creates a status-byte-only Oscillator Tune Request message. */
+inline Msg<1> oscTuneMsg() { return Msg<1>{Status::system(MsgType::kOscillatorTuneRequest)}; }
 
-static_assert(sizeof(OscTuneMsg) == 1, "OscTuneMsg must be 1 byte");
-static_assert(std::is_trivially_destructible<OscTuneMsg>::value,
-              "OscTuneMsg must be trivially destructible");
+/** Creates a status-byte-only Timing Clock message. */
+inline Msg<1> timingClockMsg() { return Msg<1>{Status::system(MsgType::kTimingClock)}; }
 
-/** Alias for a timestamped Oscillator Tune Request message. */
-using TimedOscTuneMsg = Timed<OscTuneMsg>;
+/** Creates a status-byte-only Start Playback message. */
+inline Msg<1> startPlaybackMsg() { return Msg<1>{Status::system(MsgType::kStart)}; }
+
+/** Creates a status-byte-only Continue Playback message. */
+inline Msg<1> continuePlaybackMsg() { return Msg<1>{Status::system(MsgType::kContinue)}; }
+
+/** Creates a status-byte-only Stop Playback message. */
+inline Msg<1> stopPlaybackMsg() { return Msg<1>{Status::system(MsgType::kStop)}; }
+
+/** Creates a status-byte-only Active Sensing message. */
+inline Msg<1> activeSensingMsg() { return Msg<1>{Status::system(MsgType::kActiveSensing)}; }
+
+/** Creates a status-byte-only System Reset message. */
+inline Msg<1> systemResetMsg() { return Msg<1>{Status::system(MsgType::kSystemReset)}; }
 
 }  // namespace bmmidi
 
