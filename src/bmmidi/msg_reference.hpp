@@ -1020,6 +1020,35 @@ using TimedSongSelectMsgView = Timed<SongSelectMsgView>;
 /** Alias for a timestamped read-write reference to a song select message. */
 using TimedSongSelectMsgRef = Timed<SongSelectMsgRef>;
 
+/**
+ * A reference to an Oscillator Tune Request message stored as contiguous bytes
+ * (which must outlive this reference object). Can either be read-write (see
+ * OscTuneMsgRef alias) or read-only (see OscTuneMsgView alias), based on
+ * AccessType template parameter.
+ */
+template<MsgAccess AccessType>
+class OscTuneMsgReference : public MsgReference<AccessType> {
+public:
+  using BytePointerType = typename MsgReference<AccessType>::BytePointerType;
+
+  explicit OscTuneMsgReference(BytePointerType bytes, int numBytes)
+      : MsgReference<AccessType>{bytes, numBytes} {
+    assert(this->type() == MsgType::kOscillatorTuneRequest);
+  }
+};
+
+/** Alias for a read-only OscTuneMsgReference. */
+using OscTuneMsgView = OscTuneMsgReference<MsgAccess::kReadOnly>;
+
+/** Alias for a read-write OscTuneMsgReference. */
+using OscTuneMsgRef = OscTuneMsgReference<MsgAccess::kReadWrite>;
+
+/** Alias for a timestamped read-only reference to an oscillator tune request message. */
+using TimedOscTuneMsgView = Timed<OscTuneMsgView>;
+
+/** Alias for a timestamped read-write reference to an oscillator tune request message. */
+using TimedOscTuneMsgRef = Timed<OscTuneMsgRef>;
+
 }  // namespace bmmidi
 
 #endif  // BMMIDI_MSG_REFERENCE_HPP

@@ -810,6 +810,32 @@ static_assert(std::is_trivially_destructible<SongSelectMsg>::value,
 /** Alias for a timestamped Song Select message. */
 using TimedSongSelectMsg = Timed<SongSelectMsg>;
 
+/**
+ * A Oscillator Tune Request message that stores its own bytes contiguously.
+ *
+ * Memory layout is packed bytes, so it should be safe to use reinterpret_cast<>
+ * on existing memory (but see warnings in MsgReference documentation about
+ * interleaved System Realtime messages and running status).
+ */
+class OscTuneMsg : public Msg<1> {
+public:
+  static OscTuneMsg fromMsg(const Msg<1>& msg) {
+    assert(msg.type() == MsgType::kOscillatorTuneRequest);
+    return OscTuneMsg{};
+  }
+
+  /** Creates an Oscillator Tune Request message. */
+  explicit constexpr OscTuneMsg()
+      : Msg<1>{Status::system(MsgType::kOscillatorTuneRequest)} {}
+};
+
+static_assert(sizeof(OscTuneMsg) == 1, "OscTuneMsg must be 1 byte");
+static_assert(std::is_trivially_destructible<OscTuneMsg>::value,
+              "OscTuneMsg must be trivially destructible");
+
+/** Alias for a timestamped Oscillator Tune Request message. */
+using TimedOscTuneMsg = Timed<OscTuneMsg>;
+
 }  // namespace bmmidi
 
 #endif  // BMMIDI_MSG_HPP

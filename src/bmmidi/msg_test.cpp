@@ -943,4 +943,28 @@ TEST(SongSelectMsg, ShouldConvertFromMsg) {
   EXPECT_THAT(msg.data1().value(), Eq(56));
 }
 
+TEST(OscTuneMsg, ShouldCreate) {
+  // (Oscillator Tune Request).
+  auto tuneMsg = bmmidi::OscTuneMsg{};
+  EXPECT_THAT(tuneMsg.status(),
+      Eq(bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)));
+  EXPECT_THAT(tuneMsg.rawBytes()[0], Eq(0xF6));
+
+  // (No mutations).
+}
+
+TEST(OscTuneMsg, ShouldConvertFromMsg) {
+  // A more generic Msg...
+  // (Oscillator Tune Request).
+  bmmidi::Msg<1> msg{bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)};
+  
+  // ...should convert to the more specific OscTuneMsg...
+  auto tuneMsg = msg.to<bmmidi::OscTuneMsg>();
+  EXPECT_THAT(tuneMsg.status(),
+      Eq(bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)));
+  EXPECT_THAT(tuneMsg.rawBytes()[0], Eq(0xF6));
+
+  // (No mutations).
+}
+
 }  // namespace
