@@ -3,7 +3,12 @@
 
 #include <cassert>
 
+#include "bmmidi/cpp_features.hpp"
+
 namespace bmmidi {
+
+/** The # of discrete MIDI key numbers. */
+BMMIDI_INLINE_VAR static constexpr int kNumKeys = 128;
 
 /**
  * Represents a discrete piano keyboard key in [0, 127] range, where middle C

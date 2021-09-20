@@ -16,7 +16,4 @@
 #include "bmmidi/timecode.hpp"
 #include "bmmidi/timed.hpp"
 
-// TODO: Audit when library is finished to make sure this includes all
-// individual public headers.
-
 #endif  // BMMIDI_BMMIDI_HPP
