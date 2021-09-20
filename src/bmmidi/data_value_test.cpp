@@ -15,6 +15,10 @@ inline auto DoubleEq(double expected) {
   return ::testing::DoubleNear(expected, kPrecision8);
 }
 
+TEST(DataValue, ProvidesNumDataValuesConstant) {
+  EXPECT_THAT(bmmidi::kNumDataValues, Eq(128));
+}
+
 TEST(DataValue, ShouldSupportAllValues) {
   // Should work for values 0 through 127.
   {
@@ -93,6 +97,10 @@ TEST(DataValue, ShouldSupportComparisons) {
   EXPECT_THAT(bmmidi::DataValue{127} <= bmmidi::DataValue{0}, IsFalse());
   EXPECT_THAT(bmmidi::DataValue{127} > bmmidi::DataValue{0}, IsTrue());
   EXPECT_THAT(bmmidi::DataValue{127} >= bmmidi::DataValue{0}, IsTrue());
+}
+
+TEST(DoubleDataValue, ProvidesNumDoubleDataValuesConstant) {
+  EXPECT_THAT(bmmidi::kNumDoubleDataValues, Eq(16384));
 }
 
 TEST(DoubleDataValue, ShouldSupportAllValues) {

@@ -3,7 +3,12 @@
 
 #include <cassert>
 
+#include "bmmidi/cpp_features.hpp"
+
 namespace bmmidi {
+
+/** The # of MIDI channels. */
+BMMIDI_INLINE_VAR static constexpr int kNumChannels = 16;
 
 /**
  * Represents a MIDI channel, with normal 0-based index in range [0, 15] or

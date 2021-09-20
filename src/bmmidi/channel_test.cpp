@@ -9,6 +9,10 @@ using ::testing::Eq;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
 
+TEST(Channel, ProvidesNumChannelsConstant) {
+  EXPECT_THAT(bmmidi::kNumChannels, Eq(16));
+}
+
 TEST(Channel, ShouldWorkForAllNormalChannels) {
   // Should work for index 0 through 15.
   for (int chIndex = 0; chIndex <= 15; ++chIndex) {

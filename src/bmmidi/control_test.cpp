@@ -16,6 +16,10 @@ using ::testing::IsTrue;
 constexpr int kIntMin = std::numeric_limits<int>::min();
 constexpr int kIntMax = std::numeric_limits<int>::max();
 
+TEST(Control, ProvidesNumControlsConstant) {
+  EXPECT_THAT(bmmidi::kNumControls, Eq(128));
+}
+
 TEST(Control, ShouldProvideAliasedValues) {
   // LSB aliases:
   EXPECT_THAT(bmmidi::Control::kLsb000, Eq(bmmidi::Control::k032));

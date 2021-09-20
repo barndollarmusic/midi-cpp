@@ -6,7 +6,12 @@
 #include <cstdint>
 #include <type_traits>
 
+#include "bmmidi/cpp_features.hpp"
+
 namespace bmmidi {
+
+/** The # of distinct MIDI DataValue values. */
+BMMIDI_INLINE_VAR static constexpr int kNumDataValues = 128;
 
 /** Represents a standard [0, 127] range (7-bit) integer MIDI data value. */
 class DataValue {
@@ -67,6 +72,9 @@ private:
 
   std::int8_t value_;
 };
+
+/** The # of distinct MIDI DoubleDataValue values. */
+BMMIDI_INLINE_VAR static constexpr int kNumDoubleDataValues = 16384;
 
 /** Represents an extended [0, 16383] range (14-bit) integer MIDI data value. */
 class DoubleDataValue {

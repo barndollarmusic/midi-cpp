@@ -3,7 +3,12 @@
 
 #include <cassert>
 
+#include "bmmidi/cpp_features.hpp"
+
 namespace bmmidi {
+
+/** The # of discrete MIDI PresetNumber values. */
+BMMIDI_INLINE_VAR static constexpr int kNumPresets = 128;
 
 /**
  * Represents a MIDI preset number (program number, bank, tuning program, etc.)

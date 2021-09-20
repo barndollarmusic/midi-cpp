@@ -4,9 +4,13 @@
 #include <cassert>
 #include <cstdint>
 
+#include "bmmidi/cpp_features.hpp"
 #include "bmmidi/data_value.hpp"
 
 namespace bmmidi {
+
+/** The # of MIDI Control values. */
+BMMIDI_INLINE_VAR static constexpr int kNumControls = 128;
 
 /**
  * Type of MIDI Control Change message, including special Channel Mode messages
