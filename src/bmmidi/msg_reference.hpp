@@ -198,6 +198,81 @@ using MsgView = MsgReference<MsgAccess::kReadOnly>;
 /** Alias for a read-write MsgReference. */
 using MsgRef = MsgReference<MsgAccess::kReadWrite>;
 
+/**
+ * Special subclass of Timed<> for wrapped Msg<> or MsgReference<> classes,
+ * supporting conversions to more specific timed message and reference types.
+ */
+template<typename MsgT>
+class TimedMsg : public Timed<MsgT> {
+public:
+  template<typename... Args>
+  explicit TimedMsg(double timestamp, Args&&... args)
+      : Timed<MsgT>{timestamp, std::forward<Args>(args)...} {}
+
+  /**
+   * Returns a copy of this TimedMsg wrapping a more specific subclass SubMsgT;
+   * check message type() to ensure that the conversion is valid before calling
+   * (in debug mode, assertions will check).
+   *
+   * This is only supported for wrapped Msg<> subclasses (not MsgReference<>).
+   */
+  template<typename SubMsgT>
+  TimedMsg<SubMsgT> to() const {
+    return TimedMsg<SubMsgT>{this->timestamp(), this->value().template to<SubMsgT>()};
+  }
+
+  /**
+   * Returns TimedMsg wrapping a read-only view of ViewType; check type()
+   * to ensure that the conversion is valid before calling (in debug mode,
+   * assertions will check).
+   */
+  template<typename ViewType>
+  TimedMsg<ViewType> asView() const {
+    return TimedMsg<ViewType>{this->timestamp(), this->value().template asView<ViewType>()};
+  }
+
+  /**
+   * Returns TimedMsg wrapping a read-write reference of RefType; check type()
+   * to ensure that the conversion is valid before calling (in debug mode,
+   * assertions will check).
+   *
+   * This is only supported if this TimedMsg instance is wrapping a read-write
+   * value.
+   *
+   * Also note that current timestamp will be copied into the new reference, so
+   * the timestamp of the original can NOT be changed through this returned
+   * value.
+   */
+  template<typename RefType>
+  TimedMsg<RefType> asRef() {
+    return TimedMsg<RefType>{this->timestamp(), this->value().template asRef<RefType>()};
+  }
+
+  /** Implicitly converts to TimedMsgView. */
+  operator TimedMsg<MsgView>() const { return this->asView<MsgView>(); }
+
+  /** Implicitly converts to TimedMsgRef, if this is read-write. */
+  operator TimedMsg<MsgRef>() { return this->asRef<MsgRef>(); }
+
+  /**
+   * Implicitly converts to TimedMsg<ViewType>, if MsgT supports implicit
+   * conversion to ViewType.
+   */
+  template<typename ViewType>
+  operator TimedMsg<ViewType>() const {
+    return TimedMsg<ViewType>{this->timestamp(), this->value().operator ViewType()};
+  }
+
+  /**
+   * Implicitly converts to TimedMsg<ReferenceType>, if MsgT supports implicit
+   * conversion to ReferenceType.
+   */
+  template<typename ReferenceType>
+  operator TimedMsg<ReferenceType>() {
+    return TimedMsg<ReferenceType>{this->timestamp(), this->value().operator ReferenceType()};
+  }
+};
+
 /** Alias for a timestamped read-only reference to a MIDI message. */
 using TimedMsgView = TimedMsg<MsgView>;
 

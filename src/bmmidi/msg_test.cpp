@@ -9,6 +9,7 @@
 #include "bmmidi/channel.hpp"
 #include "bmmidi/control.hpp"
 #include "bmmidi/data_value.hpp"
+#include "bmmidi/msg_reference.hpp"
 #include "bmmidi/status.hpp"
 #include "bmmidi/timecode.hpp"
 
@@ -292,6 +293,182 @@ TEST(Msg, ProvidesReadWriteRawArrayAccess) {
   EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{27}));
 }
 
+TEST(Msg, ConvertsToMsgView) {
+  {
+    // Supports explicit conversion with asView():
+    bmmidi::Msg<3> msg{
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                     bmmidi::Channel::index(9)),
+        bmmidi::controlToDataValue(bmmidi::Control::kExpression),
+        bmmidi::DataValue{76}};
+
+    auto view = msg.asView<bmmidi::MsgView>();  // Explicit.
+    EXPECT_THAT(view.type(), Eq(bmmidi::MsgType::kControlChange));
+    EXPECT_THAT(view.status().channel().index(), Eq(9));
+    EXPECT_THAT(view.data1().value(), Eq(11));
+    EXPECT_THAT(view.data2().value(), Eq(76));
+
+    // If msg is changed, the view will reflect that.
+    msg.setData2(bmmidi::DataValue{88});
+    EXPECT_THAT(view.data2().value(), Eq(88));
+  }
+
+  {
+    // Supports implicit conversion through operator MsgView():
+    bmmidi::Msg<3> msg{
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                     bmmidi::Channel::index(9)),
+        bmmidi::controlToDataValue(bmmidi::Control::kExpression),
+        bmmidi::DataValue{76}};
+
+    bmmidi::MsgView view = msg;  // Implicit.
+    EXPECT_THAT(view.type(), Eq(bmmidi::MsgType::kControlChange));
+    EXPECT_THAT(view.status().channel().index(), Eq(9));
+    EXPECT_THAT(view.data1().value(), Eq(11));
+    EXPECT_THAT(view.data2().value(), Eq(76));
+
+    // If msg is changed, the view will reflect that.
+    msg.setData2(bmmidi::DataValue{88});
+    EXPECT_THAT(view.data2().value(), Eq(88));
+  }
+}
+
+TEST(Msg, ConvertsToMsgRef) {
+  {
+    // Supports explicit conversion with asRef():
+    bmmidi::Msg<3> msg{
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                     bmmidi::Channel::index(9)),
+        bmmidi::controlToDataValue(bmmidi::Control::kExpression),
+        bmmidi::DataValue{76}};
+
+    auto ref = msg.asRef<bmmidi::MsgRef>();  // Explicit.
+    EXPECT_THAT(ref.type(), Eq(bmmidi::MsgType::kControlChange));
+    EXPECT_THAT(ref.status().channel().index(), Eq(9));
+    EXPECT_THAT(ref.data1().value(), Eq(11));
+    EXPECT_THAT(ref.data2().value(), Eq(76));
+
+    // If msg is changed, the ref will reflect that.
+    msg.setData2(bmmidi::DataValue{88});
+    EXPECT_THAT(ref.data2().value(), Eq(88));
+
+    // And can also change the msg through ref.
+    ref.setData1(bmmidi::DataValue{1});
+    EXPECT_THAT(msg.data1().value(), Eq(1));
+  }
+
+  {
+    // Supports implicit conversion through operator MsgRef():
+    bmmidi::Msg<3> msg{
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                     bmmidi::Channel::index(9)),
+        bmmidi::controlToDataValue(bmmidi::Control::kExpression),
+        bmmidi::DataValue{76}};
+
+    bmmidi::MsgRef ref = msg;  // Implicit.
+    EXPECT_THAT(ref.type(), Eq(bmmidi::MsgType::kControlChange));
+    EXPECT_THAT(ref.status().channel().index(), Eq(9));
+    EXPECT_THAT(ref.data1().value(), Eq(11));
+    EXPECT_THAT(ref.data2().value(), Eq(76));
+
+    // If msg is changed, the ref will reflect that.
+    msg.setData2(bmmidi::DataValue{88});
+    EXPECT_THAT(ref.data2().value(), Eq(88));
+
+    // And can also change the msg through ref.
+    ref.setData1(bmmidi::DataValue{1});
+    EXPECT_THAT(msg.data1().value(), Eq(1));
+  }
+}
+
+TEST(TimedMsg, ConvertsToTimedMsgView) {
+  {
+    // Supports explicit conversion with asView():
+    auto msg = bmmidi::TimedMsg<bmmidi::Msg<3>>{1.01,
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                     bmmidi::Channel::index(2)),
+        bmmidi::DataValue{69},
+        bmmidi::DataValue{90}};
+
+    auto view = msg.asView<bmmidi::MsgView>();  // Explicit.
+    EXPECT_THAT(view.value().type(), Eq(bmmidi::MsgType::kNoteOn));
+    EXPECT_THAT(view.value().status().channel().index(), Eq(2));
+    EXPECT_THAT(view.value().data1().value(), Eq(69));
+    EXPECT_THAT(view.value().data2().value(), Eq(90));
+
+    // If msg is changed (other than timestamp), the view will reflect that.
+    msg.value().setData2(bmmidi::DataValue{88});
+    EXPECT_THAT(view.value().data2().value(), Eq(88));
+  }
+
+  {
+    // Supports implicit conversion through operator TimedMsgView():
+    auto msg = bmmidi::TimedMsg<bmmidi::Msg<3>>{1.01,
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                     bmmidi::Channel::index(2)),
+        bmmidi::DataValue{69},
+        bmmidi::DataValue{90}};
+
+    bmmidi::TimedMsgView view = msg;  // Implicit.
+    EXPECT_THAT(view.value().type(), Eq(bmmidi::MsgType::kNoteOn));
+    EXPECT_THAT(view.value().status().channel().index(), Eq(2));
+    EXPECT_THAT(view.value().data1().value(), Eq(69));
+    EXPECT_THAT(view.value().data2().value(), Eq(90));
+
+    // If msg is changed (other than timestamp), the view will reflect that.
+    msg.value().setData2(bmmidi::DataValue{88});
+    EXPECT_THAT(view.value().data2().value(), Eq(88));
+  }
+}
+
+TEST(TimedMsg, ConvertsToTimedMsgRef) {
+  {
+    // Supports explicit conversion with asRef():
+    auto msg = bmmidi::TimedMsg<bmmidi::Msg<3>>{1.01,
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                     bmmidi::Channel::index(2)),
+        bmmidi::DataValue{69},
+        bmmidi::DataValue{90}};
+
+    auto ref = msg.asRef<bmmidi::MsgRef>();  // Explicit.
+    EXPECT_THAT(ref.value().type(), Eq(bmmidi::MsgType::kNoteOn));
+    EXPECT_THAT(ref.value().status().channel().index(), Eq(2));
+    EXPECT_THAT(ref.value().data1().value(), Eq(69));
+    EXPECT_THAT(ref.value().data2().value(), Eq(90));
+
+    // If msg is changed (other than timestamp), the ref will reflect that.
+    msg.value().setData2(bmmidi::DataValue{88});
+    EXPECT_THAT(ref.value().data2().value(), Eq(88));
+
+    // And changing ref will also affect msg.
+    ref.value().setData1(bmmidi::DataValue{60});
+    EXPECT_THAT(msg.value().data1().value(), Eq(60));
+  }
+
+  {
+    // Supports implicit conversion through operator TimedMsgRef():
+    auto msg = bmmidi::TimedMsg<bmmidi::Msg<3>>{1.01,
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                     bmmidi::Channel::index(2)),
+        bmmidi::DataValue{69},
+        bmmidi::DataValue{90}};
+
+    bmmidi::TimedMsgRef ref = msg;  // Implicit.
+    EXPECT_THAT(ref.value().type(), Eq(bmmidi::MsgType::kNoteOn));
+    EXPECT_THAT(ref.value().status().channel().index(), Eq(2));
+    EXPECT_THAT(ref.value().data1().value(), Eq(69));
+    EXPECT_THAT(ref.value().data2().value(), Eq(90));
+
+    // If msg is changed (other than timestamp), the ref will reflect that.
+    msg.value().setData2(bmmidi::DataValue{88});
+    EXPECT_THAT(ref.value().data2().value(), Eq(88));
+
+    // And changing ref will also affect msg.
+    ref.value().setData1(bmmidi::DataValue{60});
+    EXPECT_THAT(msg.value().data1().value(), Eq(60));
+  }
+}
+
 TEST(ChanMsg, SupportsTwoByteMsgs) {
   // (Program change, channel 13, program 57).
   bmmidi::ChanMsg<2> chanMsg{
@@ -423,6 +600,94 @@ TEST(ChanMsg, ShouldConvertFromThreeByteMsg) {
                                       bmmidi::Channel::index(2))));
 }
 
+TEST(ChanMsg, ConvertsToChanMsgView) {
+  {
+    // Supports explicit conversion with asView():
+    bmmidi::ChanMsg<3> msg{
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                     bmmidi::Channel::index(2)),
+        bmmidi::DataValue{69},
+        bmmidi::DataValue{90}};
+
+    auto view = msg.asView<bmmidi::ChanMsgView>();  // Explicit.
+    EXPECT_THAT(view.type(), Eq(bmmidi::MsgType::kNoteOn));
+    EXPECT_THAT(view.status().channel().index(), Eq(2));
+    EXPECT_THAT(view.data1().value(), Eq(69));
+    EXPECT_THAT(view.data2().value(), Eq(90));
+
+    // If msg is changed, the view will reflect that.
+    msg.setChannel(bmmidi::Channel::index(7));
+    EXPECT_THAT(view.status().channel().index(), Eq(7));
+  }
+
+  {
+    // Supports implicit conversion through operator ChanMsgView():
+    bmmidi::ChanMsg<3> msg{
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                     bmmidi::Channel::index(2)),
+        bmmidi::DataValue{69},
+        bmmidi::DataValue{90}};
+
+    bmmidi::ChanMsgView view = msg;  // Implicit.
+    EXPECT_THAT(view.type(), Eq(bmmidi::MsgType::kNoteOn));
+    EXPECT_THAT(view.status().channel().index(), Eq(2));
+    EXPECT_THAT(view.data1().value(), Eq(69));
+    EXPECT_THAT(view.data2().value(), Eq(90));
+
+    // If msg is changed, the view will reflect that.
+    msg.setChannel(bmmidi::Channel::index(7));
+    EXPECT_THAT(view.status().channel().index(), Eq(7));
+  }
+}
+
+TEST(ChanMsg, ConvertsToChanMsgRef) {
+  {
+    // Supports explicit conversion with asRef():
+    bmmidi::ChanMsg<3> msg{
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                     bmmidi::Channel::index(2)),
+        bmmidi::DataValue{69},
+        bmmidi::DataValue{90}};
+
+    auto ref = msg.asRef<bmmidi::ChanMsgRef>();  // Explicit.
+    EXPECT_THAT(ref.type(), Eq(bmmidi::MsgType::kNoteOn));
+    EXPECT_THAT(ref.status().channel().index(), Eq(2));
+    EXPECT_THAT(ref.data1().value(), Eq(69));
+    EXPECT_THAT(ref.data2().value(), Eq(90));
+
+    // If msg is changed, the ref will reflect that.
+    msg.setChannel(bmmidi::Channel::index(7));
+    EXPECT_THAT(ref.status().channel().index(), Eq(7));
+
+    // And changing ref will also change msg.
+    ref.setChannel(bmmidi::Channel::index(12));
+    EXPECT_THAT(msg.channel().index(), Eq(12));
+  }
+
+  {
+    // Supports implicit conversion through operator ChanMsgRef():
+    bmmidi::ChanMsg<3> msg{
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
+                                     bmmidi::Channel::index(2)),
+        bmmidi::DataValue{69},
+        bmmidi::DataValue{90}};
+
+    bmmidi::ChanMsgRef ref = msg;  // Implicit.
+    EXPECT_THAT(ref.type(), Eq(bmmidi::MsgType::kNoteOn));
+    EXPECT_THAT(ref.status().channel().index(), Eq(2));
+    EXPECT_THAT(ref.data1().value(), Eq(69));
+    EXPECT_THAT(ref.data2().value(), Eq(90));
+
+    // If msg is changed, the ref will reflect that.
+    msg.setChannel(bmmidi::Channel::index(7));
+    EXPECT_THAT(ref.status().channel().index(), Eq(7));
+
+    // And changing ref will also change msg.
+    ref.setChannel(bmmidi::Channel::index(12));
+    EXPECT_THAT(msg.channel().index(), Eq(12));
+  }
+}
+
 TEST(NoteMsg, ShouldCreateNoteOn) {
   // (Note On, channel 3, key 69, velocity 90).
   auto noteMsg = bmmidi::NoteMsg::on(
@@ -531,6 +796,82 @@ TEST(NoteMsg, ShouldConvertFromMsg) {
   EXPECT_THAT(msg.data2().value(), Eq(90));
 }
 
+TEST(NoteMsg, ConvertsToNoteMsgView) {
+  {
+    // Supports explicit conversion with asView():
+    auto msg = bmmidi::NoteMsg::on(
+        bmmidi::Channel::index(2), bmmidi::KeyNumber::key(69), bmmidi::DataValue{90});
+
+    auto view = msg.asView<bmmidi::NoteMsgView>();  // Explicit.
+    EXPECT_THAT(view.type(), Eq(bmmidi::MsgType::kNoteOn));
+    EXPECT_THAT(view.status().channel().index(), Eq(2));
+    EXPECT_THAT(view.data1().value(), Eq(69));
+    EXPECT_THAT(view.data2().value(), Eq(90));
+
+    // If msg is changed, the view will reflect that.
+    msg.setVelocity(bmmidi::DataValue{32});
+    EXPECT_THAT(view.data2().value(), Eq(32));
+  }
+
+  {
+    // Supports implicit conversion through operator NoteMsgView():
+    auto msg = bmmidi::NoteMsg::on(
+        bmmidi::Channel::index(2), bmmidi::KeyNumber::key(69), bmmidi::DataValue{90});
+
+    bmmidi::NoteMsgView view = msg;  // Implicit.
+    EXPECT_THAT(view.type(), Eq(bmmidi::MsgType::kNoteOn));
+    EXPECT_THAT(view.status().channel().index(), Eq(2));
+    EXPECT_THAT(view.data1().value(), Eq(69));
+    EXPECT_THAT(view.data2().value(), Eq(90));
+
+    // If msg is changed, the view will reflect that.
+    msg.setVelocity(bmmidi::DataValue{32});
+    EXPECT_THAT(view.data2().value(), Eq(32));
+  }
+}
+
+TEST(NoteMsg, ConvertsToNoteMsgRef) {
+  {
+    // Supports explicit conversion with asRef():
+    auto msg = bmmidi::NoteMsg::on(
+        bmmidi::Channel::index(2), bmmidi::KeyNumber::key(69), bmmidi::DataValue{90});
+
+    auto ref = msg.asRef<bmmidi::NoteMsgRef>();  // Explicit.
+    EXPECT_THAT(ref.type(), Eq(bmmidi::MsgType::kNoteOn));
+    EXPECT_THAT(ref.status().channel().index(), Eq(2));
+    EXPECT_THAT(ref.data1().value(), Eq(69));
+    EXPECT_THAT(ref.data2().value(), Eq(90));
+
+    // If msg is changed, the ref will reflect that.
+    msg.setVelocity(bmmidi::DataValue{32});
+    EXPECT_THAT(ref.data2().value(), Eq(32));
+
+    // And changing ref should also affect msg.
+    ref.setKey(bmmidi::KeyNumber::key(60));
+    EXPECT_THAT(msg.key().value(), Eq(60));
+  }
+
+  {
+    // Supports implicit conversion through operator NoteMsgRef():
+    auto msg = bmmidi::NoteMsg::on(
+        bmmidi::Channel::index(2), bmmidi::KeyNumber::key(69), bmmidi::DataValue{90});
+
+    bmmidi::NoteMsgRef ref = msg;  // Implicit.
+    EXPECT_THAT(ref.type(), Eq(bmmidi::MsgType::kNoteOn));
+    EXPECT_THAT(ref.status().channel().index(), Eq(2));
+    EXPECT_THAT(ref.data1().value(), Eq(69));
+    EXPECT_THAT(ref.data2().value(), Eq(90));
+
+    // If msg is changed, the ref will reflect that.
+    msg.setVelocity(bmmidi::DataValue{32});
+    EXPECT_THAT(ref.data2().value(), Eq(32));
+
+    // And changing ref should also affect msg.
+    ref.setKey(bmmidi::KeyNumber::key(60));
+    EXPECT_THAT(msg.key().value(), Eq(60));
+  }
+}
+
 TEST(TimedNoteMsg, SupportsFactoriesAndConversion) {
   {
     // Time 1.01, Note On, Channel 4, Key 60, Velocity 88:
@@ -576,6 +917,45 @@ TEST(TimedNoteMsg, SupportsFactoriesAndConversion) {
     EXPECT_THAT(msg.value().key().value(), Eq(69));
     EXPECT_THAT(msg.value().velocity().value(), Eq(90));
   }
+}
+
+TEST(TimedNoteMsg, ConvertsToTimedNoteMsgView) {
+  // Time 1.01, Note On, Channel 4, Key 60, Velocity 88:
+  auto msg = bmmidi::TimedNoteMsg::on(1.01,
+      bmmidi::Channel::index(3), bmmidi::KeyNumber::key(60), bmmidi::DataValue{88});
+  const auto& constMsgRef = msg;
+
+  bmmidi::TimedNoteMsgView view = constMsgRef;  // Implicit.
+  EXPECT_THAT(view.timestamp(), Eq(1.01));
+  EXPECT_THAT(view.value().isNoteOn(), IsTrue());
+  EXPECT_THAT(view.value().channel().index(), Eq(3));
+  EXPECT_THAT(view.value().key().value(), Eq(60));
+  EXPECT_THAT(view.value().velocity().value(), Eq(88));
+
+  // If msg is changed (except for timestamp), view should also reflect that.
+  msg.value().setChannel(bmmidi::Channel::index(7));
+  EXPECT_THAT(view.value().channel().index(), Eq(7));
+}
+
+TEST(TimedNoteMsg, ConvertsToTimedNoteMsgRef) {
+  // Time 1.01, Note On, Channel 4, Key 60, Velocity 88:
+  auto msg = bmmidi::TimedNoteMsg::on(1.01,
+      bmmidi::Channel::index(3), bmmidi::KeyNumber::key(60), bmmidi::DataValue{88});
+
+  bmmidi::TimedNoteMsgRef ref = msg;  // Implicit.
+  EXPECT_THAT(ref.timestamp(), Eq(1.01));
+  EXPECT_THAT(ref.value().isNoteOn(), IsTrue());
+  EXPECT_THAT(ref.value().channel().index(), Eq(3));
+  EXPECT_THAT(ref.value().key().value(), Eq(60));
+  EXPECT_THAT(ref.value().velocity().value(), Eq(88));
+
+  // If msg is changed (except for timestamp), ref should also reflect that.
+  msg.value().setChannel(bmmidi::Channel::index(7));
+  EXPECT_THAT(ref.value().channel().index(), Eq(7));
+
+  // And if ref is changed, msg should also reflect that.
+  ref.value().setType(bmmidi::MsgType::kNoteOff);
+  EXPECT_THAT(msg.value().isNoteOff(), IsTrue());
 }
 
 TEST(KeyPressureMsg, ShouldCreate) {

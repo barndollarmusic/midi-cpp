@@ -12,6 +12,7 @@
 #include "bmmidi/control.hpp"
 #include "bmmidi/data_value.hpp"
 #include "bmmidi/key_number.hpp"
+#include "bmmidi/msg_reference.hpp"
 #include "bmmidi/pitch_bend.hpp"
 #include "bmmidi/preset_number.hpp"
 #include "bmmidi/status.hpp"
@@ -127,6 +128,9 @@ public:
       typename = std::enable_if_t<ViewType::kAccessType == MsgAccess::kReadOnly>>
   ViewType asView() const { return ViewType{bytes_, N}; }
 
+  /** Implicitly converts to MsgView. */
+  operator MsgView() const { return asView<MsgView>(); }
+
   /**
    * Returns read-write reference of RefType to this Msg; check type() to ensure
    * that the conversion is valid before calling (in debug mode, assertions will
@@ -136,6 +140,9 @@ public:
       typename RefType,
       typename = std::enable_if_t<RefType::kAccessType == MsgAccess::kReadWrite>>
   RefType asRef() { return RefType{bytes_, N}; }
+
+  /** Implicitly converts to MsgRef, if this is read-write. */
+  operator MsgRef() { return asRef<MsgRef>(); }
 
 private:
   ByteArray bytes_;
@@ -219,6 +226,12 @@ public:
     assert(channel.isNormal());
     setStatus(Status::channelVoice(this->type(), channel));
   }
+
+  /** Implicitly converts to ChanMsgView. */
+  operator ChanMsgView() const { return asView<ChanMsgView>(); }
+
+  /** Implicitly converts to ChanMsgRef, if this is read-write. */
+  operator ChanMsgRef() { return asRef<ChanMsgRef>(); }
 
 protected:
   // Hide the more general mutation functions, since specific subclasses provide
@@ -316,6 +329,12 @@ public:
   /** Updates to the given [0, 127] velocity value. */
   void setVelocity(DataValue velocity) { setData2(velocity); }
 
+  /** Implicitly converts to NoteMsgView. */
+  operator NoteMsgView() const { return asView<NoteMsgView>(); }
+
+  /** Implicitly converts to NoteMsgRef, if this is read-write. */
+  operator NoteMsgRef() { return asRef<NoteMsgRef>(); }
+
 private:
   explicit constexpr NoteMsg(Status status, KeyNumber key, DataValue velocity)
       : ChanMsg<3>{status,
@@ -400,6 +419,12 @@ public:
 
   /** Updates to the given [0, 127] pressure value. */
   void setPressure(DataValue pressure) { setData2(pressure); }
+
+  /** Implicitly converts to KeyPressureMsgView. */
+  operator KeyPressureMsgView() const { return asView<KeyPressureMsgView>(); }
+
+  /** Implicitly converts to KeyPressureMsgRef, if this is read-write. */
+  operator KeyPressureMsgRef() { return asRef<KeyPressureMsgRef>(); }
 };
 
 static_assert(sizeof(KeyPressureMsg) == 3, "KeyPressureMsg must be 3 bytes");
@@ -458,6 +483,12 @@ public:
 
   /** Updates to the given [0, 127] control value. */
   void setValue(DataValue value) { setData2(value); }
+
+  /** Implicitly converts to ControlChangeMsgView. */
+  operator ControlChangeMsgView() const { return asView<ControlChangeMsgView>(); }
+
+  /** Implicitly converts to ControlChangeMsgRef, if this is read-write. */
+  operator ControlChangeMsgRef() { return asRef<ControlChangeMsgRef>(); }
 };
 
 static_assert(sizeof(ControlChangeMsg) == 3, "ControlChangeMsg must be 3 bytes");
@@ -519,6 +550,12 @@ public:
     assert(program.isNormal());
     setData1(DataValue{static_cast<std::int8_t>(program.index())});
   }
+
+  /** Implicitly converts to ProgramChangeMsgView. */
+  operator ProgramChangeMsgView() const { return asView<ProgramChangeMsgView>(); }
+
+  /** Implicitly converts to ProgramChangeMsgRef, if this is read-write. */
+  operator ProgramChangeMsgRef() { return asRef<ProgramChangeMsgRef>(); }
 };
 
 static_assert(sizeof(ProgramChangeMsg) == 2, "ProgramChangeMsg must be 2 bytes");
@@ -570,6 +607,12 @@ public:
 
   /** Updates to the given [0, 127] pressure value. */
   void setPressure(DataValue pressure) { setData1(pressure); }
+
+  /** Implicitly converts to ChanPressureMsgView. */
+  operator ChanPressureMsgView() const { return asView<ChanPressureMsgView>(); }
+
+  /** Implicitly converts to ChanPressureMsgRef, if this is read-write. */
+  operator ChanPressureMsgRef() { return asRef<ChanPressureMsgRef>(); }
 };
 
 static_assert(sizeof(ChanPressureMsg) == 2, "ChanPressureMsg must be 2 bytes");
@@ -633,6 +676,12 @@ public:
     setData1(DataValue{static_cast<std::int8_t>(bend.lsb())});
     setData2(DataValue{static_cast<std::int8_t>(bend.msb())});
   }
+
+  /** Implicitly converts to PitchBendMsgView. */
+  operator PitchBendMsgView() const { return asView<PitchBendMsgView>(); }
+
+  /** Implicitly converts to PitchBendMsgRef, if this is read-write. */
+  operator PitchBendMsgRef() { return asRef<PitchBendMsgRef>(); }
 };
 
 static_assert(sizeof(PitchBendMsg) == 3, "PitchBendMsg must be 3 bytes");
@@ -751,6 +800,12 @@ public:
     setDataByte(internal::setBits(dataByte(), value, internal::kMtcQuarterFrameValueBits));
   }
 
+  /** Implicitly converts to MtcQuarterFrameMsgView. */
+  operator MtcQuarterFrameMsgView() const { return asView<MtcQuarterFrameMsgView>(); }
+
+  /** Implicitly converts to MtcQuarterFrameMsgRef, if this is read-write. */
+  operator MtcQuarterFrameMsgRef() { return asRef<MtcQuarterFrameMsgRef>(); }
+
 private:
   explicit constexpr MtcQuarterFrameMsg(std::uint8_t dataByte)
       : Msg<2>{Status::system(MsgType::kMtcQuarterFrame),
@@ -844,6 +899,12 @@ public:
     setData2(DataValue{static_cast<std::int8_t>(soxteenthsAfterStart.msb())});
   }
 
+  /** Implicitly converts to SongPosMsgView. */
+  operator SongPosMsgView() const { return asView<SongPosMsgView>(); }
+
+  /** Implicitly converts to SongPosMsgRef, if this is read-write. */
+  operator SongPosMsgRef() { return asRef<SongPosMsgRef>(); }
+
 private:
   explicit constexpr SongPosMsg(DoubleDataValue sixteenthsAfterStart)
       : Msg<3>{Status::system(MsgType::kSongPositionPointer),
@@ -909,6 +970,12 @@ public:
     assert(song.isNormal());
     setData1(DataValue{static_cast<std::int8_t>(song.index())});
   }
+
+  /** Implicitly converts to SongSelectMsgView. */
+  operator SongSelectMsgView() const { return asView<SongSelectMsgView>(); }
+
+  /** Implicitly converts to SongSelectMsgRef, if this is read-write. */
+  operator SongSelectMsgRef() { return asRef<SongSelectMsgRef>(); }
 };
 
 static_assert(sizeof(SongSelectMsg) == 2, "SongSelectMsg must be 2 bytes");
