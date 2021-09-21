@@ -329,8 +329,27 @@ static_assert(sizeof(NoteMsg) == 3, "NoteMsg must be 3 bytes");
 static_assert(std::is_trivially_destructible<NoteMsg>::value,
               "NoteMsg must be trivially destructible");
 
-/** Alias for a timestamped Note Off or Note On message. */
-using TimedNoteMsg = TimedMsg<NoteMsg>;
+/** A timestamped Note Off or Note On message. */
+class TimedNoteMsg : public TimedMsg<NoteMsg> {
+public:
+  static TimedNoteMsg on(
+      double timestamp, Channel channel, KeyNumber key, DataValue velocity) {
+    return TimedNoteMsg{timestamp, NoteMsg::on(channel, key, velocity)};
+  }
+
+  static TimedNoteMsg off(
+      double timestamp, Channel channel, KeyNumber key, DataValue velocity = DataValue::min()) {
+    return TimedNoteMsg{timestamp, NoteMsg::off(channel, key, velocity)};
+  }
+
+  // Support implicit conversion from TimedMsg<NoteMsg>, so that
+  // TimedMsg::to<NoteMsg>() can be assigned to this type if needed.
+  TimedNoteMsg(const TimedMsg<NoteMsg>& other)
+      : TimedNoteMsg{other.timestamp(), other.value()} {}
+
+  explicit TimedNoteMsg(double timestamp, const NoteMsg& noteMsg)
+      : TimedMsg<NoteMsg>{timestamp, noteMsg} {}
+};
 
 /**
  * A Polyphonic Key Pressure message (a.k.a. per-key aftertouch) that stores its
@@ -387,8 +406,21 @@ static_assert(sizeof(KeyPressureMsg) == 3, "KeyPressureMsg must be 3 bytes");
 static_assert(std::is_trivially_destructible<KeyPressureMsg>::value,
               "KeyPressureMsg must be trivially destructible");
 
-/** Alias for a timestamped Polyphonic Key Pressure message. */
-using TimedKeyPressureMsg = TimedMsg<KeyPressureMsg>;
+/** A timestamped Polyphonic Key Pressure message. */
+class TimedKeyPressureMsg : public TimedMsg<KeyPressureMsg> {
+public:
+  // Support implicit conversion from TimedMsg<KeyPressureMsg>, so that
+  // TimedMsg::to<KeyPressureMsg>() can be assigned to this type if needed.
+  TimedKeyPressureMsg(const TimedMsg<KeyPressureMsg>& other)
+      : TimedKeyPressureMsg{other.timestamp(), other.value()} {}
+
+  explicit TimedKeyPressureMsg(
+      double timestamp, Channel channel, KeyNumber key, DataValue pressure)
+      : TimedMsg<KeyPressureMsg>{timestamp, channel, key, pressure} {}
+
+  explicit TimedKeyPressureMsg(double timestamp, const KeyPressureMsg& keyPressureMsg)
+      : TimedMsg<KeyPressureMsg>{timestamp, keyPressureMsg} {}
+};
 
 /**
  * A Control Change message that stores its own bytes contiguously.
@@ -432,8 +464,21 @@ static_assert(sizeof(ControlChangeMsg) == 3, "ControlChangeMsg must be 3 bytes")
 static_assert(std::is_trivially_destructible<ControlChangeMsg>::value,
               "ControlChangeMsg must be trivially destructible");
 
-/** Alias for a timestamped Control Change message. */
-using TimedControlChangeMsg = TimedMsg<ControlChangeMsg>;
+/** A timestamped Control Change message. */
+class TimedControlChangeMsg : public TimedMsg<ControlChangeMsg> {
+public:
+  // Support implicit conversion from TimedMsg<ControlChangeMsg>, so that
+  // TimedMsg::to<ControlChangeMsg>() can be assigned to this type if needed.
+  TimedControlChangeMsg(const TimedMsg<ControlChangeMsg>& other)
+      : TimedControlChangeMsg{other.timestamp(), other.value()} {}
+
+  explicit TimedControlChangeMsg(
+      double timestamp, Channel channel, Control control, DataValue value)
+      : TimedMsg<ControlChangeMsg>{timestamp, channel, control, value} {}
+
+  explicit TimedControlChangeMsg(double timestamp, const ControlChangeMsg& ccMsg)
+      : TimedMsg<ControlChangeMsg>{timestamp, ccMsg} {}
+};
 
 /**
  * A Program Change message that stores its own bytes contiguously.
@@ -480,8 +525,21 @@ static_assert(sizeof(ProgramChangeMsg) == 2, "ProgramChangeMsg must be 2 bytes")
 static_assert(std::is_trivially_destructible<ProgramChangeMsg>::value,
               "ProgramChangeMsg must be trivially destructible");
 
-/** Alias for a timestamped Program Change message. */
-using TimedProgramChangeMsg = TimedMsg<ProgramChangeMsg>;
+/** A timestamped Program Change message. */
+class TimedProgramChangeMsg : public TimedMsg<ProgramChangeMsg> {
+public:
+  // Support implicit conversion from TimedMsg<ProgramChangeMsg>, so that
+  // TimedMsg::to<ProgramChangeMsg>() can be assigned to this type if needed.
+  TimedProgramChangeMsg(const TimedMsg<ProgramChangeMsg>& other)
+      : TimedProgramChangeMsg{other.timestamp(), other.value()} {}
+
+  explicit TimedProgramChangeMsg(
+      double timestamp, Channel channel, PresetNumber program)
+      : TimedMsg<ProgramChangeMsg>{timestamp, channel, program} {}
+
+  explicit TimedProgramChangeMsg(double timestamp, const ProgramChangeMsg& pcMsg)
+      : TimedMsg<ProgramChangeMsg>{timestamp, pcMsg} {}
+};
 
 /**
  * A Channel Pressure message (non-polyphonic aftertouch that affects all keys)
@@ -518,8 +576,21 @@ static_assert(sizeof(ChanPressureMsg) == 2, "ChanPressureMsg must be 2 bytes");
 static_assert(std::is_trivially_destructible<ChanPressureMsg>::value,
               "ChanPressureMsg must be trivially destructible");
 
-/** Alias for a timestamped Channel Pressure message. */
-using TimedChanPressureMsg = TimedMsg<ChanPressureMsg>;
+/** A timestamped Channel Pressure message. */
+class TimedChanPressureMsg : public TimedMsg<ChanPressureMsg> {
+public:
+  // Support implicit conversion from TimedMsg<ChanPressureMsg>, so that
+  // TimedMsg::to<ChanPressureMsg>() can be assigned to this type if needed.
+  TimedChanPressureMsg(const TimedMsg<ChanPressureMsg>& other)
+      : TimedChanPressureMsg{other.timestamp(), other.value()} {}
+
+  explicit TimedChanPressureMsg(
+      double timestamp, Channel channel, DataValue pressure)
+      : TimedMsg<ChanPressureMsg>{timestamp, channel, pressure} {}
+
+  explicit TimedChanPressureMsg(double timestamp, const ChanPressureMsg& cpMsg)
+      : TimedMsg<ChanPressureMsg>{timestamp, cpMsg} {}
+};
 
 /**
  * A Pitch Bend Change message that stores its own bytes contiguously.
@@ -568,8 +639,21 @@ static_assert(sizeof(PitchBendMsg) == 3, "PitchBendMsg must be 3 bytes");
 static_assert(std::is_trivially_destructible<PitchBendMsg>::value,
               "PitchBendMsg must be trivially destructible");
 
-/** Alias for a timestamped Pitch Bend message. */
-using TimedPitchBendMsg = TimedMsg<PitchBendMsg>;
+/** A timestamped Pitch Bend message. */
+class TimedPitchBendMsg : public TimedMsg<PitchBendMsg> {
+public:
+  // Support implicit conversion from TimedMsg<PitchBendMsg>, so that
+  // TimedMsg::to<PitchBendMsg>() can be assigned to this type if needed.
+  TimedPitchBendMsg(const TimedMsg<PitchBendMsg>& other)
+      : TimedPitchBendMsg{other.timestamp(), other.value()} {}
+
+  explicit TimedPitchBendMsg(
+      double timestamp, Channel channel, PitchBend bend)
+      : TimedMsg<PitchBendMsg>{timestamp, channel, bend} {}
+
+  explicit TimedPitchBendMsg(double timestamp, const PitchBendMsg& pbMsg)
+      : TimedMsg<PitchBendMsg>{timestamp, pbMsg} {}
+};
 
 // NOTE: See sysex.hpp for MfrSysEx and UniversalSysEx, which behave differently
 // from the Msg<N> classes in this file.
@@ -683,8 +767,26 @@ static_assert(sizeof(MtcQuarterFrameMsg) == 2, "MtcQuarterFrameMsg must be 2 byt
 static_assert(std::is_trivially_destructible<MtcQuarterFrameMsg>::value,
               "MtcQuarterFrameMsg must be trivially destructible");
 
-/** Alias for a timestamped MTC Quarter Frame message. */
-using TimedMtcQuarterFrameMsg = TimedMsg<MtcQuarterFrameMsg>;
+/** A timestamped MTC Quarter Frame message. */
+class TimedMtcQuarterFrameMsg : public TimedMsg<MtcQuarterFrameMsg> {
+public:
+  static TimedMtcQuarterFrameMsg pieceOf(
+      double timestamp, MtcFullFrame tc, MtcQuarterFramePiece piece) {
+    return TimedMtcQuarterFrameMsg{timestamp, MtcQuarterFrameMsg::pieceOf(tc, piece)};
+  }
+
+  static TimedMtcQuarterFrameMsg withDataByte(double timestamp, std::uint8_t dataByte) {
+    return TimedMtcQuarterFrameMsg{timestamp, MtcQuarterFrameMsg::withDataByte(dataByte)};
+  }
+
+  // Support implicit conversion from TimedMsg<MtcQuarterFrameMsg>, so that
+  // TimedMsg::to<MtcQuarterFrameMsg>() can be assigned to this type if needed.
+  TimedMtcQuarterFrameMsg(const TimedMsg<MtcQuarterFrameMsg>& other)
+      : TimedMtcQuarterFrameMsg{other.timestamp(), other.value()} {}
+
+  explicit TimedMtcQuarterFrameMsg(double timestamp, const MtcQuarterFrameMsg& qfMsg)
+      : TimedMsg<MtcQuarterFrameMsg>{timestamp, qfMsg} {}
+};
 
 /**
  * A Song Position Pointer message that stores its own bytes contiguously.
@@ -753,8 +855,22 @@ static_assert(sizeof(SongPosMsg) == 3, "SongPosMsg must be 3 bytes");
 static_assert(std::is_trivially_destructible<SongPosMsg>::value,
               "SongPosMsg must be trivially destructible");
 
-/** Alias for a timestamped Song Position Pointer message. */
-using TimedSongPosMsg = TimedMsg<SongPosMsg>;
+/** A timestamped Song Position Pointer message. */
+class TimedSongPosMsg : public TimedMsg<SongPosMsg> {
+public:
+  static TimedSongPosMsg atSixteenthsAfterStart(
+      double timestamp, DoubleDataValue sixteenthsAfterStart) {
+    return TimedSongPosMsg{timestamp, SongPosMsg::atSixteenthsAfterStart(sixteenthsAfterStart)};
+  }
+
+  // Support implicit conversion from TimedMsg<SongPosMsg>, so that
+  // TimedMsg::to<SongPosMsg>() can be assigned to this type if needed.
+  TimedSongPosMsg(const TimedMsg<SongPosMsg>& other)
+      : TimedSongPosMsg{other.timestamp(), other.value()} {}
+
+  explicit TimedSongPosMsg(double timestamp, const SongPosMsg& spMsg)
+      : TimedMsg<SongPosMsg>{timestamp, spMsg} {}
+};
 
 /**
  * A Song Select message that stores its own bytes contiguously.
@@ -799,8 +915,20 @@ static_assert(sizeof(SongSelectMsg) == 2, "SongSelectMsg must be 2 bytes");
 static_assert(std::is_trivially_destructible<SongSelectMsg>::value,
               "SongSelectMsg must be trivially destructible");
 
-/** Alias for a timestamped Song Select message. */
-using TimedSongSelectMsg = TimedMsg<SongSelectMsg>;
+/** A timestamped Song Select message. */
+class TimedSongSelectMsg : public TimedMsg<SongSelectMsg> {
+public:
+  // Support implicit conversion from TimedMsg<SongSelectMsg>, so that
+  // TimedMsg::to<SongSelectMsg>() can be assigned to this type if needed.
+  TimedSongSelectMsg(const TimedMsg<SongSelectMsg>& other)
+      : TimedSongSelectMsg{other.timestamp(), other.value()} {}
+
+  explicit TimedSongSelectMsg(double timestamp, PresetNumber song)
+      : TimedMsg<SongSelectMsg>{timestamp, song} {}
+
+  explicit TimedSongSelectMsg(double timestamp, const SongSelectMsg& ssMsg)
+      : TimedMsg<SongSelectMsg>{timestamp, ssMsg} {}
+};
 
 // NOTE: NOT defining specific classes for messages with no data bytes
 // (Oscillator Tune Request and all System Realtime messages), since the status
@@ -810,23 +938,58 @@ using TimedSongSelectMsg = TimedMsg<SongSelectMsg>;
 /** Creates a status-byte-only Oscillator Tune Request message. */
 inline Msg<1> oscTuneMsg() { return Msg<1>{Status::system(MsgType::kOscillatorTuneRequest)}; }
 
+/** Creates a timestamped Oscillator Tune Request message. */
+inline TimedMsg<Msg<1>> timedOscTuneMsg(double timestamp) {
+  return TimedMsg<Msg<1>>{timestamp, oscTuneMsg()};
+}
+
 /** Creates a status-byte-only Timing Clock message. */
 inline Msg<1> timingClockMsg() { return Msg<1>{Status::system(MsgType::kTimingClock)}; }
+
+/** Creates a timestamped Timing Clock message. */
+inline TimedMsg<Msg<1>> timedTimingClockMsg(double timestamp) {
+  return TimedMsg<Msg<1>>{timestamp, timingClockMsg()};
+}
 
 /** Creates a status-byte-only Start Playback message. */
 inline Msg<1> startPlaybackMsg() { return Msg<1>{Status::system(MsgType::kStart)}; }
 
+/** Creates a timestamped Start Playback message. */
+inline TimedMsg<Msg<1>> timedStartPlaybackMsg(double timestamp) {
+  return TimedMsg<Msg<1>>{timestamp, startPlaybackMsg()};
+}
+
 /** Creates a status-byte-only Continue Playback message. */
 inline Msg<1> continuePlaybackMsg() { return Msg<1>{Status::system(MsgType::kContinue)}; }
+
+/** Creates a timestamped Continue Playback message. */
+inline TimedMsg<Msg<1>> timedContinuePlaybackMsg(double timestamp) {
+  return TimedMsg<Msg<1>>{timestamp, continuePlaybackMsg()};
+}
 
 /** Creates a status-byte-only Stop Playback message. */
 inline Msg<1> stopPlaybackMsg() { return Msg<1>{Status::system(MsgType::kStop)}; }
 
+/** Creates a timestamped Stop Playback message. */
+inline TimedMsg<Msg<1>> timedStopPlaybackMsg(double timestamp) {
+  return TimedMsg<Msg<1>>{timestamp, stopPlaybackMsg()};
+}
+
 /** Creates a status-byte-only Active Sensing message. */
 inline Msg<1> activeSensingMsg() { return Msg<1>{Status::system(MsgType::kActiveSensing)}; }
 
+/** Creates a timestamped Active Sensing message. */
+inline TimedMsg<Msg<1>> timedActiveSensingMsg(double timestamp) {
+  return TimedMsg<Msg<1>>{timestamp, activeSensingMsg()};
+}
+
 /** Creates a status-byte-only System Reset message. */
 inline Msg<1> systemResetMsg() { return Msg<1>{Status::system(MsgType::kSystemReset)}; }
+
+/** Creates a timestamped System Reset message. */
+inline TimedMsg<Msg<1>> timedSystemResetMsg(double timestamp) {
+  return TimedMsg<Msg<1>>{timestamp, systemResetMsg()};
+}
 
 }  // namespace bmmidi
 
