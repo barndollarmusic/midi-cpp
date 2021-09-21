@@ -228,10 +228,10 @@ public:
   }
 
   /** Implicitly converts to ChanMsgView. */
-  operator ChanMsgView() const { return asView<ChanMsgView>(); }
+  operator ChanMsgView() const { return this->template asView<ChanMsgView>(); }
 
   /** Implicitly converts to ChanMsgRef, if this is read-write. */
-  operator ChanMsgRef() { return asRef<ChanMsgRef>(); }
+  operator ChanMsgRef() { return this->template asRef<ChanMsgRef>(); }
 
 protected:
   // Hide the more general mutation functions, since specific subclasses provide

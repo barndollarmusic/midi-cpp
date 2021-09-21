@@ -18,10 +18,6 @@ bool typeHasSubId2(UniversalCategory category, std::uint8_t subId1) {
 
 namespace {
 
-int numBytesForId(Manufacturer mfr) {
-  return mfr.isExtended() ? 3 : 1;
-}
-
 int numMsgBytesFor(Manufacturer mfr, int numPayloadBytes) {
   const auto numMfrBytes = mfr.isExtended()
       ? internal::kNumManufacturerIdExtBytes
