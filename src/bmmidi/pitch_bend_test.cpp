@@ -59,6 +59,38 @@ TEST(PitchBendRange, ShouldAllowAsymmetricalRange) {
   }
 }
 
+TEST(PitchBendRange, ShouldProvideInRangeTest) {
+  {
+    // Should work for a symmetrical range.
+    const auto range = bmmidi::PitchBendRange::defaultWholeStep();
+    EXPECT_THAT(range.canBendBySemitones(-3), IsFalse());
+    EXPECT_THAT(range.canBendBySemitones(-2.00000001), IsFalse());
+    EXPECT_THAT(range.canBendBySemitones(-2.0), IsTrue());
+    EXPECT_THAT(range.canBendBySemitones(-1.5), IsTrue());
+    EXPECT_THAT(range.canBendBySemitones(-0.0), IsTrue());
+    EXPECT_THAT(range.canBendBySemitones(0.0), IsTrue());
+    EXPECT_THAT(range.canBendBySemitones(0.5), IsTrue());
+    EXPECT_THAT(range.canBendBySemitones(2.0), IsTrue());
+    EXPECT_THAT(range.canBendBySemitones(2.00000001), IsFalse());
+    EXPECT_THAT(range.canBendBySemitones(2.5), IsFalse());
+  }
+
+  {
+    // Should work for an asymmetrical range.
+    const auto range = bmmidi::PitchBendRange::asymmetrical(/* down: */ 2.5, /* up: */ 5);
+    EXPECT_THAT(range.canBendBySemitones(-3), IsFalse());
+    EXPECT_THAT(range.canBendBySemitones(-2.50000001), IsFalse());
+    EXPECT_THAT(range.canBendBySemitones(-2.5), IsTrue());
+    EXPECT_THAT(range.canBendBySemitones(-1.5), IsTrue());
+    EXPECT_THAT(range.canBendBySemitones(-0.0), IsTrue());
+    EXPECT_THAT(range.canBendBySemitones(0.0), IsTrue());
+    EXPECT_THAT(range.canBendBySemitones(3.5), IsTrue());
+    EXPECT_THAT(range.canBendBySemitones(5.0), IsTrue());
+    EXPECT_THAT(range.canBendBySemitones(5.00000001), IsFalse());
+    EXPECT_THAT(range.canBendBySemitones(5.5), IsFalse());
+  }
+}
+
 TEST(PitchBend, ShouldSupportAllValues) {
   // Should work for values 0 through 16383.
   {

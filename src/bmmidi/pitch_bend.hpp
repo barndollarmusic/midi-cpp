@@ -40,6 +40,16 @@ public:
   /** Returns maximum upward bend in semitones (as a non-negative value). */
   constexpr double maxSemitonesUp() const { return maxSemitonesUp_; }
 
+  /**
+   * Returns true if the given +/- semitonesOffset is within this
+   * PitchBendRange.
+   */
+  constexpr bool canBendBySemitones(double semitonesOffset) const {
+    return (semitonesOffset < 0.0)
+        ? (-semitonesOffset <= maxSemitonesDown_)
+        : (semitonesOffset <= maxSemitonesUp_);
+  }
+
 private:
   explicit constexpr PitchBendRange(double maxSemitonesDown, double maxSemitonesUp)
       : maxSemitonesDown_{maxSemitonesDown},
