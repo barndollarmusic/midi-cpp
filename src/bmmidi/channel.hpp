@@ -29,10 +29,20 @@ public:
     return Channel{channelIndex};
   }
 
-  /** Creates a special Channel representing no channel. */
+  /**
+   * Creates a special Channel representing no channel.
+   *
+   * Note that for comparison and increment/decrement operations,
+   * Channel::none() represents one-beyond-the-last normal channel.
+   */
   static constexpr Channel none() { return Channel{kNone}; }
 
-  /** Creates a special Channel representing all channels (omni). */
+  /**
+   * Creates a special Channel representing all channels (omni).
+   *
+   * Note that it is an invalid operation to increment or decrement the returned
+   * Channel::ommni() value (this fails assertions in debug mode).
+   */
   static constexpr Channel omni() { return Channel{kOmni}; }
 
   /** Returns true if this is a normal, single [0, 15] MIDI channel. */
@@ -61,10 +71,41 @@ public:
   friend constexpr bool operator>(Channel lhs, Channel rhs) { return lhs.index_ > rhs.index_; }
   friend constexpr bool operator>=(Channel lhs, Channel rhs) { return lhs.index_ >= rhs.index_; }
 
+  // Increment and decrement operators (supported for normal channels, with
+  // none() representing one-beyond-the-last normal channel).
+
+  // Pre-increment:
+  Channel& operator++() {
+    assert(isNormal());
+    ++index_;
+    return *this;
+  }
+
+  // Post-increment:
+  Channel operator++(int) {
+    Channel copy = *this;
+    ++(*this);
+    return copy;
+  }
+
+  // Pre-decrement:
+  Channel& operator--() {
+    --index_;
+    assert(isNormal());
+    return *this;
+  }
+
+  // Post-decrement:
+  Channel operator--(int) {
+    Channel copy = *this;
+    --(*this);
+    return copy;
+  }
+
 private:
-  static constexpr int kNone = -1;
   static constexpr int kMinNormal = 0;
   static constexpr int kMaxNormal = 15;
+  static constexpr int kNone = 16;  // One beyond the last.
   static constexpr int kOmni = 64;
 
   explicit constexpr Channel(int index) : index_{index} {}

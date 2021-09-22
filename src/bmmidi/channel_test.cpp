@@ -79,15 +79,16 @@ TEST(Channel, ShouldSupportComparisons) {
   EXPECT_THAT(bmmidi::Channel::index(15) > bmmidi::Channel::index(0), IsTrue());
   EXPECT_THAT(bmmidi::Channel::index(15) >= bmmidi::Channel::index(0), IsTrue());
 
-  // None should compare less than other channels.
-  EXPECT_THAT(bmmidi::Channel::none() < bmmidi::Channel::index(0), IsTrue());
-  EXPECT_THAT(bmmidi::Channel::none() > bmmidi::Channel::index(0), IsFalse());
+  // None should compare greater than other channels.
+  EXPECT_THAT(bmmidi::Channel::none() < bmmidi::Channel::index(15), IsFalse());
+  EXPECT_THAT(bmmidi::Channel::none() > bmmidi::Channel::index(15), IsTrue());
+
+  // Omni should compare greater than other channels and None.
+  EXPECT_THAT(bmmidi::Channel::omni() < bmmidi::Channel::none(), IsFalse());
+  EXPECT_THAT(bmmidi::Channel::omni() > bmmidi::Channel::none(), IsTrue());
   EXPECT_THAT(bmmidi::Channel::none() < bmmidi::Channel::omni(), IsTrue());
   EXPECT_THAT(bmmidi::Channel::none() > bmmidi::Channel::omni(), IsFalse());
 
-  // Omni should compare greater than other channels.
-  EXPECT_THAT(bmmidi::Channel::omni() < bmmidi::Channel::none(), IsFalse());
-  EXPECT_THAT(bmmidi::Channel::omni() > bmmidi::Channel::none(), IsTrue());
   EXPECT_THAT(bmmidi::Channel::omni() < bmmidi::Channel::index(15), IsFalse());
   EXPECT_THAT(bmmidi::Channel::omni() > bmmidi::Channel::index(15), IsTrue());
 
@@ -96,6 +97,40 @@ TEST(Channel, ShouldSupportComparisons) {
   EXPECT_THAT(bmmidi::Channel::none() != bmmidi::Channel::none(), IsFalse());
   EXPECT_THAT(bmmidi::Channel::omni() == bmmidi::Channel::omni(), IsTrue());
   EXPECT_THAT(bmmidi::Channel::omni() != bmmidi::Channel::omni(), IsFalse());
+}
+
+TEST(Channel, SupportsIncrDecr) {
+  auto chanA = bmmidi::Channel::first();
+  EXPECT_THAT(chanA.index(), Eq(0));
+
+  // Pre-increment:
+  EXPECT_THAT((++chanA).index(), Eq(1));
+  EXPECT_THAT(chanA.index(), Eq(1));
+
+  // Post-increment:
+  EXPECT_THAT((chanA++).index(), Eq(1));
+  EXPECT_THAT(chanA.index(), Eq(2));
+
+  auto chanB = bmmidi::Channel::last();
+  EXPECT_THAT(chanB.index(), Eq(15));
+
+  // Pre-decrement:
+  EXPECT_THAT((--chanB).index(), Eq(14));
+  EXPECT_THAT(chanB.index(), Eq(14));
+
+  // Post-decrement:
+  EXPECT_THAT((chanB--).index(), Eq(14));
+  EXPECT_THAT(chanB.index(), Eq(13));
+
+  // Supports decrement down to Channel::first():
+  EXPECT_THAT(--bmmidi::Channel::index(1), Eq(bmmidi::Channel::first()));
+
+  // Channel::none() represents one-beyond-the-last:
+  EXPECT_THAT(++bmmidi::Channel::last(), Eq(bmmidi::Channel::none()));
+  EXPECT_THAT(--bmmidi::Channel::none(), Eq(bmmidi::Channel::last()));
+
+  // NOTE: Incrementing or decrementing Channel::omni() fails debug assertions,
+  // since it would result in an invalid value.
 }
 
 }  // namespace
