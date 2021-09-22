@@ -76,15 +76,15 @@ TEST(KeyNumber, ShouldSupportComparisons) {
   EXPECT_THAT(bmmidi::KeyNumber::key(127) > bmmidi::KeyNumber::key(0), IsTrue());
   EXPECT_THAT(bmmidi::KeyNumber::key(127) >= bmmidi::KeyNumber::key(0), IsTrue());
 
-  // None should compare less than other keys.
-  EXPECT_THAT(bmmidi::KeyNumber::none() < bmmidi::KeyNumber::key(0), IsTrue());
-  EXPECT_THAT(bmmidi::KeyNumber::none() > bmmidi::KeyNumber::key(0), IsFalse());
-  EXPECT_THAT(bmmidi::KeyNumber::none() < bmmidi::KeyNumber::all(), IsTrue());
-  EXPECT_THAT(bmmidi::KeyNumber::none() > bmmidi::KeyNumber::all(), IsFalse());
+  // None should compare greater than other normal keys.
+  EXPECT_THAT(bmmidi::KeyNumber::none() < bmmidi::KeyNumber::key(127), IsFalse());
+  EXPECT_THAT(bmmidi::KeyNumber::none() > bmmidi::KeyNumber::key(127), IsTrue());
 
-  // Omni should compare greater than other keys.
+  // All should compare greater than other keys and None.
   EXPECT_THAT(bmmidi::KeyNumber::all() < bmmidi::KeyNumber::none(), IsFalse());
   EXPECT_THAT(bmmidi::KeyNumber::all() > bmmidi::KeyNumber::none(), IsTrue());
+  EXPECT_THAT(bmmidi::KeyNumber::none() < bmmidi::KeyNumber::all(), IsTrue());
+  EXPECT_THAT(bmmidi::KeyNumber::none() > bmmidi::KeyNumber::all(), IsFalse());
   EXPECT_THAT(bmmidi::KeyNumber::all() < bmmidi::KeyNumber::key(127), IsFalse());
   EXPECT_THAT(bmmidi::KeyNumber::all() > bmmidi::KeyNumber::key(127), IsTrue());
 
@@ -93,6 +93,40 @@ TEST(KeyNumber, ShouldSupportComparisons) {
   EXPECT_THAT(bmmidi::KeyNumber::none() != bmmidi::KeyNumber::none(), IsFalse());
   EXPECT_THAT(bmmidi::KeyNumber::all() == bmmidi::KeyNumber::all(), IsTrue());
   EXPECT_THAT(bmmidi::KeyNumber::all() != bmmidi::KeyNumber::all(), IsFalse());
+}
+
+TEST(KeyNumber, SupportsIncrDecr) {
+  auto keyA = bmmidi::KeyNumber::first();
+  EXPECT_THAT(keyA.value(), Eq(0));
+
+  // Pre-increment:
+  EXPECT_THAT((++keyA).value(), Eq(1));
+  EXPECT_THAT(keyA.value(), Eq(1));
+
+  // Post-increment:
+  EXPECT_THAT((keyA++).value(), Eq(1));
+  EXPECT_THAT(keyA.value(), Eq(2));
+
+  auto keyB = bmmidi::KeyNumber::last();
+  EXPECT_THAT(keyB.value(), Eq(127));
+
+  // Pre-decrement:
+  EXPECT_THAT((--keyB).value(), Eq(126));
+  EXPECT_THAT(keyB.value(), Eq(126));
+
+  // Post-decrement:
+  EXPECT_THAT((keyB--).value(), Eq(126));
+  EXPECT_THAT(keyB.value(), Eq(125));
+
+  // Supports decrement down to KeyNumber::first():
+  EXPECT_THAT(--bmmidi::KeyNumber::key(1), Eq(bmmidi::KeyNumber::first()));
+
+  // KeyNumber::none() represents one-beyond-the-last:
+  EXPECT_THAT(++bmmidi::KeyNumber::last(), Eq(bmmidi::KeyNumber::none()));
+  EXPECT_THAT(--bmmidi::KeyNumber::none(), Eq(bmmidi::KeyNumber::last()));
+
+  // NOTE: Incrementing or decrementing KeyNumber::omni() fails debug assertions,
+  // since it would result in an invalid value.
 }
 
 }  // namespace

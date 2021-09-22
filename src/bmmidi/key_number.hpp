@@ -33,10 +33,20 @@ public:
     return KeyNumber{value};
   }
 
-  /** Creates a special KeyNumber representing no key. */
+  /**
+   * Creates a special KeyNumber representing no key.
+   *
+   * Note that for comparison and increment/decrement operations,
+   * KeyNumber::none() represents one-beyond-the-last normal key.
+   */
   static constexpr KeyNumber none() { return KeyNumber{kNone}; }
 
-  /** Creates a special KeyNumber representing all keys. */
+  /**
+   * Creates a special KeyNumber representing all keys.
+   *
+   * Note that it is an invalid operation to increment or decrement the returned
+   * KeyNumber::all() value (this fails assertions in debug mode).
+   */
   static constexpr KeyNumber all() { return KeyNumber{kAll}; }
 
   /** Returns true if this is a normal, single [0, 127] MIDI key. */
@@ -62,10 +72,41 @@ public:
   friend constexpr bool operator>(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ > rhs.value_; }
   friend constexpr bool operator>=(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ >= rhs.value_; }
 
+  // Increment and decrement operators (supported for normal keys, with none()
+  // representing one-beyond-the-last normal key).
+
+  // Pre-increment:
+  KeyNumber& operator++() {
+    assert(isNormal());
+    ++value_;
+    return *this;
+  }
+
+  // Post-increment:
+  KeyNumber operator++(int) {
+    KeyNumber copy = *this;
+    ++(*this);
+    return copy;
+  }
+
+  // Pre-decrement:
+  KeyNumber& operator--() {
+    --value_;
+    assert(isNormal());
+    return *this;
+  }
+
+  // Post-decrement:
+  KeyNumber operator--(int) {
+    KeyNumber copy = *this;
+    --(*this);
+    return copy;
+  }
+
 private:
-  static constexpr int kNone = -1;
   static constexpr int kMinNormal = 0;
   static constexpr int kMaxNormal = 127;
+  static constexpr int kNone = 128;  // One beyond the last normal value.
   static constexpr int kAll = 192;
 
   explicit constexpr KeyNumber(int value) : value_{value} {}

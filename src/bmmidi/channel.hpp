@@ -105,7 +105,7 @@ public:
 private:
   static constexpr int kMinNormal = 0;
   static constexpr int kMaxNormal = 15;
-  static constexpr int kNone = 16;  // One beyond the last.
+  static constexpr int kNone = 16;  // One beyond the last normal value.
   static constexpr int kOmni = 64;
 
   explicit constexpr Channel(int index) : index_{index} {}

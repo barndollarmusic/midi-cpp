@@ -79,7 +79,7 @@ TEST(Channel, ShouldSupportComparisons) {
   EXPECT_THAT(bmmidi::Channel::index(15) > bmmidi::Channel::index(0), IsTrue());
   EXPECT_THAT(bmmidi::Channel::index(15) >= bmmidi::Channel::index(0), IsTrue());
 
-  // None should compare greater than other channels.
+  // None should compare greater than other normal channels.
   EXPECT_THAT(bmmidi::Channel::none() < bmmidi::Channel::index(15), IsFalse());
   EXPECT_THAT(bmmidi::Channel::none() > bmmidi::Channel::index(15), IsTrue());
 
