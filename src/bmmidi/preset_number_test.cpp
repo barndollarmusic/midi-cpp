@@ -69,15 +69,46 @@ TEST(PresetNumber, ShouldSupportComparisons) {
   EXPECT_THAT(bmmidi::PresetNumber::index(127) > bmmidi::PresetNumber::index(0), IsTrue());
   EXPECT_THAT(bmmidi::PresetNumber::index(127) >= bmmidi::PresetNumber::index(0), IsTrue());
 
-  // None should compare less than other presets.
-  EXPECT_THAT(bmmidi::PresetNumber::none() < bmmidi::PresetNumber::index(0), IsTrue());
-  EXPECT_THAT(bmmidi::PresetNumber::none() > bmmidi::PresetNumber::index(0), IsFalse());
-  EXPECT_THAT(bmmidi::PresetNumber::none() < bmmidi::PresetNumber::index(64), IsTrue());
-  EXPECT_THAT(bmmidi::PresetNumber::none() > bmmidi::PresetNumber::index(64), IsFalse());
+  // None should compare greater than other normal presets.
+  EXPECT_THAT(bmmidi::PresetNumber::none() < bmmidi::PresetNumber::index(0), IsFalse());
+  EXPECT_THAT(bmmidi::PresetNumber::none() > bmmidi::PresetNumber::index(0), IsTrue());
+  EXPECT_THAT(bmmidi::PresetNumber::none() < bmmidi::PresetNumber::index(64), IsFalse());
+  EXPECT_THAT(bmmidi::PresetNumber::none() > bmmidi::PresetNumber::index(64), IsTrue());
 
   // None should equal itself.
   EXPECT_THAT(bmmidi::PresetNumber::none() == bmmidi::PresetNumber::none(), IsTrue());
   EXPECT_THAT(bmmidi::PresetNumber::none() != bmmidi::PresetNumber::none(), IsFalse());
+}
+
+TEST(PresetNumber, SupportsIncrDecr) {
+  auto presetA = bmmidi::PresetNumber::first();
+  EXPECT_THAT(presetA.index(), Eq(0));
+
+  // Pre-increment:
+  EXPECT_THAT((++presetA).index(), Eq(1));
+  EXPECT_THAT(presetA.index(), Eq(1));
+
+  // Post-increment:
+  EXPECT_THAT((presetA++).index(), Eq(1));
+  EXPECT_THAT(presetA.index(), Eq(2));
+
+  auto presetB = bmmidi::PresetNumber::last();
+  EXPECT_THAT(presetB.index(), Eq(127));
+
+  // Pre-decrement:
+  EXPECT_THAT((--presetB).index(), Eq(126));
+  EXPECT_THAT(presetB.index(), Eq(126));
+
+  // Post-decrement:
+  EXPECT_THAT((presetB--).index(), Eq(126));
+  EXPECT_THAT(presetB.index(), Eq(125));
+
+  // Supports decrement down to PresetNumber::first():
+  EXPECT_THAT(--bmmidi::PresetNumber::index(1), Eq(bmmidi::PresetNumber::first()));
+
+  // PresetNumber::none() represents one-beyond-the-last:
+  EXPECT_THAT(++bmmidi::PresetNumber::last(), Eq(bmmidi::PresetNumber::none()));
+  EXPECT_THAT(--bmmidi::PresetNumber::none(), Eq(bmmidi::PresetNumber::last()));
 }
 
 }  // namespace

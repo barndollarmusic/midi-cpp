@@ -31,7 +31,12 @@ public:
     return PresetNumber{index};
   }
 
-  /** Creates a special PresetNumber representing no preset. */
+  /**
+   * Creates a special PresetNumber representing no preset.
+   *
+   * Note that for comparison and increment/decrement operations,
+   * PresentNumber::none() represents one-beyond-the-last normal preset.
+   */
   static constexpr PresetNumber none() { return PresetNumber{kNone}; }
 
   /** Returns true if this is a normal [0, 127] index preset number. */
@@ -57,10 +62,41 @@ public:
   friend constexpr bool operator>(PresetNumber lhs, PresetNumber rhs) { return lhs.index_ > rhs.index_; }
   friend constexpr bool operator>=(PresetNumber lhs, PresetNumber rhs) { return lhs.index_ >= rhs.index_; }
 
+  // Increment and decrement operators (supported for normal presets, with
+  // none() representing one-beyond-the-last normal preset).
+
+  // Pre-increment:
+  PresetNumber& operator++() {
+    assert(isNormal());
+    ++index_;
+    return *this;
+  }
+
+  // Post-increment:
+  PresetNumber operator++(int) {
+    PresetNumber copy = *this;
+    ++(*this);
+    return copy;
+  }
+
+  // Pre-decrement:
+  PresetNumber& operator--() {
+    --index_;
+    assert(isNormal());
+    return *this;
+  }
+
+  // Post-decrement:
+  PresetNumber operator--(int) {
+    PresetNumber copy = *this;
+    --(*this);
+    return copy;
+  }
+
 private:
-  static constexpr int kNone = -1;
   static constexpr int kMinNormal = 0;
   static constexpr int kMaxNormal = 127;
+  static constexpr int kNone = 128;  // One beyond the last normal value.
 
   explicit constexpr PresetNumber(int index) : index_{index} {}
 

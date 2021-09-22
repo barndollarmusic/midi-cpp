@@ -125,7 +125,7 @@ TEST(KeyNumber, SupportsIncrDecr) {
   EXPECT_THAT(++bmmidi::KeyNumber::last(), Eq(bmmidi::KeyNumber::none()));
   EXPECT_THAT(--bmmidi::KeyNumber::none(), Eq(bmmidi::KeyNumber::last()));
 
-  // NOTE: Incrementing or decrementing KeyNumber::omni() fails debug assertions,
+  // NOTE: Incrementing or decrementing KeyNumber::all() fails debug assertions,
   // since it would result in an invalid value.
 }
 
