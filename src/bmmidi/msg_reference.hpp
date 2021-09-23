@@ -182,7 +182,7 @@ public:
 
   /** Implicitly converts to MsgView. */
   operator MsgReference<MsgAccess::kReadOnly>() const {
-    return asView<MsgReference<MsgAccess::kReadOnly>>();
+    return this->template asView<MsgReference<MsgAccess::kReadOnly>>();
   }
 
   /** Returns true if this message is byte-for-byte identical to otherReference. */
@@ -317,7 +317,7 @@ public:
 
   /** Implicitly converts to ChanMsgView. */
   operator ChanMsgReference<MsgAccess::kReadOnly>() const {
-    return asView<ChanMsgReference<MsgAccess::kReadOnly>>();
+    return this->template asView<ChanMsgReference<MsgAccess::kReadOnly>>();
   }
 
 protected:
@@ -400,7 +400,7 @@ public:
 
   /** Implicitly converts to NoteMsgView. */
   operator NoteMsgReference<MsgAccess::kReadOnly>() const {
-    return asView<NoteMsgReference<MsgAccess::kReadOnly>>();
+    return this->template asView<NoteMsgReference<MsgAccess::kReadOnly>>();
   }
 };
 
@@ -458,7 +458,7 @@ public:
 
   /** Implicitly converts to KeyPressureMsgView. */
   operator KeyPressureMsgReference<MsgAccess::kReadOnly>() const {
-    return asView<KeyPressureMsgReference<MsgAccess::kReadOnly>>();
+    return this->template asView<KeyPressureMsgReference<MsgAccess::kReadOnly>>();
   }
 };
 
@@ -512,7 +512,7 @@ public:
 
   /** Implicitly converts to ControlChangeMsgView. */
   operator ControlChangeMsgReference<MsgAccess::kReadOnly>() const {
-    return asView<ControlChangeMsgReference<MsgAccess::kReadOnly>>();
+    return this->template asView<ControlChangeMsgReference<MsgAccess::kReadOnly>>();
   }
 };
 
@@ -561,7 +561,7 @@ public:
 
   /** Implicitly converts to ProgramChangeMsgView. */
   operator ProgramChangeMsgReference<MsgAccess::kReadOnly>() const {
-    return asView<ProgramChangeMsgReference<MsgAccess::kReadOnly>>();
+    return this->template asView<ProgramChangeMsgReference<MsgAccess::kReadOnly>>();
   }
 };
 
@@ -605,7 +605,7 @@ public:
 
   /** Implicitly converts to ChanPressureMsgView. */
   operator ChanPressureMsgReference<MsgAccess::kReadOnly>() const {
-    return asView<ChanPressureMsgReference<MsgAccess::kReadOnly>>();
+    return this->template asView<ChanPressureMsgReference<MsgAccess::kReadOnly>>();
   }
 };
 
@@ -655,7 +655,7 @@ public:
 
   /** Implicitly converts to PitchBendMsgView. */
   operator PitchBendMsgReference<MsgAccess::kReadOnly>() const {
-    return asView<PitchBendMsgReference<MsgAccess::kReadOnly>>();
+    return this->template asView<PitchBendMsgReference<MsgAccess::kReadOnly>>();
   }
 };
 
@@ -711,7 +711,7 @@ public:
 
   /** Implicitly converts to SysExMsgView. */
   operator SysExMsgReference<MsgAccess::kReadOnly>() const {
-    return asView<SysExMsgReference<MsgAccess::kReadOnly>>();
+    return this->template asView<SysExMsgReference<MsgAccess::kReadOnly>>();
   }
 
 protected:
@@ -805,7 +805,7 @@ public:
 
   /** Implicitly converts to MfrSysExMsgView. */
   operator MfrSysExMsgReference<MsgAccess::kReadOnly>() const {
-    return asView<MfrSysExMsgReference<MsgAccess::kReadOnly>>();
+    return this->template asView<MfrSysExMsgReference<MsgAccess::kReadOnly>>();
   }
 
 private:
@@ -925,7 +925,7 @@ public:
 
   /** Implicitly converts to UniversalSysExMsgView. */
   operator UniversalSysExMsgReference<MsgAccess::kReadOnly>() const {
-    return asView<UniversalSysExMsgReference<MsgAccess::kReadOnly>>();
+    return this->template asView<UniversalSysExMsgReference<MsgAccess::kReadOnly>>();
   }
 
 private:
@@ -1036,7 +1036,7 @@ public:
 
   /** Implicitly converts to MtcQuarterFrameMsgView. */
   operator MtcQuarterFrameMsgReference<MsgAccess::kReadOnly>() const {
-    return asView<MtcQuarterFrameMsgReference<MsgAccess::kReadOnly>>();
+    return this->template asView<MtcQuarterFrameMsgReference<MsgAccess::kReadOnly>>();
   }
 };
 
@@ -1100,7 +1100,7 @@ public:
 
   /** Implicitly converts to SongPosMsgView. */
   operator SongPosMsgReference<MsgAccess::kReadOnly>() const {
-    return asView<SongPosMsgReference<MsgAccess::kReadOnly>>();
+    return this->template asView<SongPosMsgReference<MsgAccess::kReadOnly>>();
   }
 };
 
@@ -1149,7 +1149,7 @@ public:
 
   /** Implicitly converts to SongSelectMsgView. */
   operator SongSelectMsgReference<MsgAccess::kReadOnly>() const {
-    return asView<SongSelectMsgReference<MsgAccess::kReadOnly>>();
+    return this->template asView<SongSelectMsgReference<MsgAccess::kReadOnly>>();
   }
 };
 
