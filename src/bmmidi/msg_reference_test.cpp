@@ -222,6 +222,24 @@ TEST(MsgRef, WorksForMsg) {
   EXPECT_THAT(ccCh13Mod37.rawBytes()[2], Eq(0x5A));
 }
 
+TEST(MsgRef, ImplicitlyConvertsToMsgView) {
+  // Control Change, channel 13, CC #1 (Mod Wheel), value 37.
+  bmmidi::Msg<3> ccCh13Mod37{
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
+                                   bmmidi::Channel::index(12)),
+      bmmidi::controlToDataValue(bmmidi::Control::kModWheel),
+      bmmidi::DataValue{37}};
+  auto ref = ccCh13Mod37.asRef<bmmidi::MsgRef>();
+
+  // MsgRef should implicitly convert to MsgView.
+  bmmidi::MsgView view = ref;
+  EXPECT_THAT(view.data2().value(), Eq(37));
+
+  // And changes through MsgRef should be reflected through that MsgView.
+  ref.setData2(bmmidi::DataValue{88});
+  EXPECT_THAT(view.data2().value(), Eq(88));
+}
+
 // TODO: Add tests for MsgView and MsgRef referring to SysExMsg.
 // TODO: Add at least one test with TimedMsgView, TimedMsgRef.
 
@@ -260,6 +278,25 @@ TEST(ChanMsgRef, CanReferToRawBytes) {
   chanMsgRef.setChannel(bmmidi::Channel::index(13));
   EXPECT_THAT(chanMsgRef.channel().displayNumber(), Eq(14));
   EXPECT_THAT(srcBytes[0], Eq(0x9D));
+}
+
+TEST(ChanMsgRef, ImplicitlyConvertsToChanMsgView) {
+  // (Note On, channel 3, key 69, velocity 90).
+  std::uint8_t srcBytes[] = {0x92, 0x45, 0x5A};
+  bmmidi::ChanMsgRef chanMsgRef{srcBytes, sizeof(srcBytes)};
+
+  // Should implicitly convert to MsgView.
+  bmmidi::MsgView msgView = chanMsgRef;
+  EXPECT_THAT(msgView.status().channel().index(), Eq(2));
+
+  // And should implicitly convert to ChanMsgView.
+  bmmidi::ChanMsgView chanMsgView = chanMsgRef;
+  EXPECT_THAT(chanMsgView.channel().index(), Eq(2));
+
+  // Both views should see changes made through ChanMsgRef.
+  chanMsgRef.setChannel(bmmidi::Channel::index(7));
+  EXPECT_THAT(msgView.status().channel().index(), Eq(7));
+  EXPECT_THAT(chanMsgView.channel().index(), Eq(7));
 }
 
 TEST(NoteMsgView, CanReferToRawBytes) {
@@ -438,6 +475,25 @@ TEST(NoteMsgRef, ShouldConvertFromMsg) {
   noteOnRef.setVelocity(bmmidi::DataValue{23});
   EXPECT_THAT(noteOnRef.velocity().value(), Eq(23));
   EXPECT_THAT(msg.data2().value(), Eq(23));
+}
+
+TEST(NoteMsgRef, ImplicitlyConvertsToNoteMsgView) {
+  // (Note Off, channel 3, key 69, velocity 90).
+  std::uint8_t srcBytes[] = {0x82, 0x45, 0x5A};
+  bmmidi::NoteMsgRef noteMsgRef{srcBytes, sizeof(srcBytes)};
+
+  // Should implicitly convert to MsgView.
+  bmmidi::MsgView msgView = noteMsgRef;
+  EXPECT_THAT(msgView.data2().value(), Eq(90));
+
+  // And should implicitly convert to NoteMsgView.
+  bmmidi::NoteMsgView noteMsgView = noteMsgRef;
+  EXPECT_THAT(noteMsgView.velocity().value(), Eq(90));
+
+  // Both views should see changes made through NoteMsgRef.
+  noteMsgRef.setVelocity(bmmidi::DataValue{33});
+  EXPECT_THAT(msgView.data2().value(), Eq(33));
+  EXPECT_THAT(noteMsgView.velocity().value(), Eq(33));
 }
 
 TEST(KeyPressureMsgView, CanReferToRawBytes) {

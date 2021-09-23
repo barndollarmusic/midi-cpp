@@ -180,6 +180,11 @@ public:
       typename = std::enable_if_t<ViewType::kAccessType == MsgAccess::kReadOnly>>
   ViewType asView() const { return ViewType{bytes_, numBytes_}; }
 
+  /** Implicitly converts to MsgView. */
+  operator MsgReference<MsgAccess::kReadOnly>() const {
+    return asView<MsgReference<MsgAccess::kReadOnly>>();
+  }
+
   /** Returns true if this message is byte-for-byte identical to otherReference. */
   template<MsgAccess OtherAccessType>
   bool hasSameValueAs(const MsgReference<OtherAccessType>& otherReference) const {
@@ -310,6 +315,11 @@ public:
     setStatus(Status::channelVoice(this->type(), channel));
   }
 
+  /** Implicitly converts to ChanMsgView. */
+  operator ChanMsgReference<MsgAccess::kReadOnly>() const {
+    return asView<ChanMsgReference<MsgAccess::kReadOnly>>();
+  }
+
 protected:
   // Hide the more general mutation functions, since specific subclasses provide
   // more specific semantic APIs that will limit correct mutations for the
@@ -387,6 +397,11 @@ public:
       MsgAccess AccessT = AccessType,
       typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setVelocity(DataValue velocity) { this->setData2(velocity); }
+
+  /** Implicitly converts to NoteMsgView. */
+  operator NoteMsgReference<MsgAccess::kReadOnly>() const {
+    return asView<NoteMsgReference<MsgAccess::kReadOnly>>();
+  }
 };
 
 /** Alias for a read-only NoteMsgReference. */
@@ -440,6 +455,11 @@ public:
       MsgAccess AccessT = AccessType,
       typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setPressure(DataValue pressure) { this->setData2(pressure); }
+
+  /** Implicitly converts to KeyPressureMsgView. */
+  operator KeyPressureMsgReference<MsgAccess::kReadOnly>() const {
+    return asView<KeyPressureMsgReference<MsgAccess::kReadOnly>>();
+  }
 };
 
 /** Alias for a read-only KeyPressureMsgReference. */
@@ -489,6 +509,11 @@ public:
       MsgAccess AccessT = AccessType,
       typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setValue(DataValue value) { this->setData2(value); }
+
+  /** Implicitly converts to ControlChangeMsgView. */
+  operator ControlChangeMsgReference<MsgAccess::kReadOnly>() const {
+    return asView<ControlChangeMsgReference<MsgAccess::kReadOnly>>();
+  }
 };
 
 /** Alias for a read-only ControlChangeMsgReference. */
@@ -533,6 +558,11 @@ public:
     assert(program.isNormal());
     this->setData1(DataValue{static_cast<std::int8_t>(program.index())});
   }
+
+  /** Implicitly converts to ProgramChangeMsgView. */
+  operator ProgramChangeMsgReference<MsgAccess::kReadOnly>() const {
+    return asView<ProgramChangeMsgReference<MsgAccess::kReadOnly>>();
+  }
 };
 
 /** Alias for a read-only ProgramChangeMsgReference. */
@@ -572,6 +602,11 @@ public:
       MsgAccess AccessT = AccessType,
       typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setPressure(DataValue pressure) { this->setData1(pressure); }
+
+  /** Implicitly converts to ChanPressureMsgView. */
+  operator ChanPressureMsgReference<MsgAccess::kReadOnly>() const {
+    return asView<ChanPressureMsgReference<MsgAccess::kReadOnly>>();
+  }
 };
 
 /** Alias for a read-only ChanPressureMsgReference. */
@@ -616,6 +651,11 @@ public:
   void setBend(PitchBend bend) {
     this->setData1(DataValue{static_cast<std::int8_t>(bend.lsb())});
     this->setData2(DataValue{static_cast<std::int8_t>(bend.msb())});
+  }
+
+  /** Implicitly converts to PitchBendMsgView. */
+  operator PitchBendMsgReference<MsgAccess::kReadOnly>() const {
+    return asView<PitchBendMsgReference<MsgAccess::kReadOnly>>();
   }
 };
 
@@ -667,6 +707,11 @@ public:
   bool isUniversal() const {
     return (sysExId() == static_cast<std::uint8_t>(UniversalCategory::kNonRealTime))
         || (sysExId() == static_cast<std::uint8_t>(UniversalCategory::kRealTime));
+  }
+
+  /** Implicitly converts to SysExMsgView. */
+  operator SysExMsgReference<MsgAccess::kReadOnly>() const {
+    return asView<SysExMsgReference<MsgAccess::kReadOnly>>();
   }
 
 protected:
@@ -756,6 +801,11 @@ public:
    */
   int numPayloadBytes() const {
     return this->numBytes() - numHeaderBytes() - 1;  // Last -1 for trailing EOX.
+  }
+
+  /** Implicitly converts to MfrSysExMsgView. */
+  operator MfrSysExMsgReference<MsgAccess::kReadOnly>() const {
+    return asView<MfrSysExMsgReference<MsgAccess::kReadOnly>>();
   }
 
 private:
@@ -873,6 +923,11 @@ public:
     return this->numBytes() - numHeaderBytes() - 1;  // Last -1 for trailing EOX.
   }
 
+  /** Implicitly converts to UniversalSysExMsgView. */
+  operator UniversalSysExMsgReference<MsgAccess::kReadOnly>() const {
+    return asView<UniversalSysExMsgReference<MsgAccess::kReadOnly>>();
+  }
+
 private:
   int numHeaderBytes() const {
     const auto numUniversalHdrBytes = internal::typeHasSubId2(category(), this->rawBytes()[3])
@@ -978,6 +1033,11 @@ public:
     assert(value <= 0b0000'1111);
     setDataByte(internal::setBits(dataByte(), value, internal::kMtcQuarterFrameValueBits));
   }
+
+  /** Implicitly converts to MtcQuarterFrameMsgView. */
+  operator MtcQuarterFrameMsgReference<MsgAccess::kReadOnly>() const {
+    return asView<MtcQuarterFrameMsgReference<MsgAccess::kReadOnly>>();
+  }
 };
 
 /** Alias for a read-only MtcQuarterFrameMsgReference. */
@@ -1037,6 +1097,11 @@ public:
     this->setData1(DataValue{static_cast<std::int8_t>(soxteenthsAfterStart.lsb())});
     this->setData2(DataValue{static_cast<std::int8_t>(soxteenthsAfterStart.msb())});
   }
+
+  /** Implicitly converts to SongPosMsgView. */
+  operator SongPosMsgReference<MsgAccess::kReadOnly>() const {
+    return asView<SongPosMsgReference<MsgAccess::kReadOnly>>();
+  }
 };
 
 /** Alias for a read-only SongPosMsgReference. */
@@ -1080,6 +1145,11 @@ public:
   void setSong(PresetNumber song) {
     assert(song.isNormal());
     this->setData1(DataValue{static_cast<std::int8_t>(song.index())});
+  }
+
+  /** Implicitly converts to SongSelectMsgView. */
+  operator SongSelectMsgReference<MsgAccess::kReadOnly>() const {
+    return asView<SongSelectMsgReference<MsgAccess::kReadOnly>>();
   }
 };
 
