@@ -258,7 +258,7 @@ TEST(UniversalSysEx, WorksForOneSubIdTypeWithinBuffer) {
 
   auto msg = builder.buildAsRefToBytes(&buffer[3], 6);
   EXPECT_THAT(msg.category(), Eq(bmmidi::UniversalCategory::kNonRealTime));
-  EXPECT_THAT(msg.type(), Eq(bmmidi::universal::kAck));
+  EXPECT_THAT(msg.universalType(), Eq(bmmidi::universal::kAck));
   EXPECT_THAT(msg.device(), Eq(bmmidi::Device::all()));
 
   // Can fill in 1 payload byte (here the packet #).
@@ -280,7 +280,7 @@ TEST(UniversalSysEx, WorksForOneSubIdTypeWithinBuffer) {
   // Test read-only access through const reference:
   const auto& msgRef = msg;
   EXPECT_THAT(msgRef.category(), Eq(bmmidi::UniversalCategory::kNonRealTime));
-  EXPECT_THAT(msgRef.type(), Eq(bmmidi::universal::kAck));
+  EXPECT_THAT(msgRef.universalType(), Eq(bmmidi::universal::kAck));
   EXPECT_THAT(msgRef.device(), Eq(bmmidi::Device::all()));
 
   EXPECT_THAT(msgRef.numPayloadBytes(), Eq(1));
@@ -309,7 +309,7 @@ TEST(UniversalSysEx, WorksForTwoSubIdTypeOnHeap) {
 
   auto msg = builder.buildOnHeap();
   EXPECT_THAT(msg.category(), Eq(bmmidi::UniversalCategory::kNonRealTime));
-  EXPECT_THAT(msg.type(), Eq(bmmidi::universal::kTuningBulkDumpReq));
+  EXPECT_THAT(msg.universalType(), Eq(bmmidi::universal::kTuningBulkDumpReq));
   EXPECT_THAT(msg.device().value(), Eq(22));
 
   // Can fill in the 1 payload byte (here the tuning program # being requested).
@@ -337,7 +337,7 @@ TEST(UniversalSysEx, WorksForRealtime) {
 
   auto msg = builder.buildOnHeap();
   EXPECT_THAT(msg.category(), Eq(bmmidi::UniversalCategory::kRealTime));
-  EXPECT_THAT(msg.type(), Eq(bmmidi::universal::kTuningRtNoteChange));
+  EXPECT_THAT(msg.universalType(), Eq(bmmidi::universal::kTuningRtNoteChange));
   EXPECT_THAT(msg.device().value(), Eq(22));
 
   // Can fill in the payload bytes.

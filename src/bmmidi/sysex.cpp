@@ -172,7 +172,7 @@ UniversalCategory UniversalSysEx::category() const {
   return static_cast<UniversalCategory>(msgBytes_[1]);
 }
 
-UniversalType UniversalSysEx::type() const {
+UniversalType UniversalSysEx::universalType() const {
   const auto subId1 = msgBytes_[3];
 
   if (category() == UniversalCategory::kNonRealTime) {

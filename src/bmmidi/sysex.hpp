@@ -650,7 +650,7 @@ public:
   UniversalCategory category() const;
 
   /** Returns the type of universal message this is. */
-  UniversalType type() const;
+  UniversalType universalType() const;
 
   /**
    * Returns the device that should respond to this message (or special "all"
