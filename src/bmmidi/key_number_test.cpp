@@ -22,8 +22,10 @@ TEST(KeyNumber, ShouldWorkForAllNormalKeys) {
     EXPECT_THAT(ch.isAll(), IsFalse());
     EXPECT_THAT(ch.value(), Eq(keyNumber));
   }
+}
 
-  // Should also provide first() and last() for limits.
+TEST(KeyNumber, ProvidesUsefulKeys) {
+  // Should provide first() and last() for limits.
   const auto minKey = bmmidi::KeyNumber::first();
   EXPECT_THAT(minKey.isNormal(), IsTrue());
   EXPECT_THAT(minKey.isNone(), IsFalse());
@@ -35,6 +37,19 @@ TEST(KeyNumber, ShouldWorkForAllNormalKeys) {
   EXPECT_THAT(maxKey.isNone(), IsFalse());
   EXPECT_THAT(maxKey.isAll(), IsFalse());
   EXPECT_THAT(maxKey.value(), Eq(127));
+
+  // Should provide middleC() and tuningA() as common reference keys.
+  const auto c4 = bmmidi::KeyNumber::middleC();
+  EXPECT_THAT(c4.isNormal(), IsTrue());
+  EXPECT_THAT(c4.isNone(), IsFalse());
+  EXPECT_THAT(c4.isAll(), IsFalse());
+  EXPECT_THAT(c4.value(), Eq(60));
+
+  const auto a4 = bmmidi::KeyNumber::tuningA();
+  EXPECT_THAT(a4.isNormal(), IsTrue());
+  EXPECT_THAT(a4.isNone(), IsFalse());
+  EXPECT_THAT(a4.isAll(), IsFalse());
+  EXPECT_THAT(a4.value(), Eq(69));
 }
 
 TEST(KeyNumber, ShouldSupportSpecialValues) {

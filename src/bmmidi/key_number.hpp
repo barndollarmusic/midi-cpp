@@ -23,6 +23,12 @@ public:
   /** Returns first valid normal KeyNumber, with value 0. */
   static constexpr KeyNumber first() { return KeyNumber{kMinNormal}; }
 
+  /** Returns KeyNumber for middle C, with value 60. */
+  static constexpr KeyNumber middleC() { return KeyNumber{60}; }
+
+  /** Returns KeyNumber for tuning A, with value 69. */
+  static constexpr KeyNumber tuningA() { return KeyNumber{69}; }
+
   /** Returns last valid normal KeyNumber, with value 127. */
   static constexpr KeyNumber last() { return KeyNumber{kMaxNormal}; }
 
