@@ -1,12 +1,8 @@
-THIRD-PARTY SOFTWARE NOTICES AND INFORMATION
-
-barndollarmusic/midi-cpp: The BMMidi C++ library incorporates third party
-materials from the projects listed below.
-
-
-================================================================================
-https://github.com/google/googletest
+SPDX-FileCopyrightText: Copyright 2008, Google Inc.
 SPDX-License-Identifier: BSD-3-Clause
+
+https://github.com/google/googletest
+
 ================================================================================
 
 Copyright 2008, Google Inc.

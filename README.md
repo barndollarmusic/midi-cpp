@@ -11,11 +11,11 @@ This library requires C++14 or later.
 
 Documentation coming soon :)
 
-# Licenses
+## Licenses
 This is free open source software. The code in this project is made available
-under the [Apache-2.0](LICENSES/Apache-2.0.txt) license. See
-[ThirdPartyNotices.txt](ThirdPartyNotices.txt) for license information about the
-software libraries, assets, and tools this project depends upon.
+under the [Apache-2.0](LICENSES/Apache-2.0.txt) license. See the
+`ThirdPartyNotices/` folder for information about the software libraries,
+assets, and tools this project depends upon.
 
 Source files and `LICENSES/` are annotated and checked using
 [reuse.software](https://reuse.software/) tools.
