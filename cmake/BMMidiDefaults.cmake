@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022 Barndollar Music, Ltd.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 if(NOT BMMIDI_IS_TOP_LEVEL_PROJECT)
   if(CMAKE_CXX_STANDARD LESS 14)
     message(FATAL_ERROR

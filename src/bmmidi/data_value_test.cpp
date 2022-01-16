@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2022 Barndollar Music, Ltd.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #include "bmmidi/data_value.hpp"
 
 #include <gmock/gmock.h>

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2022 Barndollar Music, Ltd.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef BMMIDI_KEY_NUMBER_HPP
 #define BMMIDI_KEY_NUMBER_HPP
 

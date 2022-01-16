@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2022 Barndollar Music, Ltd.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 /** This is a convenience header-file that includes entire bmmidi library. */
 
 #ifndef BMMIDI_BMMIDI_HPP

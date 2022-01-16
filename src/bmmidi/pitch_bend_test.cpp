@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2022 Barndollar Music, Ltd.
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #include "bmmidi/pitch_bend.hpp"
 
 #include <gmock/gmock.h>
