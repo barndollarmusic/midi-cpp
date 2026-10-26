@@ -23,9 +23,9 @@ constexpr int kMaxValidSec = 59;
 
 bool isPieceForUpperBits(MtcQuarterFramePiece piece) {
   return (piece == MtcQuarterFramePiece::k1FrameUpperBits)
-      || (piece == MtcQuarterFramePiece::k3SecUpperBits)
-      || (piece == MtcQuarterFramePiece::k5MinUpperBits)
-      || (piece == MtcQuarterFramePiece::k7RateHourUpperBits);
+         || (piece == MtcQuarterFramePiece::k3SecUpperBits)
+         || (piece == MtcQuarterFramePiece::k5MinUpperBits)
+         || (piece == MtcQuarterFramePiece::k7RateHourUpperBits);
 }
 
 struct MtcFullByteInfo {
@@ -99,61 +99,48 @@ MtcFullFrame MtcFullFrame::zero(MtcFrameRateStandard frameRate) {
 }
 
 MtcFrameRateStandard MtcFullFrame::frameRate() const {
-  return static_cast<MtcFrameRateStandard>(
-      internal::getBits(bytes_[0], kMtcFullFrameRateBits));
+  return static_cast<MtcFrameRateStandard>(internal::getBits(bytes_[0], kMtcFullFrameRateBits));
 }
 
 void MtcFullFrame::setFrameRate(MtcFrameRateStandard frameRate) {
-  bytes_[0] = internal::setBits(bytes_[0], static_cast<std::uint8_t>(frameRate),
-                                kMtcFullFrameRateBits);
+  bytes_[0] =
+      internal::setBits(bytes_[0], static_cast<std::uint8_t>(frameRate), kMtcFullFrameRateBits);
 }
 
-int MtcFullFrame::hh() const {
-  return internal::getBits(bytes_[0], kMtcFullFrameHHBits);
-}
+int MtcFullFrame::hh() const { return internal::getBits(bytes_[0], kMtcFullFrameHHBits); }
 
 void MtcFullFrame::setHH(int hour) {
   assert(0 <= hour);
   assert(hour <= kMaxValidHour);
 
-  bytes_[0] = internal::setBits(bytes_[0], static_cast<std::uint8_t>(hour),
-                                kMtcFullFrameHHBits);
+  bytes_[0] = internal::setBits(bytes_[0], static_cast<std::uint8_t>(hour), kMtcFullFrameHHBits);
 }
 
-int MtcFullFrame::mm() const {
-  return internal::getBits(bytes_[1], kMtcFullFrameMMBits);
-}
+int MtcFullFrame::mm() const { return internal::getBits(bytes_[1], kMtcFullFrameMMBits); }
 
 void MtcFullFrame::setMM(int min) {
   assert(0 <= min);
   assert(min <= kMaxValidMin);
 
-  bytes_[1] = internal::setBits(bytes_[1], static_cast<std::uint8_t>(min),
-                                kMtcFullFrameMMBits);
+  bytes_[1] = internal::setBits(bytes_[1], static_cast<std::uint8_t>(min), kMtcFullFrameMMBits);
 }
 
-int MtcFullFrame::ss() const {
-  return internal::getBits(bytes_[2], kMtcFullFrameSSBits);
-}
+int MtcFullFrame::ss() const { return internal::getBits(bytes_[2], kMtcFullFrameSSBits); }
 
 void MtcFullFrame::setSS(int sec) {
   assert(0 <= sec);
   assert(sec <= kMaxValidSec);
 
-  bytes_[2] = internal::setBits(bytes_[2], static_cast<std::uint8_t>(sec),
-                                kMtcFullFrameSSBits);
+  bytes_[2] = internal::setBits(bytes_[2], static_cast<std::uint8_t>(sec), kMtcFullFrameSSBits);
 }
 
-int MtcFullFrame::ff() const {
-  return internal::getBits(bytes_[3], kMtcFullFrameFFBits);
-}
+int MtcFullFrame::ff() const { return internal::getBits(bytes_[3], kMtcFullFrameFFBits); }
 
 void MtcFullFrame::setFF(int frame) {
   assert(0 <= frame);
   assert(frame <= 29);  // Only check max across all frame rate standards.
 
-  bytes_[3] = internal::setBits(bytes_[3], static_cast<std::uint8_t>(frame),
-                                kMtcFullFrameFFBits);
+  bytes_[3] = internal::setBits(bytes_[3], static_cast<std::uint8_t>(frame), kMtcFullFrameFFBits);
 }
 
 bool MtcFullFrame::isValid() const {
@@ -165,11 +152,8 @@ bool MtcFullFrame::isValid() const {
 
   // NOTE: Because of bitmasking, negative components shouldn't be possible.
   assert((0 <= hour) && (0 <= min) && (0 <= sec) && (0 <= frame));
-  return (hour <= kMaxValidHour)
-      && (min <= kMaxValidMin)
-      && (sec <= kMaxValidSec)
-      && (frame <= maxFrameNumberFor(rate))
-      && !isDropFrame(rate, min, sec, frame);
+  return (hour <= kMaxValidHour) && (min <= kMaxValidMin) && (sec <= kMaxValidSec)
+         && (frame <= maxFrameNumberFor(rate)) && !isDropFrame(rate, min, sec, frame);
 }
 
 std::uint8_t MtcFullFrame::quarterFrameDataByteFor(MtcQuarterFramePiece piece) const {
@@ -190,8 +174,7 @@ void MtcFullFrame::setPieceFromQuarterFrameDataByte(std::uint8_t quarterFrameDat
 
   // Value is always stored in lower 4 bits of quarter frame data byte.
   // If this piece represents the upper bits, those need to be shifted higher.
-  auto value =
-      internal::getBits(quarterFrameDataByte, internal::kMtcQuarterFrameValueBits);
+  auto value = internal::getBits(quarterFrameDataByte, internal::kMtcQuarterFrameValueBits);
   value <<= isPieceForUpperBits(piece) ? 4 : 0;
 
   const auto byteInfo = mtcFullByteInfoFor(piece);

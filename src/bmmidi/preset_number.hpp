@@ -59,12 +59,24 @@ public:
   constexpr int displayNumber() const { return index() + 1; }
 
   // Comparison operations:
-  friend constexpr bool operator==(PresetNumber lhs, PresetNumber rhs) { return lhs.index_ == rhs.index_; }
-  friend constexpr bool operator!=(PresetNumber lhs, PresetNumber rhs) { return lhs.index_ != rhs.index_; }
-  friend constexpr bool operator<(PresetNumber lhs, PresetNumber rhs) { return lhs.index_ < rhs.index_; }
-  friend constexpr bool operator<=(PresetNumber lhs, PresetNumber rhs) { return lhs.index_ <= rhs.index_; }
-  friend constexpr bool operator>(PresetNumber lhs, PresetNumber rhs) { return lhs.index_ > rhs.index_; }
-  friend constexpr bool operator>=(PresetNumber lhs, PresetNumber rhs) { return lhs.index_ >= rhs.index_; }
+  friend constexpr bool operator==(PresetNumber lhs, PresetNumber rhs) {
+    return lhs.index_ == rhs.index_;
+  }
+  friend constexpr bool operator!=(PresetNumber lhs, PresetNumber rhs) {
+    return lhs.index_ != rhs.index_;
+  }
+  friend constexpr bool operator<(PresetNumber lhs, PresetNumber rhs) {
+    return lhs.index_ < rhs.index_;
+  }
+  friend constexpr bool operator<=(PresetNumber lhs, PresetNumber rhs) {
+    return lhs.index_ <= rhs.index_;
+  }
+  friend constexpr bool operator>(PresetNumber lhs, PresetNumber rhs) {
+    return lhs.index_ > rhs.index_;
+  }
+  friend constexpr bool operator>=(PresetNumber lhs, PresetNumber rhs) {
+    return lhs.index_ >= rhs.index_;
+  }
 
   // Increment and decrement operators (supported for normal presets, with
   // none() representing one-beyond-the-last normal preset).

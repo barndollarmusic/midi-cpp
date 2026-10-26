@@ -157,13 +157,13 @@ public:
   std::uint8_t quarterFrameDataByteFor(MtcQuarterFramePiece piece) const;
 
   /**
-  * Updates one quarter frame piece of this timecode frame value based on the
-  * given encoded MTC quarter frame message data byte.
-  *
-  * NOTE: This may allow setting invalid data, since validation only makes sense
-  * once all pieces have been set. See isValid() if you need to check for
-  * validity before using this MtcFullFrame value.
-  */
+   * Updates one quarter frame piece of this timecode frame value based on the
+   * given encoded MTC quarter frame message data byte.
+   *
+   * NOTE: This may allow setting invalid data, since validation only makes sense
+   * once all pieces have been set. See isValid() if you need to check for
+   * validity before using this MtcFullFrame value.
+   */
   void setPieceFromQuarterFrameDataByte(std::uint8_t quarterFrameDataByte);
 
 private:

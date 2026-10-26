@@ -23,23 +23,17 @@ bool typeHasSubId2(UniversalCategory category, std::uint8_t subId1) {
 namespace {
 
 int numMsgBytesFor(Manufacturer mfr, int numPayloadBytes) {
-  const auto numMfrBytes = mfr.isExtended()
-      ? internal::kNumManufacturerIdExtBytes
-      : internal::kNumManufacturerIdShortBytes;
-  return internal::kOneSysExHdrStatusByte
-      + numMfrBytes
-      + numPayloadBytes
-      + internal::kOneSysExTerminatingEoxByte;
+  const auto numMfrBytes = mfr.isExtended() ? internal::kNumManufacturerIdExtBytes
+                                            : internal::kNumManufacturerIdShortBytes;
+  return internal::kOneSysExHdrStatusByte + numMfrBytes + numPayloadBytes
+         + internal::kOneSysExTerminatingEoxByte;
 }
 
 int numMsgBytesFor(UniversalType type, int numPayloadBytes) {
-  const auto numUniversalHdrBytes = type.hasSubId2()
-      ? internal::kNumUniversalHdrBytesTwoSubIds
-      : internal::kNumUniversalHdrBytesOneSubId;
-  return internal::kOneSysExHdrStatusByte
-      + numUniversalHdrBytes
-      + numPayloadBytes
-      + internal::kOneSysExTerminatingEoxByte;
+  const auto numUniversalHdrBytes = type.hasSubId2() ? internal::kNumUniversalHdrBytesTwoSubIds
+                                                     : internal::kNumUniversalHdrBytesOneSubId;
+  return internal::kOneSysExHdrStatusByte + numUniversalHdrBytes + numPayloadBytes
+         + internal::kOneSysExTerminatingEoxByte;
 }
 
 void writeSysExStatusBytes(std::uint8_t* rawMsgBytes, int numMsgBytes) {
@@ -77,9 +71,7 @@ MfrSysEx::MfrSysEx(Manufacturer manufacturer, int numPayloadBytes)
 }
 
 MfrSysEx::MfrSysEx(Manufacturer manufacturer, std::uint8_t* rawMsgBytes, int numMsgBytes)
-    : numMsgBytes_{numMsgBytes},
-      heapAllocatedBytes_{},
-      msgBytes_{rawMsgBytes} {
+    : numMsgBytes_{numMsgBytes}, heapAllocatedBytes_{}, msgBytes_{rawMsgBytes} {
   // (Input arguments already validated by MfrSysExBuilder).
 
   writeSysExStatusBytes(msgBytes_, numMsgBytes_);
@@ -89,9 +81,8 @@ MfrSysEx::MfrSysEx(Manufacturer manufacturer, std::uint8_t* rawMsgBytes, int num
 bool MfrSysEx::hasExtMfrId() const { return (msgBytes_[1] == Manufacturer::kExtendedSysExId); }
 
 int MfrSysEx::numHeaderBytes() const {
-  const auto numMfrBytes = hasExtMfrId()
-      ? internal::kNumManufacturerIdExtBytes
-      : internal::kNumManufacturerIdShortBytes;
+  const auto numMfrBytes =
+      hasExtMfrId() ? internal::kNumManufacturerIdExtBytes : internal::kNumManufacturerIdShortBytes;
   return internal::kOneSysExHdrStatusByte + numMfrBytes;
 }
 
@@ -104,9 +95,7 @@ Manufacturer MfrSysEx::manufacturer() const {
   return isNonCommercial ? Manufacturer::nonCommercial() : Manufacturer::shortId(msgBytes_[1]);
 }
 
-const std::uint8_t* MfrSysEx::rawPayloadBytes() const {
-  return &msgBytes_[numHeaderBytes()];
-}
+const std::uint8_t* MfrSysEx::rawPayloadBytes() const { return &msgBytes_[numHeaderBytes()]; }
 
 std::uint8_t* MfrSysEx::rawPayloadBytes() {
   return const_cast<std::uint8_t*>(static_cast<const MfrSysEx*>(this)->rawPayloadBytes());
@@ -152,9 +141,7 @@ UniversalSysEx::UniversalSysEx(UniversalType type, Device device, int numPayload
 
 UniversalSysEx::UniversalSysEx(
     UniversalType type, Device device, std::uint8_t* rawMsgBytes, int numMsgBytes)
-    : numMsgBytes_{numMsgBytes},
-      heapAllocatedBytes_{},
-      msgBytes_{rawMsgBytes} {
+    : numMsgBytes_{numMsgBytes}, heapAllocatedBytes_{}, msgBytes_{rawMsgBytes} {
   // (Input arguments already validated by UniversalSysExBuilder).
 
   writeSysExStatusBytes(msgBytes_, numMsgBytes_);
@@ -166,9 +153,8 @@ bool UniversalSysEx::typeHasSubId2() const {
 }
 
 int UniversalSysEx::numHeaderBytes() const {
-  const auto numUniversalHdrBytes = typeHasSubId2()
-      ? internal::kNumUniversalHdrBytesTwoSubIds
-      : internal::kNumUniversalHdrBytesOneSubId;
+  const auto numUniversalHdrBytes = typeHasSubId2() ? internal::kNumUniversalHdrBytesTwoSubIds
+                                                    : internal::kNumUniversalHdrBytesOneSubId;
   return internal::kOneSysExHdrStatusByte + numUniversalHdrBytes;
 }
 
@@ -180,29 +166,21 @@ UniversalType UniversalSysEx::universalType() const {
   const auto subId1 = msgBytes_[3];
 
   if (category() == UniversalCategory::kNonRealTime) {
-    return typeHasSubId2()
-        ? UniversalType::nonRealTime(subId1, msgBytes_[4])
-        : UniversalType::nonRealTime(subId1);
+    return typeHasSubId2() ? UniversalType::nonRealTime(subId1, msgBytes_[4])
+                           : UniversalType::nonRealTime(subId1);
   } else {
-    return typeHasSubId2()
-        ? UniversalType::realTime(subId1, msgBytes_[4])
-        : UniversalType::realTime(subId1);
+    return typeHasSubId2() ? UniversalType::realTime(subId1, msgBytes_[4])
+                           : UniversalType::realTime(subId1);
   }
 }
 
 Device UniversalSysEx::device() const {
-  return (msgBytes_[2] == Device::all().value())
-      ? Device::all()
-      : Device::id(msgBytes_[2]);
+  return (msgBytes_[2] == Device::all().value()) ? Device::all() : Device::id(msgBytes_[2]);
 }
 
-void UniversalSysEx::setDevice(Device device) {
-  msgBytes_[2] = device.value();
-}
+void UniversalSysEx::setDevice(Device device) { msgBytes_[2] = device.value(); }
 
-const std::uint8_t* UniversalSysEx::rawPayloadBytes() const {
-  return &msgBytes_[numHeaderBytes()];
-}
+const std::uint8_t* UniversalSysEx::rawPayloadBytes() const { return &msgBytes_[numHeaderBytes()]; }
 
 std::uint8_t* UniversalSysEx::rawPayloadBytes() {
   return const_cast<std::uint8_t*>(static_cast<const UniversalSysEx*>(this)->rawPayloadBytes());

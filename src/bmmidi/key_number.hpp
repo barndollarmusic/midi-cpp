@@ -75,12 +75,20 @@ public:
   }
 
   // Comparison operations:
-  friend constexpr bool operator==(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ == rhs.value_; }
-  friend constexpr bool operator!=(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ != rhs.value_; }
+  friend constexpr bool operator==(KeyNumber lhs, KeyNumber rhs) {
+    return lhs.value_ == rhs.value_;
+  }
+  friend constexpr bool operator!=(KeyNumber lhs, KeyNumber rhs) {
+    return lhs.value_ != rhs.value_;
+  }
   friend constexpr bool operator<(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ < rhs.value_; }
-  friend constexpr bool operator<=(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ <= rhs.value_; }
+  friend constexpr bool operator<=(KeyNumber lhs, KeyNumber rhs) {
+    return lhs.value_ <= rhs.value_;
+  }
   friend constexpr bool operator>(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ > rhs.value_; }
-  friend constexpr bool operator>=(KeyNumber lhs, KeyNumber rhs) { return lhs.value_ >= rhs.value_; }
+  friend constexpr bool operator>=(KeyNumber lhs, KeyNumber rhs) {
+    return lhs.value_ >= rhs.value_;
+  }
 
   // Increment and decrement operators (supported for normal keys, with none()
   // representing one-beyond-the-last normal key).

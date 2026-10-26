@@ -26,7 +26,7 @@
 namespace bmmidi {
 
 /** Used as a template parameter to control read-only vs. read-write access. */
-enum class MsgAccess {kReadOnly, kReadWrite};
+enum class MsgAccess { kReadOnly, kReadWrite };
 
 /**
  * A reference to a MIDI message stored as contiguous bytes (which
@@ -55,8 +55,8 @@ public:
   static constexpr MsgAccess kAccessType = AccessType;
 
   /** Type of input byte pointer (const or non-const based on AccessType). */
-  using BytePointerType = std::conditional_t<AccessType == MsgAccess::kReadOnly,
-                                             const std::uint8_t*, std::uint8_t*>;
+  using BytePointerType =
+      std::conditional_t<AccessType == MsgAccess::kReadOnly, const std::uint8_t*, std::uint8_t*>;
 
   /**
    * Constructs a new MsgReference pointing to contiguous MIDI data bytes,
@@ -65,12 +65,10 @@ public:
    *
    * The referenced MIDI data must outlive this MsgReference instance.
    */
-  explicit MsgReference(BytePointerType bytes, int numBytes)
-      : bytes_{bytes}, numBytes_{numBytes} {
+  explicit MsgReference(BytePointerType bytes, int numBytes) : bytes_{bytes}, numBytes_{numBytes} {
     assert(bytes != nullptr);
     assert(numBytes >= 1);
-    assert((type() == MsgType::kSystemExclusive)
-        || (numBytes == 1 + status().numDataBytes()));
+    assert((type() == MsgType::kSystemExclusive) || (numBytes == 1 + status().numDataBytes()));
   }
 
   /** Returns type of this message, as determined by its Status byte. */
@@ -81,14 +79,14 @@ public:
 
   /** Updates Status byte to the given value. */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
-  void setStatus(Status status) { bytes_[0] = status.value(); }
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setStatus(Status status) {
+    bytes_[0] = status.value();
+  }
 
   // (This empty deleted overload allows using declarations in subclasses).
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadOnly>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadOnly>>
   void setStatus() = delete;
 
   /**
@@ -105,8 +103,7 @@ public:
    * debug assertion) if this message does not have any data bytes.
    */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setData1(DataValue data1) {
     assert(status().numDataBytes() >= 1);
     bytes_[1] = static_cast<std::uint8_t>(data1.value());
@@ -114,8 +111,7 @@ public:
 
   // (This empty deleted overload allows using declarations in subclasses).
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadOnly>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadOnly>>
   void setData1() = delete;
 
   /**
@@ -132,8 +128,7 @@ public:
    * debug assertion) if this message does not have a 2nd data byte.
    */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setData2(DataValue data2) {
     assert(status().numDataBytes() >= 2);
     bytes_[2] = static_cast<std::uint8_t>(data2.value());
@@ -141,8 +136,7 @@ public:
 
   // (This empty deleted overload allows using declarations in subclasses).
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadOnly>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadOnly>>
   void setData2() = delete;
 
   /**
@@ -170,9 +164,11 @@ public:
    */
   template<
       typename RefType,
-      typename = std::enable_if_t<(AccessType == MsgAccess::kReadWrite)
-                                  && (RefType::kAccessType == MsgAccess::kReadWrite)>>
-  RefType asRef() { return RefType{bytes_, numBytes_}; }
+      typename = std::enable_if_t<
+          (AccessType == MsgAccess::kReadWrite) && (RefType::kAccessType == MsgAccess::kReadWrite)>>
+  RefType asRef() {
+    return RefType{bytes_, numBytes_};
+  }
 
   /**
    * Returns this reference as a read-only ViewType; check type() to ensure that
@@ -180,9 +176,10 @@ public:
    * check).
    */
   template<
-      typename ViewType,
-      typename = std::enable_if_t<ViewType::kAccessType == MsgAccess::kReadOnly>>
-  ViewType asView() const { return ViewType{bytes_, numBytes_}; }
+      typename ViewType, typename = std::enable_if_t<ViewType::kAccessType == MsgAccess::kReadOnly>>
+  ViewType asView() const {
+    return ViewType{bytes_, numBytes_};
+  }
 
   /** Implicitly converts to MsgView. */
   operator MsgReference<MsgAccess::kReadOnly>() const {
@@ -193,7 +190,7 @@ public:
   template<MsgAccess OtherAccessType>
   bool hasSameValueAs(const MsgReference<OtherAccessType>& otherReference) const {
     return (numBytes() == otherReference.numBytes())
-        && (std::memcmp(rawBytes(), otherReference.rawBytes(), numBytes()) == 0);
+           && (std::memcmp(rawBytes(), otherReference.rawBytes(), numBytes()) == 0);
   }
 
 private:
@@ -312,8 +309,7 @@ public:
    * (not a special "none" or "omni" value).
    */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setChannel(Channel channel) {
     assert(channel.isNormal());
     setStatus(Status::channelVoice(this->type(), channel));
@@ -386,8 +382,7 @@ public:
    * (not a special "none" or "all" value).
    */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setKey(KeyNumber key) {
     assert(key.isNormal());
     this->setData1(DataValue{static_cast<std::int8_t>(key.value())});
@@ -398,9 +393,10 @@ public:
 
   /** Updates to the given [0, 127] velocity value. */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
-  void setVelocity(DataValue velocity) { this->setData2(velocity); }
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setVelocity(DataValue velocity) {
+    this->setData2(velocity);
+  }
 
   /** Implicitly converts to NoteMsgView. */
   operator NoteMsgReference<MsgAccess::kReadOnly>() const {
@@ -444,8 +440,7 @@ public:
    * (not a special "none" or "all" value).
    */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setKey(KeyNumber key) {
     assert(key.isNormal());
     this->setData1(DataValue{static_cast<std::int8_t>(key.value())});
@@ -456,9 +451,10 @@ public:
 
   /** Updates to the given [0, 127] pressure value. */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
-  void setPressure(DataValue pressure) { this->setData2(pressure); }
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setPressure(DataValue pressure) {
+    this->setData2(pressure);
+  }
 
   /** Implicitly converts to KeyPressureMsgView. */
   operator KeyPressureMsgReference<MsgAccess::kReadOnly>() const {
@@ -499,8 +495,7 @@ public:
 
   /** Updates to the given Control number. */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setControl(Control control) {
     this->setData1(controlToDataValue(control));
   }
@@ -510,9 +505,10 @@ public:
 
   /** Updates to the given [0, 127] control value. */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
-  void setValue(DataValue value) { this->setData2(value); }
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setValue(DataValue value) {
+    this->setData2(value);
+  }
 
   /** Implicitly converts to ControlChangeMsgView. */
   operator ControlChangeMsgReference<MsgAccess::kReadOnly>() const {
@@ -556,8 +552,7 @@ public:
    * range (not a special "none" value).
    */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setProgram(PresetNumber program) {
     assert(program.isNormal());
     this->setData1(DataValue{static_cast<std::int8_t>(program.index())});
@@ -603,9 +598,10 @@ public:
 
   /** Updates to the given [0, 127] pressure value. */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
-  void setPressure(DataValue pressure) { this->setData1(pressure); }
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+  void setPressure(DataValue pressure) {
+    this->setData1(pressure);
+  }
 
   /** Implicitly converts to ChanPressureMsgView. */
   operator ChanPressureMsgReference<MsgAccess::kReadOnly>() const {
@@ -650,8 +646,7 @@ public:
 
   /** Updates to the given 14-bit [1, 16383] MIDI pitch bend value. */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setBend(PitchBend bend) {
     this->setData1(DataValue{static_cast<std::int8_t>(bend.lsb())});
     this->setData2(DataValue{static_cast<std::int8_t>(bend.msb())});
@@ -710,7 +705,7 @@ public:
    */
   bool isUniversal() const {
     return (sysExId() == static_cast<std::uint8_t>(UniversalCategory::kNonRealTime))
-        || (sysExId() == static_cast<std::uint8_t>(UniversalCategory::kRealTime));
+           || (sysExId() == static_cast<std::uint8_t>(UniversalCategory::kRealTime));
   }
 
   /** Implicitly converts to SysExMsgView. */
@@ -781,9 +776,7 @@ public:
    *
    * See numPayloadBytes() for size.
    */
-  const std::uint8_t* rawPayloadBytes() const {
-    return &(this->rawBytes()[numHeaderBytes()]);
-  }
+  const std::uint8_t* rawPayloadBytes() const { return &(this->rawBytes()[numHeaderBytes()]); }
 
   /**
    * Returns read-write pointer to span of raw payload bytes, after the 1 or 3
@@ -792,8 +785,7 @@ public:
    * See numPayloadBytes() for size.
    */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   std::uint8_t* rawPayloadBytes() {
     return &(this->rawBytes()[numHeaderBytes()]);
   }
@@ -815,8 +807,8 @@ public:
 private:
   int numHeaderBytes() const {
     const auto numMfrBytes = (this->sysExId() == Manufacturer::kExtendedSysExId)
-        ? internal::kNumManufacturerIdExtBytes
-        : internal::kNumManufacturerIdShortBytes;
+                                 ? internal::kNumManufacturerIdExtBytes
+                                 : internal::kNumManufacturerIdShortBytes;
     return internal::kOneSysExHdrStatusByte + numMfrBytes;
   }
 };
@@ -852,9 +844,7 @@ public:
   }
 
   /** Returns the category of universal message this is (non-realtime or realtime). */
-  UniversalCategory category() const {
-    return static_cast<UniversalCategory>(this->sysExId());
-  }
+  UniversalCategory category() const { return static_cast<UniversalCategory>(this->sysExId()); }
 
   /** Returns the type of universal message this is. */
   UniversalType universalType() const {
@@ -863,12 +853,12 @@ public:
 
     if (cat == UniversalCategory::kNonRealTime) {
       return internal::typeHasSubId2(cat, subId1)
-          ? UniversalType::nonRealTime(subId1, this->rawBytes()[4])
-          : UniversalType::nonRealTime(subId1);
+                 ? UniversalType::nonRealTime(subId1, this->rawBytes()[4])
+                 : UniversalType::nonRealTime(subId1);
     } else {
       return internal::typeHasSubId2(cat, subId1)
-          ? UniversalType::realTime(subId1, this->rawBytes()[4])
-          : UniversalType::realTime(subId1);
+                 ? UniversalType::realTime(subId1, this->rawBytes()[4])
+                 : UniversalType::realTime(subId1);
     }
   }
 
@@ -880,15 +870,13 @@ public:
    * value that indicates message is for all receiving devices).
    */
   Device device() const {
-    return (this->rawBytes()[2] == Device::all().value())
-        ? Device::all()
-        : Device::id(this->rawBytes()[2]);
+    return (this->rawBytes()[2] == Device::all().value()) ? Device::all()
+                                                          : Device::id(this->rawBytes()[2]);
   }
 
   /** Sets the device (or special "all" value) that should respond. */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setDevice(Device device) {
     this->rawBytes()[2] = device.value();
   }
@@ -900,9 +888,7 @@ public:
    *
    * See numPayloadBytes() for size.
    */
-  const std::uint8_t* rawPayloadBytes() const {
-    return &(this->rawBytes()[numHeaderBytes()]);
-  }
+  const std::uint8_t* rawPayloadBytes() const { return &(this->rawBytes()[numHeaderBytes()]); }
 
   /**
    * Returns read-write pointer to span of raw payload bytes, after the SysEx
@@ -912,8 +898,7 @@ public:
    * See numPayloadBytes() for size.
    */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   std::uint8_t* rawPayloadBytes() {
     return &(this->rawBytes()[numHeaderBytes()]);
   }
@@ -935,8 +920,8 @@ public:
 private:
   int numHeaderBytes() const {
     const auto numUniversalHdrBytes = internal::typeHasSubId2(category(), this->rawBytes()[3])
-        ? internal::kNumUniversalHdrBytesTwoSubIds
-        : internal::kNumUniversalHdrBytesOneSubId;
+                                          ? internal::kNumUniversalHdrBytesTwoSubIds
+                                          : internal::kNumUniversalHdrBytesOneSubId;
     return internal::kOneSysExHdrStatusByte + numUniversalHdrBytes;
   }
 };
@@ -988,8 +973,7 @@ public:
    * value for that piece.
    */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setDataByte(std::uint8_t dataByte) {
     assert(dataByte <= static_cast<int>(DataValue::max().value()));
     this->rawBytes()[1] = dataByte;
@@ -1009,11 +993,11 @@ public:
    * provides a value for.
    */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setPiece(MtcQuarterFramePiece piece) {
-    setDataByte(internal::setBits(dataByte(), static_cast<std::uint8_t>(piece),
-                internal::kMtcQuarterFramePieceBits));
+    setDataByte(
+        internal::setBits(
+            dataByte(), static_cast<std::uint8_t>(piece), internal::kMtcQuarterFramePieceBits));
   }
 
   /**
@@ -1031,8 +1015,7 @@ public:
    * bits must be 0s).
    */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setValueFromLower4Bits(std::uint8_t value) {
     assert(value <= 0b0000'1111);
     setDataByte(internal::setBits(dataByte(), value, internal::kMtcQuarterFrameValueBits));
@@ -1095,8 +1078,7 @@ public:
    * measured in multiples of 6 MIDI clocks = 1 sixteenth note.
    */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setSixteenthsAfterStart(DoubleDataValue soxteenthsAfterStart) {
     this->setData1(DataValue{static_cast<std::int8_t>(soxteenthsAfterStart.lsb())});
     this->setData2(DataValue{static_cast<std::int8_t>(soxteenthsAfterStart.msb())});
@@ -1144,8 +1126,7 @@ public:
    * range (not a special "none" value).
    */
   template<
-      MsgAccess AccessT = AccessType,
-      typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
+      MsgAccess AccessT = AccessType, typename = std::enable_if_t<AccessT == MsgAccess::kReadWrite>>
   void setSong(PresetNumber song) {
     assert(song.isNormal());
     this->setData1(DataValue{static_cast<std::int8_t>(song.index())});

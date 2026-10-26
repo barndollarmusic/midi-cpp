@@ -15,13 +15,9 @@ using ::testing::IsTrue;
 
 constexpr double kPrecision8 = 0.00000001;
 
-inline auto DoubleEq(double expected) {
-  return ::testing::DoubleNear(expected, kPrecision8);
-}
+inline auto DoubleEq(double expected) { return ::testing::DoubleNear(expected, kPrecision8); }
 
-TEST(DataValue, ProvidesNumDataValuesConstant) {
-  EXPECT_THAT(bmmidi::kNumDataValues, Eq(128));
-}
+TEST(DataValue, ProvidesNumDataValuesConstant) { EXPECT_THAT(bmmidi::kNumDataValues, Eq(128)); }
 
 TEST(DataValue, ShouldSupportAllValues) {
   // Should work for values 0 through 127.

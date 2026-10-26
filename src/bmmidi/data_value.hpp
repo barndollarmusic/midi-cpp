@@ -35,7 +35,8 @@ public:
    */
   template<typename FloatT>
   static constexpr DataValue fromNormalized0To1(FloatT normalizedValue) {
-    static_assert(std::is_floating_point<FloatT>::value,
+    static_assert(
+        std::is_floating_point<FloatT>::value,
         "DataValue::fromNormalized0To1() requires a floating-point type");
 
     const auto rawValue = std::round(normalizedValue * static_cast<FloatT>(kMax));
@@ -45,9 +46,7 @@ public:
   }
 
   /** Creates a DataValue from the input [0, 127] value. */
-  explicit constexpr DataValue(std::int8_t value) : value_{value} {
-    assert(kMin <= value);
-  }
+  explicit constexpr DataValue(std::int8_t value) : value_{value} { assert(kMin <= value); }
 
   /** Returns [0, 127] integer value. */
   constexpr std::int8_t value() const { return value_; }
@@ -55,19 +54,28 @@ public:
   /** Returns normalized [0.0, 1.0] floating-point value. */
   template<typename FloatT>
   FloatT toNormalized0To1() const {
-    static_assert(std::is_floating_point<FloatT>::value,
+    static_assert(
+        std::is_floating_point<FloatT>::value,
         "DataValue::toNormalized0To1() requires a floating-point type");
 
     return static_cast<FloatT>(value_) / static_cast<FloatT>(kMax);
   }
 
   // Comparison operations:
-  friend constexpr bool operator==(DataValue lhs, DataValue rhs) { return lhs.value_ == rhs.value_; }
-  friend constexpr bool operator!=(DataValue lhs, DataValue rhs) { return lhs.value_ != rhs.value_; }
+  friend constexpr bool operator==(DataValue lhs, DataValue rhs) {
+    return lhs.value_ == rhs.value_;
+  }
+  friend constexpr bool operator!=(DataValue lhs, DataValue rhs) {
+    return lhs.value_ != rhs.value_;
+  }
   friend constexpr bool operator<(DataValue lhs, DataValue rhs) { return lhs.value_ < rhs.value_; }
-  friend constexpr bool operator<=(DataValue lhs, DataValue rhs) { return lhs.value_ <= rhs.value_; }
+  friend constexpr bool operator<=(DataValue lhs, DataValue rhs) {
+    return lhs.value_ <= rhs.value_;
+  }
   friend constexpr bool operator>(DataValue lhs, DataValue rhs) { return lhs.value_ > rhs.value_; }
-  friend constexpr bool operator>=(DataValue lhs, DataValue rhs) { return lhs.value_ >= rhs.value_; }
+  friend constexpr bool operator>=(DataValue lhs, DataValue rhs) {
+    return lhs.value_ >= rhs.value_;
+  }
 
 private:
   static constexpr std::int8_t kMin = 0;
@@ -104,17 +112,14 @@ public:
   }
 
   /** Creates a DoubleDataValue from the input [0, 16383] value. */
-  explicit constexpr DoubleDataValue(std::int16_t value) : value_{value} {
-    assert(kMin <= value);
-  }
+  explicit constexpr DoubleDataValue(std::int16_t value) : value_{value} { assert(kMin <= value); }
 
   /** Returns [0, 16383] integer value. */
   constexpr std::int16_t value() const { return value_; }
 
   /** Returns Least Significant Byte (LSB), i.e. value of lower 7 bits. */
   constexpr std::uint8_t lsb() const {
-    return static_cast<std::uint8_t>(
-        static_cast<std::uint16_t>(value_) & kLsbBitmask);
+    return static_cast<std::uint8_t>(static_cast<std::uint16_t>(value_) & kLsbBitmask);
   }
 
   /** Returns Most Significant Byte (MSB), i.e. value of upper 7 bits. */
@@ -124,12 +129,24 @@ public:
   }
 
   // Comparison operations:
-  friend constexpr bool operator==(DoubleDataValue lhs, DoubleDataValue rhs) { return lhs.value_ == rhs.value_; }
-  friend constexpr bool operator!=(DoubleDataValue lhs, DoubleDataValue rhs) { return lhs.value_ != rhs.value_; }
-  friend constexpr bool operator<(DoubleDataValue lhs, DoubleDataValue rhs) { return lhs.value_ < rhs.value_; }
-  friend constexpr bool operator<=(DoubleDataValue lhs, DoubleDataValue rhs) { return lhs.value_ <= rhs.value_; }
-  friend constexpr bool operator>(DoubleDataValue lhs, DoubleDataValue rhs) { return lhs.value_ > rhs.value_; }
-  friend constexpr bool operator>=(DoubleDataValue lhs, DoubleDataValue rhs) { return lhs.value_ >= rhs.value_; }
+  friend constexpr bool operator==(DoubleDataValue lhs, DoubleDataValue rhs) {
+    return lhs.value_ == rhs.value_;
+  }
+  friend constexpr bool operator!=(DoubleDataValue lhs, DoubleDataValue rhs) {
+    return lhs.value_ != rhs.value_;
+  }
+  friend constexpr bool operator<(DoubleDataValue lhs, DoubleDataValue rhs) {
+    return lhs.value_ < rhs.value_;
+  }
+  friend constexpr bool operator<=(DoubleDataValue lhs, DoubleDataValue rhs) {
+    return lhs.value_ <= rhs.value_;
+  }
+  friend constexpr bool operator>(DoubleDataValue lhs, DoubleDataValue rhs) {
+    return lhs.value_ > rhs.value_;
+  }
+  friend constexpr bool operator>=(DoubleDataValue lhs, DoubleDataValue rhs) {
+    return lhs.value_ >= rhs.value_;
+  }
 
 private:
   static constexpr std::int16_t kMin = 0;

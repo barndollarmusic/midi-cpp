@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: 2022 Eric Barndollar
+#
+# SPDX-License-Identifier: Apache-2.0
+
+---
+BasedOnStyle: Google
+ColumnLimit: 100
+IndentWidth: 2
+---
+Language: Cpp
+AccessModifierOffset: -2
+AlignAfterOpenBracket: AlwaysBreak
+AlwaysBreakTemplateDeclarations: Yes
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeBraces: Attach
+BreakBeforeTernaryOperators: true
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+DerivePointerAlignment: false
+IncludeBlocks: Preserve
+IndentPPDirectives: BeforeHash
+NamespaceIndentation: None
+PackConstructorInitializers: BinPack
+PointerAlignment: Left
+SpaceAfterTemplateKeyword: false
+...

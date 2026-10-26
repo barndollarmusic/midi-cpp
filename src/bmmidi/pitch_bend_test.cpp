@@ -20,9 +20,7 @@ constexpr double kInfinity = std::numeric_limits<double>::infinity();
 
 constexpr double kPrecision8 = 0.00000001;
 
-inline auto DoubleEq(double expected) {
-  return ::testing::DoubleNear(expected, kPrecision8);
-}
+inline auto DoubleEq(double expected) { return ::testing::DoubleNear(expected, kPrecision8); }
 
 TEST(PitchBendRange, ShouldDefaultToUpDown2) {
   EXPECT_THAT(bmmidi::PitchBendRange::defaultWholeStep().maxSemitonesDown(), Eq(2.0));

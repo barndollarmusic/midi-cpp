@@ -20,7 +20,7 @@ enum class MsgType : std::uint8_t {
 
   /**
    * Note Off (key released).
-   * 
+   *
    * 2 data bytes:
    * [1] Key Number
    * [2] Note Off Velocity (usually 0, but may affect release if supported)
@@ -41,7 +41,7 @@ enum class MsgType : std::uint8_t {
 
   /**
    * Polyphonic key pressure (per-key aftertouch).
-   * 
+   *
    * 2 data bytes:
    * [1] Key Number
    * [2] Pressure Value
@@ -59,7 +59,7 @@ enum class MsgType : std::uint8_t {
 
   /**
    * Program Change, i.e. to select a different patch or preset.
-   * 
+   *
    * 1 data byte:
    * [1] Program Number
    */
@@ -82,7 +82,7 @@ enum class MsgType : std::uint8_t {
    *
    * Note that 1 is often interpreted the same as 0 as the minimum downward
    * bend, for symmetry of upward and downward bend ranges.
-   * 
+   *
    * 2 data bytes:
    * [1] Pitch Bend LSB (lower 7 bits)
    * [2] Pitch Bend MSB (upper 7 bits)
@@ -155,7 +155,7 @@ enum class MsgType : std::uint8_t {
 
   /**
    * System Real Time: Active Sensing.
-   * 
+   *
    * Can be used to help detect a disconnected MIDI input device (e.g. if no
    * MIDI messages have been received after ~330 ms). Should only assume
    * disconnected if a device transmits these Active Sensing messages, however,
@@ -167,7 +167,7 @@ enum class MsgType : std::uint8_t {
 
   /**
    * System Real Time: System Reset.
-   * 
+   *
    * Receiving device should set Omni On, Poly Mode, Local Control On, Voices
    * Off, reset all controllers, set song position to 0, stop playback, clear
    * running status, and reset instrument to its power-up condition.
@@ -192,7 +192,7 @@ public:
 
   /**
    * Creates Status byte value for a Channel Voice message.
-   * 
+   *
    * Input channel must be a normal [0, 15] index MIDI channel (since special
    * Channel 'none' and 'omni' values aren't supported as MIDI status
    * bytes).
@@ -250,16 +250,16 @@ public:
       case MsgType::kPitchBend:
       case MsgType::kSongPositionPointer:
         return 2;
-      
+
       case MsgType::kProgramChange:
       case MsgType::kChannelPressure:
       case MsgType::kMtcQuarterFrame:
       case MsgType::kSongSelect:
         return 1;
-      
+
       case MsgType::kSystemExclusive:
         return kVariableDataBytes;
-      
+
       default:
         return 0;
     }

@@ -20,9 +20,7 @@ using ::testing::IsTrue;
 constexpr int kIntMin = std::numeric_limits<int>::min();
 constexpr int kIntMax = std::numeric_limits<int>::max();
 
-TEST(Control, ProvidesNumControlsConstant) {
-  EXPECT_THAT(bmmidi::kNumControls, Eq(128));
-}
+TEST(Control, ProvidesNumControlsConstant) { EXPECT_THAT(bmmidi::kNumControls, Eq(128)); }
 
 TEST(Control, ShouldProvideAliasedValues) {
   // LSB aliases:
@@ -209,40 +207,25 @@ TEST(Control, ShouldConvertToAndFromNumber) {
 }
 
 TEST(Control, ShouldConvertToAndFromDataValue) {
-  EXPECT_THAT(bmmidi::controlFromDataValue(bmmidi::DataValue{0}),
-              Eq(bmmidi::Control::k000));
-  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::k000),
-              Eq(bmmidi::DataValue{0}));
-  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::kBankSelect),
-              Eq(bmmidi::DataValue{0}));
+  EXPECT_THAT(bmmidi::controlFromDataValue(bmmidi::DataValue{0}), Eq(bmmidi::Control::k000));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::k000), Eq(bmmidi::DataValue{0}));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::kBankSelect), Eq(bmmidi::DataValue{0}));
 
-  EXPECT_THAT(bmmidi::controlFromDataValue(bmmidi::DataValue{1}),
-              Eq(bmmidi::Control::k001));
-  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::k001),
-              Eq(bmmidi::DataValue{1}));
-  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::kModWheel),
-              Eq(bmmidi::DataValue{1}));
+  EXPECT_THAT(bmmidi::controlFromDataValue(bmmidi::DataValue{1}), Eq(bmmidi::Control::k001));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::k001), Eq(bmmidi::DataValue{1}));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::kModWheel), Eq(bmmidi::DataValue{1}));
 
-  EXPECT_THAT(bmmidi::controlFromDataValue(bmmidi::DataValue{11}),
-              Eq(bmmidi::Control::k011));
-  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::k011),
-              Eq(bmmidi::DataValue{11}));
-  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::kExpression),
-              Eq(bmmidi::DataValue{11}));
+  EXPECT_THAT(bmmidi::controlFromDataValue(bmmidi::DataValue{11}), Eq(bmmidi::Control::k011));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::k011), Eq(bmmidi::DataValue{11}));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::kExpression), Eq(bmmidi::DataValue{11}));
 
-  EXPECT_THAT(bmmidi::controlFromDataValue(bmmidi::DataValue{126}),
-              Eq(bmmidi::Control::k126));
-  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::k126),
-              Eq(bmmidi::DataValue{126}));
-  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::kMonoMode),
-              Eq(bmmidi::DataValue{126}));
+  EXPECT_THAT(bmmidi::controlFromDataValue(bmmidi::DataValue{126}), Eq(bmmidi::Control::k126));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::k126), Eq(bmmidi::DataValue{126}));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::kMonoMode), Eq(bmmidi::DataValue{126}));
 
-  EXPECT_THAT(bmmidi::controlFromDataValue(bmmidi::DataValue{127}),
-              Eq(bmmidi::Control::k127));
-  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::k127),
-              Eq(bmmidi::DataValue{127}));
-  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::kPolyMode),
-              Eq(bmmidi::DataValue{127}));
+  EXPECT_THAT(bmmidi::controlFromDataValue(bmmidi::DataValue{127}), Eq(bmmidi::Control::k127));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::k127), Eq(bmmidi::DataValue{127}));
+  EXPECT_THAT(bmmidi::controlToDataValue(bmmidi::Control::kPolyMode), Eq(bmmidi::DataValue{127}));
 }
 
 }  // namespace

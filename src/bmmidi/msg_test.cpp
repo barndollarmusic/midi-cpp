@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "bmmidi/msg_reference.hpp"
 #include "bmmidi/msg.hpp"
+#include "bmmidi/msg_reference.hpp"
 
 #include <cstdint>
 
@@ -33,29 +33,26 @@ TEST(Msg, OneByteVersionHasStatus) {
   bmmidi::Msg<1> msg{bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)};
 
   EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kOscillatorTuneRequest));
-  EXPECT_THAT(msg.status(),
-      Eq(bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)));
+  EXPECT_THAT(msg.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)));
 
   EXPECT_THAT(msg.rawBytes()[0], Eq(0xF6));
 
   msg.setStatus(bmmidi::Status::system(bmmidi::MsgType::kSystemReset));
   EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kSystemReset));
-  EXPECT_THAT(msg.status(),
-      Eq(bmmidi::Status::system(bmmidi::MsgType::kSystemReset)));
+  EXPECT_THAT(msg.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kSystemReset)));
 
   EXPECT_THAT(msg.rawBytes()[0], Eq(0xFF));
 }
 
 TEST(Msg, TwoByteVersionHasData1) {
   bmmidi::Msg<2> msg{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                   bmmidi::Channel::index(12)),
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(12)),
       bmmidi::DataValue{57}};
 
   EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kProgramChange));
-  EXPECT_THAT(msg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                      bmmidi::Channel::index(12))));
+  EXPECT_THAT(
+      msg.status(), Eq(bmmidi::Status::channelVoice(
+                        bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(12))));
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{57}));
 
   EXPECT_THAT(msg.rawBytes()[0], Eq(0xCC));
@@ -63,21 +60,20 @@ TEST(Msg, TwoByteVersionHasData1) {
 
   msg.setData1(bmmidi::DataValue{63});
   EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kProgramChange));
-  EXPECT_THAT(msg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                      bmmidi::Channel::index(12))));
+  EXPECT_THAT(
+      msg.status(), Eq(bmmidi::Status::channelVoice(
+                        bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(12))));
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{63}));
 
   EXPECT_THAT(msg.rawBytes()[0], Eq(0xCC));
   EXPECT_THAT(msg.rawBytes()[1], Eq(0x3F));
 
   msg.setStatus(
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
-                                   bmmidi::Channel::index(3)));
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure, bmmidi::Channel::index(3)));
   EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kChannelPressure));
-  EXPECT_THAT(msg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
-                                      bmmidi::Channel::index(3))));
+  EXPECT_THAT(
+      msg.status(), Eq(bmmidi::Status::channelVoice(
+                        bmmidi::MsgType::kChannelPressure, bmmidi::Channel::index(3))));
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{63}));
 
   EXPECT_THAT(msg.rawBytes()[0], Eq(0xD3));
@@ -86,15 +82,13 @@ TEST(Msg, TwoByteVersionHasData1) {
 
 TEST(Msg, ThreeByteVersionHasData2) {
   bmmidi::Msg<3> msg{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                   bmmidi::Channel::index(9)),
-      bmmidi::controlToDataValue(bmmidi::Control::kExpression),
-      bmmidi::DataValue{76}};
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9)),
+      bmmidi::controlToDataValue(bmmidi::Control::kExpression), bmmidi::DataValue{76}};
 
   EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kControlChange));
-  EXPECT_THAT(msg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                      bmmidi::Channel::index(9))));
+  EXPECT_THAT(
+      msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9))));
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{11}));
   EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{76}));
 
@@ -104,9 +98,9 @@ TEST(Msg, ThreeByteVersionHasData2) {
 
   msg.setData2(bmmidi::DataValue{27});
   EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kControlChange));
-  EXPECT_THAT(msg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                      bmmidi::Channel::index(9))));
+  EXPECT_THAT(
+      msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9))));
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{11}));
   EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{27}));
 
@@ -116,9 +110,9 @@ TEST(Msg, ThreeByteVersionHasData2) {
 
   msg.setData1(bmmidi::controlToDataValue(bmmidi::Control::kModWheel));
   EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kControlChange));
-  EXPECT_THAT(msg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                      bmmidi::Channel::index(9))));
+  EXPECT_THAT(
+      msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9))));
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{1}));
   EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{27}));
 
@@ -127,12 +121,12 @@ TEST(Msg, ThreeByteVersionHasData2) {
   EXPECT_THAT(msg.rawBytes()[2], Eq(0x1B));
 
   msg.setStatus(
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
-                                   bmmidi::Channel::index(3)));
+      bmmidi::Status::channelVoice(
+          bmmidi::MsgType::kPolyphonicKeyPressure, bmmidi::Channel::index(3)));
   EXPECT_THAT(msg.type(), Eq(bmmidi::MsgType::kPolyphonicKeyPressure));
-  EXPECT_THAT(msg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
-                                      bmmidi::Channel::index(3))));
+  EXPECT_THAT(
+      msg.status(), Eq(bmmidi::Status::channelVoice(
+                        bmmidi::MsgType::kPolyphonicKeyPressure, bmmidi::Channel::index(3))));
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{1}));
   EXPECT_THAT(msg.data2(), Eq(bmmidi::DataValue{27}));
 
@@ -142,12 +136,10 @@ TEST(Msg, ThreeByteVersionHasData2) {
 }
 
 TEST(Msg, OneByteVersionSupportsEqualityOperations) {
-  bmmidi::Msg<1> oscTuneRequest{
-      bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)};
+  bmmidi::Msg<1> oscTuneRequest{bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)};
   bmmidi::Msg<1> alsoOscTuneRequest{
       bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)};
-  bmmidi::Msg<1> systemReset{
-      bmmidi::Status::system(bmmidi::MsgType::kSystemReset)};
+  bmmidi::Msg<1> systemReset{bmmidi::Status::system(bmmidi::MsgType::kSystemReset)};
 
   EXPECT_THAT(oscTuneRequest == oscTuneRequest, IsTrue());
   EXPECT_THAT(oscTuneRequest != oscTuneRequest, IsFalse());
@@ -165,16 +157,13 @@ TEST(Msg, OneByteVersionSupportsEqualityOperations) {
 
 TEST(Msg, TwoByteVersionSupportsEqualityOperations) {
   bmmidi::Msg<2> pcCh13Prog57{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                   bmmidi::Channel::index(12)),
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(12)),
       bmmidi::DataValue{57}};
   bmmidi::Msg<2> alsoProgramChangeCh13Prog57{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                   bmmidi::Channel::index(12)),
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(12)),
       bmmidi::DataValue{57}};
   bmmidi::Msg<2> pcCh13Prog58{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                   bmmidi::Channel::index(12)),
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(12)),
       bmmidi::DataValue{58}};
 
   EXPECT_THAT(pcCh13Prog57 == pcCh13Prog57, IsTrue());
@@ -193,20 +182,14 @@ TEST(Msg, TwoByteVersionSupportsEqualityOperations) {
 
 TEST(Msg, ThreeByteVersionSupportsEqualityOperations) {
   bmmidi::Msg<3> ccCh10Expr76{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                   bmmidi::Channel::index(9)),
-      bmmidi::controlToDataValue(bmmidi::Control::kExpression),
-      bmmidi::DataValue{76}};
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9)),
+      bmmidi::controlToDataValue(bmmidi::Control::kExpression), bmmidi::DataValue{76}};
   bmmidi::Msg<3> alsoCcCh10Expr76{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                   bmmidi::Channel::index(9)),
-      bmmidi::controlToDataValue(bmmidi::Control::kExpression),
-      bmmidi::DataValue{76}};
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9)),
+      bmmidi::controlToDataValue(bmmidi::Control::kExpression), bmmidi::DataValue{76}};
   bmmidi::Msg<3> ccCh10Expr77{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                   bmmidi::Channel::index(9)),
-      bmmidi::controlToDataValue(bmmidi::Control::kExpression),
-      bmmidi::DataValue{77}};
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9)),
+      bmmidi::controlToDataValue(bmmidi::Control::kExpression), bmmidi::DataValue{77}};
 
   EXPECT_THAT(ccCh10Expr76 == ccCh10Expr76, IsTrue());
   EXPECT_THAT(ccCh10Expr76 != ccCh10Expr76, IsFalse());
@@ -231,8 +214,7 @@ TEST(Msg, ProvidesReadOnlyRawArrayAccess) {
 
   // Two byte version:
   const bmmidi::Msg<2> programChangeCh13{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                   bmmidi::Channel::index(12)),
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(12)),
       bmmidi::DataValue{57}};
   EXPECT_THAT(sizeof(programChangeCh13.rawBytes()), Eq(2));
   EXPECT_THAT(programChangeCh13.rawBytes()[0], Eq(std::uint8_t{0xCC}));
@@ -240,10 +222,8 @@ TEST(Msg, ProvidesReadOnlyRawArrayAccess) {
 
   // Three byte version:
   const bmmidi::Msg<3> controlChangeCh10{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                   bmmidi::Channel::index(9)),
-      bmmidi::controlToDataValue(bmmidi::Control::kExpression),
-      bmmidi::DataValue{76}};
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9)),
+      bmmidi::controlToDataValue(bmmidi::Control::kExpression), bmmidi::DataValue{76}};
   EXPECT_THAT(sizeof(controlChangeCh10.rawBytes()), Eq(3));
   EXPECT_THAT(controlChangeCh10.rawBytes()[0], Eq(std::uint8_t{0xB9}));
   EXPECT_THAT(controlChangeCh10.rawBytes()[1], Eq(std::uint8_t{0x0B}));
@@ -252,15 +232,13 @@ TEST(Msg, ProvidesReadOnlyRawArrayAccess) {
 
 TEST(Msg, ProvidesReadWriteRawArrayAccess) {
   bmmidi::Msg<3> msg{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                   bmmidi::Channel::index(9)),
-      bmmidi::controlToDataValue(bmmidi::Control::kExpression),
-      bmmidi::DataValue{76}};
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9)),
+      bmmidi::controlToDataValue(bmmidi::Control::kExpression), bmmidi::DataValue{76}};
   EXPECT_THAT(sizeof(msg.rawBytes()), Eq(3));
   EXPECT_THAT(msg.rawBytes()[0], Eq(std::uint8_t{0xB9}));
-  EXPECT_THAT(msg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                      bmmidi::Channel::index(9))));
+  EXPECT_THAT(
+      msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9))));
   EXPECT_THAT(msg.rawBytes()[1], Eq(std::uint8_t{0x0B}));
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{11}));
   EXPECT_THAT(msg.rawBytes()[2], Eq(std::uint8_t{0x4C}));
@@ -268,9 +246,9 @@ TEST(Msg, ProvidesReadWriteRawArrayAccess) {
 
   msg.rawBytes()[2] = 0x1B;
   EXPECT_THAT(msg.rawBytes()[0], Eq(std::uint8_t{0xB9}));
-  EXPECT_THAT(msg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                      bmmidi::Channel::index(9))));
+  EXPECT_THAT(
+      msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9))));
   EXPECT_THAT(msg.rawBytes()[1], Eq(std::uint8_t{0x0B}));
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{11}));
   EXPECT_THAT(msg.rawBytes()[2], Eq(std::uint8_t{0x1B}));
@@ -278,9 +256,9 @@ TEST(Msg, ProvidesReadWriteRawArrayAccess) {
 
   msg.rawBytes()[1] = 0x01;
   EXPECT_THAT(msg.rawBytes()[0], Eq(std::uint8_t{0xB9}));
-  EXPECT_THAT(msg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                      bmmidi::Channel::index(9))));
+  EXPECT_THAT(
+      msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9))));
   EXPECT_THAT(msg.rawBytes()[1], Eq(std::uint8_t{0x01}));
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{1}));
   EXPECT_THAT(msg.rawBytes()[2], Eq(std::uint8_t{0x1B}));
@@ -288,9 +266,9 @@ TEST(Msg, ProvidesReadWriteRawArrayAccess) {
 
   msg.rawBytes()[0] = 0xA3;
   EXPECT_THAT(msg.rawBytes()[0], Eq(std::uint8_t{0xA3}));
-  EXPECT_THAT(msg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
-                                      bmmidi::Channel::index(3))));
+  EXPECT_THAT(
+      msg.status(), Eq(bmmidi::Status::channelVoice(
+                        bmmidi::MsgType::kPolyphonicKeyPressure, bmmidi::Channel::index(3))));
   EXPECT_THAT(msg.rawBytes()[1], Eq(std::uint8_t{0x01}));
   EXPECT_THAT(msg.data1(), Eq(bmmidi::DataValue{1}));
   EXPECT_THAT(msg.rawBytes()[2], Eq(std::uint8_t{0x1B}));
@@ -301,10 +279,8 @@ TEST(Msg, ConvertsToMsgView) {
   {
     // Supports explicit conversion with asView():
     bmmidi::Msg<3> msg{
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                     bmmidi::Channel::index(9)),
-        bmmidi::controlToDataValue(bmmidi::Control::kExpression),
-        bmmidi::DataValue{76}};
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9)),
+        bmmidi::controlToDataValue(bmmidi::Control::kExpression), bmmidi::DataValue{76}};
 
     auto view = msg.asView<bmmidi::MsgView>();  // Explicit.
     EXPECT_THAT(view.type(), Eq(bmmidi::MsgType::kControlChange));
@@ -320,10 +296,8 @@ TEST(Msg, ConvertsToMsgView) {
   {
     // Supports implicit conversion through operator MsgView():
     bmmidi::Msg<3> msg{
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                     bmmidi::Channel::index(9)),
-        bmmidi::controlToDataValue(bmmidi::Control::kExpression),
-        bmmidi::DataValue{76}};
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9)),
+        bmmidi::controlToDataValue(bmmidi::Control::kExpression), bmmidi::DataValue{76}};
 
     bmmidi::MsgView view = msg;  // Implicit.
     EXPECT_THAT(view.type(), Eq(bmmidi::MsgType::kControlChange));
@@ -341,10 +315,8 @@ TEST(Msg, ConvertsToMsgRef) {
   {
     // Supports explicit conversion with asRef():
     bmmidi::Msg<3> msg{
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                     bmmidi::Channel::index(9)),
-        bmmidi::controlToDataValue(bmmidi::Control::kExpression),
-        bmmidi::DataValue{76}};
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9)),
+        bmmidi::controlToDataValue(bmmidi::Control::kExpression), bmmidi::DataValue{76}};
 
     auto ref = msg.asRef<bmmidi::MsgRef>();  // Explicit.
     EXPECT_THAT(ref.type(), Eq(bmmidi::MsgType::kControlChange));
@@ -364,10 +336,8 @@ TEST(Msg, ConvertsToMsgRef) {
   {
     // Supports implicit conversion through operator MsgRef():
     bmmidi::Msg<3> msg{
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                     bmmidi::Channel::index(9)),
-        bmmidi::controlToDataValue(bmmidi::Control::kExpression),
-        bmmidi::DataValue{76}};
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9)),
+        bmmidi::controlToDataValue(bmmidi::Control::kExpression), bmmidi::DataValue{76}};
 
     bmmidi::MsgRef ref = msg;  // Implicit.
     EXPECT_THAT(ref.type(), Eq(bmmidi::MsgType::kControlChange));
@@ -388,11 +358,9 @@ TEST(Msg, ConvertsToMsgRef) {
 TEST(TimedMsg, ConvertsToTimedMsgView) {
   {
     // Supports explicit conversion with asView():
-    auto msg = bmmidi::TimedMsg<bmmidi::Msg<3>>{1.01,
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                     bmmidi::Channel::index(2)),
-        bmmidi::DataValue{69},
-        bmmidi::DataValue{90}};
+    auto msg = bmmidi::TimedMsg<bmmidi::Msg<3>>{
+        1.01, bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2)),
+        bmmidi::DataValue{69}, bmmidi::DataValue{90}};
 
     auto view = msg.asView<bmmidi::MsgView>();  // Explicit.
     EXPECT_THAT(view.value().type(), Eq(bmmidi::MsgType::kNoteOn));
@@ -407,11 +375,9 @@ TEST(TimedMsg, ConvertsToTimedMsgView) {
 
   {
     // Supports implicit conversion through operator TimedMsgView():
-    auto msg = bmmidi::TimedMsg<bmmidi::Msg<3>>{1.01,
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                     bmmidi::Channel::index(2)),
-        bmmidi::DataValue{69},
-        bmmidi::DataValue{90}};
+    auto msg = bmmidi::TimedMsg<bmmidi::Msg<3>>{
+        1.01, bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2)),
+        bmmidi::DataValue{69}, bmmidi::DataValue{90}};
 
     bmmidi::TimedMsgView view = msg;  // Implicit.
     EXPECT_THAT(view.value().type(), Eq(bmmidi::MsgType::kNoteOn));
@@ -428,11 +394,9 @@ TEST(TimedMsg, ConvertsToTimedMsgView) {
 TEST(TimedMsg, ConvertsToTimedMsgRef) {
   {
     // Supports explicit conversion with asRef():
-    auto msg = bmmidi::TimedMsg<bmmidi::Msg<3>>{1.01,
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                     bmmidi::Channel::index(2)),
-        bmmidi::DataValue{69},
-        bmmidi::DataValue{90}};
+    auto msg = bmmidi::TimedMsg<bmmidi::Msg<3>>{
+        1.01, bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2)),
+        bmmidi::DataValue{69}, bmmidi::DataValue{90}};
 
     auto ref = msg.asRef<bmmidi::MsgRef>();  // Explicit.
     EXPECT_THAT(ref.value().type(), Eq(bmmidi::MsgType::kNoteOn));
@@ -451,11 +415,9 @@ TEST(TimedMsg, ConvertsToTimedMsgRef) {
 
   {
     // Supports implicit conversion through operator TimedMsgRef():
-    auto msg = bmmidi::TimedMsg<bmmidi::Msg<3>>{1.01,
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                     bmmidi::Channel::index(2)),
-        bmmidi::DataValue{69},
-        bmmidi::DataValue{90}};
+    auto msg = bmmidi::TimedMsg<bmmidi::Msg<3>>{
+        1.01, bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2)),
+        bmmidi::DataValue{69}, bmmidi::DataValue{90}};
 
     bmmidi::TimedMsgRef ref = msg;  // Implicit.
     EXPECT_THAT(ref.value().type(), Eq(bmmidi::MsgType::kNoteOn));
@@ -476,18 +438,17 @@ TEST(TimedMsg, ConvertsToTimedMsgRef) {
 TEST(ChanMsg, SupportsTwoByteMsgs) {
   // (Program change, channel 13, program 57).
   bmmidi::ChanMsg<2> chanMsg{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                   bmmidi::Channel::index(12)),
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(12)),
       bmmidi::DataValue{57}};
-  
+
   // Can use channel accessor:
   EXPECT_THAT(chanMsg.channel().displayNumber(), Eq(13));
 
   // Can also still use Msg accessors:
   EXPECT_THAT(chanMsg.type(), Eq(bmmidi::MsgType::kProgramChange));
-  EXPECT_THAT(chanMsg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                      bmmidi::Channel::index(12))));
+  EXPECT_THAT(
+      chanMsg.status(), Eq(bmmidi::Status::channelVoice(
+                            bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(12))));
   EXPECT_THAT(chanMsg.data1(), Eq(bmmidi::DataValue{57}));
 
   EXPECT_THAT(chanMsg.rawBytes()[0], Eq(0xCC));
@@ -495,12 +456,12 @@ TEST(ChanMsg, SupportsTwoByteMsgs) {
 
   // Can mutate channel:
   chanMsg.setChannel(bmmidi::Channel::index(2));
-  
+
   EXPECT_THAT(chanMsg.channel().displayNumber(), Eq(3));
   EXPECT_THAT(chanMsg.type(), Eq(bmmidi::MsgType::kProgramChange));
-  EXPECT_THAT(chanMsg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      chanMsg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(2))));
   EXPECT_THAT(chanMsg.data1(), Eq(bmmidi::DataValue{57}));
 
   EXPECT_THAT(chanMsg.rawBytes()[0], Eq(0xC2));
@@ -510,19 +471,17 @@ TEST(ChanMsg, SupportsTwoByteMsgs) {
 TEST(ChanMsg, SupportsThreeByteMsgs) {
   // (Note On, channel 3, key 69, velocity 90).
   bmmidi::ChanMsg<3> chanMsg{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                   bmmidi::Channel::index(2)),
-      bmmidi::DataValue{69},
-      bmmidi::DataValue{90}};
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2)),
+      bmmidi::DataValue{69}, bmmidi::DataValue{90}};
 
   // Can use channel accessor:
   EXPECT_THAT(chanMsg.channel().displayNumber(), Eq(3));
 
   // Can also still use Msg accessors:
   EXPECT_THAT(chanMsg.type(), Eq(bmmidi::MsgType::kNoteOn));
-  EXPECT_THAT(chanMsg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      chanMsg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2))));
   EXPECT_THAT(chanMsg.data1(), Eq(bmmidi::DataValue{69}));
   EXPECT_THAT(chanMsg.data2(), Eq(bmmidi::DataValue{90}));
 
@@ -532,12 +491,12 @@ TEST(ChanMsg, SupportsThreeByteMsgs) {
 
   // Can mutate channel:
   chanMsg.setChannel(bmmidi::Channel::index(13));
-  
+
   EXPECT_THAT(chanMsg.channel().displayNumber(), Eq(14));
   EXPECT_THAT(chanMsg.type(), Eq(bmmidi::MsgType::kNoteOn));
-  EXPECT_THAT(chanMsg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                      bmmidi::Channel::index(13))));
+  EXPECT_THAT(
+      chanMsg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(13))));
   EXPECT_THAT(chanMsg.data1(), Eq(bmmidi::DataValue{69}));
   EXPECT_THAT(chanMsg.data2(), Eq(bmmidi::DataValue{90}));
 
@@ -550,18 +509,17 @@ TEST(ChanMsg, ShouldConvertFromTwoByteMsg) {
   // A more generic Msg<2>...
   // (Program change, channel 13, program 57).
   bmmidi::Msg<2> msg{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                   bmmidi::Channel::index(12)),
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(12)),
       bmmidi::DataValue{57}};
-  
+
   // ...should convert to the more specific ChanMsg<2>...
   auto chanMsg = msg.to<bmmidi::ChanMsg<2>>();
 
   EXPECT_THAT(chanMsg.channel().displayNumber(), Eq(13));
   EXPECT_THAT(chanMsg.type(), Eq(bmmidi::MsgType::kProgramChange));
-  EXPECT_THAT(chanMsg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                      bmmidi::Channel::index(12))));
+  EXPECT_THAT(
+      chanMsg.status(), Eq(bmmidi::Status::channelVoice(
+                            bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(12))));
   EXPECT_THAT(chanMsg.data1(), Eq(bmmidi::DataValue{57}));
 
   // ...and the new ChanMsg<2> copy should be mutable...
@@ -569,28 +527,26 @@ TEST(ChanMsg, ShouldConvertFromTwoByteMsg) {
   EXPECT_THAT(chanMsg.channel().displayNumber(), Eq(3));
 
   // ...without affecting the original Msg<2>.
-  EXPECT_THAT(msg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                      bmmidi::Channel::index(12))));
+  EXPECT_THAT(
+      msg.status(), Eq(bmmidi::Status::channelVoice(
+                        bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(12))));
 }
 
 TEST(ChanMsg, ShouldConvertFromThreeByteMsg) {
   // A more generic Msg<3>...
   // (Note On, channel 3, key 69, velocity 90).
   bmmidi::Msg<3> msg{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                   bmmidi::Channel::index(2)),
-      bmmidi::DataValue{69},
-      bmmidi::DataValue{90}};
-  
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2)),
+      bmmidi::DataValue{69}, bmmidi::DataValue{90}};
+
   // ...should convert to the more specific ChanMsg<3>...
   auto chanMsg = msg.to<bmmidi::ChanMsg<3>>();
 
   EXPECT_THAT(chanMsg.channel().displayNumber(), Eq(3));
   EXPECT_THAT(chanMsg.type(), Eq(bmmidi::MsgType::kNoteOn));
-  EXPECT_THAT(chanMsg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      chanMsg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2))));
   EXPECT_THAT(chanMsg.data1(), Eq(bmmidi::DataValue{69}));
   EXPECT_THAT(chanMsg.data2(), Eq(bmmidi::DataValue{90}));
 
@@ -599,19 +555,17 @@ TEST(ChanMsg, ShouldConvertFromThreeByteMsg) {
   EXPECT_THAT(chanMsg.channel().displayNumber(), Eq(14));
 
   // ...without affecting the original Msg<3>.
-  EXPECT_THAT(msg.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      msg.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2))));
 }
 
 TEST(ChanMsg, ConvertsToChanMsgView) {
   {
     // Supports explicit conversion with asView():
     bmmidi::ChanMsg<3> msg{
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                     bmmidi::Channel::index(2)),
-        bmmidi::DataValue{69},
-        bmmidi::DataValue{90}};
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2)),
+        bmmidi::DataValue{69}, bmmidi::DataValue{90}};
 
     auto view = msg.asView<bmmidi::ChanMsgView>();  // Explicit.
     EXPECT_THAT(view.type(), Eq(bmmidi::MsgType::kNoteOn));
@@ -627,10 +581,8 @@ TEST(ChanMsg, ConvertsToChanMsgView) {
   {
     // Supports implicit conversion through operator ChanMsgView():
     bmmidi::ChanMsg<3> msg{
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                     bmmidi::Channel::index(2)),
-        bmmidi::DataValue{69},
-        bmmidi::DataValue{90}};
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2)),
+        bmmidi::DataValue{69}, bmmidi::DataValue{90}};
 
     bmmidi::ChanMsgView view = msg;  // Implicit.
     EXPECT_THAT(view.type(), Eq(bmmidi::MsgType::kNoteOn));
@@ -648,10 +600,8 @@ TEST(ChanMsg, ConvertsToChanMsgRef) {
   {
     // Supports explicit conversion with asRef():
     bmmidi::ChanMsg<3> msg{
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                     bmmidi::Channel::index(2)),
-        bmmidi::DataValue{69},
-        bmmidi::DataValue{90}};
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2)),
+        bmmidi::DataValue{69}, bmmidi::DataValue{90}};
 
     auto ref = msg.asRef<bmmidi::ChanMsgRef>();  // Explicit.
     EXPECT_THAT(ref.type(), Eq(bmmidi::MsgType::kNoteOn));
@@ -671,10 +621,8 @@ TEST(ChanMsg, ConvertsToChanMsgRef) {
   {
     // Supports implicit conversion through operator ChanMsgRef():
     bmmidi::ChanMsg<3> msg{
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                     bmmidi::Channel::index(2)),
-        bmmidi::DataValue{69},
-        bmmidi::DataValue{90}};
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2)),
+        bmmidi::DataValue{69}, bmmidi::DataValue{90}};
 
     bmmidi::ChanMsgRef ref = msg;  // Implicit.
     EXPECT_THAT(ref.type(), Eq(bmmidi::MsgType::kNoteOn));
@@ -727,8 +675,7 @@ TEST(NoteMsg, ShouldCreateNoteOn) {
 TEST(NoteMsg, ShouldCreateNoteOffDefaultVelocity) {
   // If no 3rd argument is given, should default to velocity 0.
   // (Note Off, channel 3, key 69, velocity 0).
-  auto noteMsg =
-      bmmidi::NoteMsg::off(bmmidi::Channel::index(2), bmmidi::KeyNumber::key(69));
+  auto noteMsg = bmmidi::NoteMsg::off(bmmidi::Channel::index(2), bmmidi::KeyNumber::key(69));
 
   EXPECT_THAT(noteMsg.channel().displayNumber(), Eq(3));
   EXPECT_THAT(noteMsg.isNoteOff(), IsTrue());
@@ -778,11 +725,9 @@ TEST(NoteMsg, ShouldConvertFromMsg) {
   // A more generic Msg...
   // (Note On, channel 3, key 69, velocity 90).
   bmmidi::Msg<3> msg{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                   bmmidi::Channel::index(2)),
-      bmmidi::DataValue{69},
-      bmmidi::DataValue{90}};
-  
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2)),
+      bmmidi::DataValue{69}, bmmidi::DataValue{90}};
+
   // ...should convert to the more specific NoteMsg...
   auto noteMsg = msg.to<bmmidi::NoteMsg>();
 
@@ -879,8 +824,8 @@ TEST(NoteMsg, ConvertsToNoteMsgRef) {
 TEST(TimedNoteMsg, SupportsFactoriesAndConversion) {
   {
     // Time 1.01, Note On, Channel 4, Key 60, Velocity 88:
-    auto msg = bmmidi::TimedNoteMsg::on(1.01,
-        bmmidi::Channel::index(3), bmmidi::KeyNumber::key(60), bmmidi::DataValue{88});
+    auto msg = bmmidi::TimedNoteMsg::on(
+        1.01, bmmidi::Channel::index(3), bmmidi::KeyNumber::key(60), bmmidi::DataValue{88});
     EXPECT_THAT(msg.timestamp(), Eq(1.01));
     EXPECT_THAT(msg.value().isNoteOn(), IsTrue());
     EXPECT_THAT(msg.value().channel().index(), Eq(3));
@@ -890,8 +835,8 @@ TEST(TimedNoteMsg, SupportsFactoriesAndConversion) {
 
   {
     // Time 2.02, Note Off, Channel 4, Key 60, Velocity 88:
-    auto msg = bmmidi::TimedNoteMsg::off(2.02,
-        bmmidi::Channel::index(3), bmmidi::KeyNumber::key(60), bmmidi::DataValue{88});
+    auto msg = bmmidi::TimedNoteMsg::off(
+        2.02, bmmidi::Channel::index(3), bmmidi::KeyNumber::key(60), bmmidi::DataValue{88});
     EXPECT_THAT(msg.timestamp(), Eq(2.02));
     EXPECT_THAT(msg.value().isNoteOff(), IsTrue());
     EXPECT_THAT(msg.value().channel().index(), Eq(3));
@@ -901,18 +846,16 @@ TEST(TimedNoteMsg, SupportsFactoriesAndConversion) {
 
   {
     // Should default to note off velocity 0:
-    auto msg = bmmidi::TimedNoteMsg::off(3.03,
-        bmmidi::Channel::index(3), bmmidi::KeyNumber::key(60));
+    auto msg =
+        bmmidi::TimedNoteMsg::off(3.03, bmmidi::Channel::index(3), bmmidi::KeyNumber::key(60));
     EXPECT_THAT(msg.value().velocity().value(), Eq(0));
   }
 
   {
     // Should convert from TimedMsg<Msg<N>>:
-    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<3>>{4.04,
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                    bmmidi::Channel::index(2)),
-        bmmidi::DataValue{69},
-        bmmidi::DataValue{90}};
+    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<3>>{
+        4.04, bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2)),
+        bmmidi::DataValue{69}, bmmidi::DataValue{90}};
 
     bmmidi::TimedNoteMsg msg = genericMsg.to<bmmidi::NoteMsg>();
     EXPECT_THAT(msg.timestamp(), Eq(4.04));
@@ -925,8 +868,8 @@ TEST(TimedNoteMsg, SupportsFactoriesAndConversion) {
 
 TEST(TimedNoteMsg, ConvertsToTimedNoteMsgView) {
   // Time 1.01, Note On, Channel 4, Key 60, Velocity 88:
-  auto msg = bmmidi::TimedNoteMsg::on(1.01,
-      bmmidi::Channel::index(3), bmmidi::KeyNumber::key(60), bmmidi::DataValue{88});
+  auto msg = bmmidi::TimedNoteMsg::on(
+      1.01, bmmidi::Channel::index(3), bmmidi::KeyNumber::key(60), bmmidi::DataValue{88});
   const auto& constMsgRef = msg;
 
   bmmidi::TimedNoteMsgView view = constMsgRef;  // Implicit.
@@ -943,8 +886,8 @@ TEST(TimedNoteMsg, ConvertsToTimedNoteMsgView) {
 
 TEST(TimedNoteMsg, ConvertsToTimedNoteMsgRef) {
   // Time 1.01, Note On, Channel 4, Key 60, Velocity 88:
-  auto msg = bmmidi::TimedNoteMsg::on(1.01,
-      bmmidi::Channel::index(3), bmmidi::KeyNumber::key(60), bmmidi::DataValue{88});
+  auto msg = bmmidi::TimedNoteMsg::on(
+      1.01, bmmidi::Channel::index(3), bmmidi::KeyNumber::key(60), bmmidi::DataValue{88});
 
   bmmidi::TimedNoteMsgRef ref = msg;  // Implicit.
   EXPECT_THAT(ref.timestamp(), Eq(1.01));
@@ -993,11 +936,10 @@ TEST(KeyPressureMsg, ShouldConvertFromMsg) {
   // A more generic Msg...
   // (Polyphonic Key Pressure, channel 3, key 69, pressure 90).
   bmmidi::Msg<3> msg{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
-                                   bmmidi::Channel::index(2)),
-      bmmidi::DataValue{69},
-      bmmidi::DataValue{90}};
-  
+      bmmidi::Status::channelVoice(
+          bmmidi::MsgType::kPolyphonicKeyPressure, bmmidi::Channel::index(2)),
+      bmmidi::DataValue{69}, bmmidi::DataValue{90}};
+
   // ...should convert to the more specific KeyPressureMsg...
   auto kpMsg = msg.to<bmmidi::KeyPressureMsg>();
 
@@ -1016,8 +958,8 @@ TEST(KeyPressureMsg, ShouldConvertFromMsg) {
 TEST(TimedKeyPressureMsg, SupportsFactoriesAndConversion) {
   {
     // Time 1.01, Polyphonic Key Pressure, Channel 3, Key 69, Pressure 90:
-    auto msg = bmmidi::TimedKeyPressureMsg{1.01,
-        bmmidi::Channel::index(2), bmmidi::KeyNumber::key(69), bmmidi::DataValue{90}};
+    auto msg = bmmidi::TimedKeyPressureMsg{
+        1.01, bmmidi::Channel::index(2), bmmidi::KeyNumber::key(69), bmmidi::DataValue{90}};
     EXPECT_THAT(msg.timestamp(), Eq(1.01));
     EXPECT_THAT(msg.value().channel().index(), Eq(2));
     EXPECT_THAT(msg.value().key().value(), Eq(69));
@@ -1026,11 +968,11 @@ TEST(TimedKeyPressureMsg, SupportsFactoriesAndConversion) {
 
   {
     // Should convert from TimedMsg<Msg<N>>:
-    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<3>>{2.02,
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
-                                     bmmidi::Channel::index(7)),
-        bmmidi::DataValue{60},
-        bmmidi::DataValue{88}};
+    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<3>>{
+        2.02,
+        bmmidi::Status::channelVoice(
+            bmmidi::MsgType::kPolyphonicKeyPressure, bmmidi::Channel::index(7)),
+        bmmidi::DataValue{60}, bmmidi::DataValue{88}};
 
     bmmidi::TimedKeyPressureMsg msg = genericMsg.to<bmmidi::KeyPressureMsg>();
     EXPECT_THAT(msg.timestamp(), Eq(2.02));
@@ -1043,7 +985,7 @@ TEST(TimedKeyPressureMsg, SupportsFactoriesAndConversion) {
 TEST(ControlChangeMsg, ShouldCreate) {
   // (Control Change, channel 3, CC #11 expression, value 90).
   auto ccMsg = bmmidi::ControlChangeMsg{
-     bmmidi::Channel::index(2), bmmidi::Control::kExpression, bmmidi::DataValue{90}};
+      bmmidi::Channel::index(2), bmmidi::Control::kExpression, bmmidi::DataValue{90}};
 
   EXPECT_THAT(ccMsg.channel().displayNumber(), Eq(3));
   EXPECT_THAT(ccMsg.control(), Eq(bmmidi::Control::kExpression));
@@ -1071,11 +1013,9 @@ TEST(ControlChangeMsg, ShouldConvertFromMsg) {
   // A more generic Msg...
   // (Control Change, channel 3, CC #11 expression, value 90).
   bmmidi::Msg<3> msg{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                   bmmidi::Channel::index(2)),
-      bmmidi::DataValue{11},
-      bmmidi::DataValue{90}};
-  
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(2)),
+      bmmidi::DataValue{11}, bmmidi::DataValue{90}};
+
   // ...should convert to the more specific ControlChangeMsg...
   auto ccMsg = msg.to<bmmidi::ControlChangeMsg>();
 
@@ -1094,8 +1034,8 @@ TEST(ControlChangeMsg, ShouldConvertFromMsg) {
 TEST(TimedControlChangeMsg, SupportsFactoriesAndConversion) {
   {
     // Time 1.01, Control Change, Channel 3, CC #11 Expression, Value 90.
-    auto msg = bmmidi::TimedControlChangeMsg{1.01,
-        bmmidi::Channel::index(2), bmmidi::Control::kExpression, bmmidi::DataValue{90}};
+    auto msg = bmmidi::TimedControlChangeMsg{
+        1.01, bmmidi::Channel::index(2), bmmidi::Control::kExpression, bmmidi::DataValue{90}};
     EXPECT_THAT(msg.timestamp(), Eq(1.01));
     EXPECT_THAT(msg.value().channel().index(), Eq(2));
     EXPECT_THAT(msg.value().control(), Eq(bmmidi::Control::kExpression));
@@ -1104,11 +1044,10 @@ TEST(TimedControlChangeMsg, SupportsFactoriesAndConversion) {
 
   {
     // Should convert from TimedMsg<Msg<N>>:
-    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<3>>{2.02,
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                    bmmidi::Channel::index(7)),
-        bmmidi::DataValue{1},
-        bmmidi::DataValue{88}};
+    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<3>>{
+        2.02,
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(7)),
+        bmmidi::DataValue{1}, bmmidi::DataValue{88}};
 
     bmmidi::TimedControlChangeMsg msg = genericMsg.to<bmmidi::ControlChangeMsg>();
     EXPECT_THAT(msg.timestamp(), Eq(2.02));
@@ -1120,8 +1059,7 @@ TEST(TimedControlChangeMsg, SupportsFactoriesAndConversion) {
 
 TEST(ProgramChangeMsg, ShouldCreate) {
   // (Program Change, channel 3, program 57).
-  auto pcMsg = bmmidi::ProgramChangeMsg{
-     bmmidi::Channel::index(2), bmmidi::PresetNumber::index(56)};
+  auto pcMsg = bmmidi::ProgramChangeMsg{bmmidi::Channel::index(2), bmmidi::PresetNumber::index(56)};
 
   EXPECT_THAT(pcMsg.channel().displayNumber(), Eq(3));
   EXPECT_THAT(pcMsg.program().displayNumber(), Eq(57));
@@ -1144,10 +1082,9 @@ TEST(ProgramChangeMsg, ShouldConvertFromMsg) {
   // A more generic Msg...
   // (Program Change, channel 3, program 57).
   bmmidi::Msg<2> msg{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                   bmmidi::Channel::index(2)),
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(2)),
       bmmidi::DataValue{56}};
-  
+
   // ...should convert to the more specific ProgramChangeMsg...
   auto pcMsg = msg.to<bmmidi::ProgramChangeMsg>();
 
@@ -1165,8 +1102,8 @@ TEST(ProgramChangeMsg, ShouldConvertFromMsg) {
 TEST(TimedProgramChangeMsg, SupportsFactoriesAndConversion) {
   {
     // Time 1.01, Program Change, Channel 3, Program 57:
-    auto msg = bmmidi::TimedProgramChangeMsg{1.01,
-        bmmidi::Channel::index(2), bmmidi::PresetNumber::index(56)};
+    auto msg = bmmidi::TimedProgramChangeMsg{
+        1.01, bmmidi::Channel::index(2), bmmidi::PresetNumber::index(56)};
     EXPECT_THAT(msg.timestamp(), Eq(1.01));
     EXPECT_THAT(msg.value().channel().index(), Eq(2));
     EXPECT_THAT(msg.value().program().index(), Eq(56));
@@ -1174,9 +1111,9 @@ TEST(TimedProgramChangeMsg, SupportsFactoriesAndConversion) {
 
   {
     // Should convert from TimedMsg<Msg<N>>:
-    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<2>>{2.02,
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                     bmmidi::Channel::index(7)),
+    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<2>>{
+        2.02,
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(7)),
         bmmidi::DataValue{88}};
 
     bmmidi::TimedProgramChangeMsg msg = genericMsg.to<bmmidi::ProgramChangeMsg>();
@@ -1211,10 +1148,9 @@ TEST(ChanPressureMsg, ShouldConvertFromMsg) {
   // A more generic Msg...
   // (Channel Pressure, channel 3, pressure 56).
   bmmidi::Msg<2> msg{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
-                                   bmmidi::Channel::index(2)),
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure, bmmidi::Channel::index(2)),
       bmmidi::DataValue{56}};
-  
+
   // ...should convert to the more specific ChanPressureMsg...
   auto cpMsg = msg.to<bmmidi::ChanPressureMsg>();
 
@@ -1232,8 +1168,7 @@ TEST(ChanPressureMsg, ShouldConvertFromMsg) {
 TEST(TimedChanPressureMsg, SupportsFactoriesAndConversion) {
   {
     // Time 1.01, Channel Pressure, Channel 3, Pressure 56.
-    auto msg = bmmidi::TimedChanPressureMsg{1.01,
-        bmmidi::Channel::index(2), bmmidi::DataValue{56}};
+    auto msg = bmmidi::TimedChanPressureMsg{1.01, bmmidi::Channel::index(2), bmmidi::DataValue{56}};
     EXPECT_THAT(msg.timestamp(), Eq(1.01));
     EXPECT_THAT(msg.value().channel().index(), Eq(2));
     EXPECT_THAT(msg.value().pressure().value(), Eq(56));
@@ -1241,9 +1176,9 @@ TEST(TimedChanPressureMsg, SupportsFactoriesAndConversion) {
 
   {
     // Should convert from TimedMsg<Msg<N>>:
-    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<2>>{2.02,
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
-                                     bmmidi::Channel::index(7)),
+    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<2>>{
+        2.02,
+        bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure, bmmidi::Channel::index(7)),
         bmmidi::DataValue{88}};
 
     bmmidi::TimedChanPressureMsg msg = genericMsg.to<bmmidi::ChanPressureMsg>();
@@ -1286,11 +1221,9 @@ TEST(PitchBendMsg, ShouldConvertFromMsg) {
   // MSB: 0b10 0000 0         (  0x40 = 64)
   // Val: 0b10 0000 0000 0000 (0x2000 = 8192)
   bmmidi::Msg<3> msg{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kPitchBend,
-                                   bmmidi::Channel::index(2)),
-      bmmidi::DataValue{0x00},
-      bmmidi::DataValue{0x40}};
-  
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kPitchBend, bmmidi::Channel::index(2)),
+      bmmidi::DataValue{0x00}, bmmidi::DataValue{0x40}};
+
   // ...should convert to the more specific PitchBendMsg...
   auto pbMsg = msg.to<bmmidi::PitchBendMsg>();
 
@@ -1309,8 +1242,7 @@ TEST(PitchBendMsg, ShouldConvertFromMsg) {
 TEST(TimedPitchBendMsg, SupportsFactoriesAndConversion) {
   {
     // Time 1.01, Pitch Bend, Channel 3, Bend 377.
-    auto msg = bmmidi::TimedPitchBendMsg{1.01,
-        bmmidi::Channel::index(2), bmmidi::PitchBend{377}};
+    auto msg = bmmidi::TimedPitchBendMsg{1.01, bmmidi::Channel::index(2), bmmidi::PitchBend{377}};
     EXPECT_THAT(msg.timestamp(), Eq(1.01));
     EXPECT_THAT(msg.value().channel().index(), Eq(2));
     EXPECT_THAT(msg.value().bend().value(), Eq(377));
@@ -1321,11 +1253,9 @@ TEST(TimedPitchBendMsg, SupportsFactoriesAndConversion) {
     // LSB:          0b000 0000 (  0x00 = 0)
     // MSB: 0b10 0000 0         (  0x40 = 64)
     // Val: 0b10 0000 0000 0000 (0x2000 = 8192)
-    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<3>>{2.02,
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kPitchBend,
-                                     bmmidi::Channel::index(7)),
-        bmmidi::DataValue{0x00},
-        bmmidi::DataValue{0x40}};
+    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<3>>{
+        2.02, bmmidi::Status::channelVoice(bmmidi::MsgType::kPitchBend, bmmidi::Channel::index(7)),
+        bmmidi::DataValue{0x00}, bmmidi::DataValue{0x40}};
 
     bmmidi::TimedPitchBendMsg msg = genericMsg.to<bmmidi::PitchBendMsg>();
     EXPECT_THAT(msg.timestamp(), Eq(2.02));
@@ -1384,7 +1314,7 @@ TEST(MtcQuarterFrameMsg, ShouldCreateFromDataByte) {
   // Or can set piece and value individually:
   // (FF upper 1 bit of 0b0001).
   qfMsg.setPiece(bmmidi::MtcQuarterFramePiece::k1FrameUpperBits);  // 0x10.
-  qfMsg.setValueFromLower4Bits(0b0000'0001);  // 0x01.
+  qfMsg.setValueFromLower4Bits(0b0000'0001);                       // 0x01.
 
   EXPECT_THAT(qfMsg.dataByte(), Eq(0x11));
   EXPECT_THAT(qfMsg.piece(), Eq(bmmidi::MtcQuarterFramePiece::k1FrameUpperBits));
@@ -1401,7 +1331,7 @@ TEST(MtcQuarterFrameMsg, ShouldConvertFromMsg) {
   bmmidi::Msg<2> msg{
       bmmidi::Status::system(bmmidi::MsgType::kMtcQuarterFrame),
       bmmidi::DataValue{0b0100'1011}};  // 0x4B.
-  
+
   // ...should convert to the more specific MtcQuarterFrameMsg...
   auto qfMsg = msg.to<bmmidi::MtcQuarterFrameMsg>();
 
@@ -1436,8 +1366,8 @@ TEST(TimedMtcQuarterFrameMsg, SupportsFactoriesAndConversion) {
     tc.setFF(24);
 
     // Time 1.01, MTC Quarter Frame, Lower 4 bits of MM:
-    auto msg = bmmidi::TimedMtcQuarterFrameMsg::pieceOf(1.01,
-        tc, bmmidi::MtcQuarterFramePiece::k4MinLowerBits);
+    auto msg = bmmidi::TimedMtcQuarterFrameMsg::pieceOf(
+        1.01, tc, bmmidi::MtcQuarterFramePiece::k4MinLowerBits);
     EXPECT_THAT(msg.timestamp(), Eq(1.01));
     EXPECT_THAT(msg.value().dataByte(), Eq(0x4B));
     EXPECT_THAT(msg.value().piece(), Eq(bmmidi::MtcQuarterFramePiece::k4MinLowerBits));
@@ -1456,8 +1386,8 @@ TEST(TimedMtcQuarterFrameMsg, SupportsFactoriesAndConversion) {
 
   {
     // Should convert from TimedMsg<Msg<N>>:
-    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<2>>{3.03,
-        bmmidi::Status::system(bmmidi::MsgType::kMtcQuarterFrame),
+    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<2>>{
+        3.03, bmmidi::Status::system(bmmidi::MsgType::kMtcQuarterFrame),
         bmmidi::DataValue{0b0100'1011}};  // 0x4B.
 
     bmmidi::TimedMtcQuarterFrameMsg msg = genericMsg.to<bmmidi::MtcQuarterFrameMsg>();
@@ -1498,8 +1428,7 @@ TEST(SongPosMsg, ShouldConvertFromMsg) {
   // MSB: 0b10 0000 0         (  0x40 = 64)
   // Val: 0b10 0000 0000 0000 (0x2000 = 8192)
   bmmidi::Msg<3> msg{
-      bmmidi::Status::system(bmmidi::MsgType::kSongPositionPointer),
-      bmmidi::DataValue{0x00},
+      bmmidi::Status::system(bmmidi::MsgType::kSongPositionPointer), bmmidi::DataValue{0x00},
       bmmidi::DataValue{0x40}};
 
   // ...should convert to the more specific SongPosMsg...
@@ -1530,10 +1459,9 @@ TEST(TimedSongPosMsg, SupportsFactoriesAndConversion) {
     // LSB:          0b000 0000 (  0x00 = 0)
     // MSB: 0b10 0000 0         (  0x40 = 64)
     // Val: 0b10 0000 0000 0000 (0x2000 = 8192)
-    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<3>>{2.02,
-        bmmidi::Status::system(bmmidi::MsgType::kSongPositionPointer),
-        bmmidi::DataValue{0x00},
-        bmmidi::DataValue{0x40}};
+    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<3>>{
+        2.02, bmmidi::Status::system(bmmidi::MsgType::kSongPositionPointer),
+        bmmidi::DataValue{0x00}, bmmidi::DataValue{0x40}};
 
     bmmidi::TimedSongPosMsg msg = genericMsg.to<bmmidi::SongPosMsg>();
     EXPECT_THAT(msg.timestamp(), Eq(2.02));
@@ -1560,10 +1488,8 @@ TEST(SongSelectMsg, ShouldCreate) {
 TEST(SongSelectMsg, ShouldConvertFromMsg) {
   // A more generic Msg...
   // (Song Select, song 57).
-  bmmidi::Msg<2> msg{
-      bmmidi::Status::system(bmmidi::MsgType::kSongSelect),
-      bmmidi::DataValue{56}};
-  
+  bmmidi::Msg<2> msg{bmmidi::Status::system(bmmidi::MsgType::kSongSelect), bmmidi::DataValue{56}};
+
   // ...should convert to the more specific SongSelectMsg...
   auto songMsg = msg.to<bmmidi::SongSelectMsg>();
   EXPECT_THAT(songMsg.song().displayNumber(), Eq(57));
@@ -1586,9 +1512,8 @@ TEST(TimedSongSelectMsg, SupportsFactoriesAndConversion) {
 
   {
     // Should convert from TimedMsg<Msg<N>>:
-    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<2>>{2.02,
-        bmmidi::Status::system(bmmidi::MsgType::kSongSelect),
-        bmmidi::DataValue{88}};
+    auto genericMsg = bmmidi::TimedMsg<bmmidi::Msg<2>>{
+        2.02, bmmidi::Status::system(bmmidi::MsgType::kSongSelect), bmmidi::DataValue{88}};
 
     bmmidi::TimedSongSelectMsg msg = genericMsg.to<bmmidi::SongSelectMsg>();
     EXPECT_THAT(msg.timestamp(), Eq(2.02));
@@ -1599,8 +1524,8 @@ TEST(TimedSongSelectMsg, SupportsFactoriesAndConversion) {
 TEST(StatusOnlyMsgs, ShouldCreate) {
   // (Oscillator Tune Request).
   const auto tuneMsg = bmmidi::oscTuneMsg();
-  EXPECT_THAT(tuneMsg.status(),
-      Eq(bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)));
+  EXPECT_THAT(
+      tuneMsg.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)));
   EXPECT_THAT(tuneMsg.rawBytes()[0], Eq(0xF6));
 
   // (Timing Clock).
@@ -1638,7 +1563,8 @@ TEST(StatusOnlyMsgs, ShouldCreateWithTimestamps) {
   // (Oscillator Tune Request).
   const auto tuneMsg = bmmidi::timedOscTuneMsg(1.01);
   EXPECT_THAT(tuneMsg.timestamp(), Eq(1.01));
-  EXPECT_THAT(tuneMsg.value().status(),
+  EXPECT_THAT(
+      tuneMsg.value().status(),
       Eq(bmmidi::Status::system(bmmidi::MsgType::kOscillatorTuneRequest)));
   EXPECT_THAT(tuneMsg.value().rawBytes()[0], Eq(0xF6));
 
@@ -1669,7 +1595,8 @@ TEST(StatusOnlyMsgs, ShouldCreateWithTimestamps) {
   // (Active Sensing).
   const auto senseMsg = bmmidi::timedActiveSensingMsg(6.06);
   EXPECT_THAT(senseMsg.timestamp(), Eq(6.06));
-  EXPECT_THAT(senseMsg.value().status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kActiveSensing)));
+  EXPECT_THAT(
+      senseMsg.value().status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kActiveSensing)));
   EXPECT_THAT(senseMsg.value().rawBytes()[0], Eq(0xFE));
 
   // (System Reset).

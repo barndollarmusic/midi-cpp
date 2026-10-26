@@ -13,9 +13,7 @@ using ::testing::Eq;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
 
-TEST(PresetNumber, ProvidesNumPresetsConstant) {
-  EXPECT_THAT(bmmidi::kNumPresets, Eq(128));
-}
+TEST(PresetNumber, ProvidesNumPresetsConstant) { EXPECT_THAT(bmmidi::kNumPresets, Eq(128)); }
 
 TEST(PresetNumber, ShouldWorkForAllNormalPresets) {
   // Should work for index 0 through 127.

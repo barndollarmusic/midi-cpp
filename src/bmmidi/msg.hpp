@@ -45,26 +45,22 @@ public:
   using ConstByteArray = const std::uint8_t[N];
 
   template<std::size_t NN = N, typename = std::enable_if_t<NN == 1>>
-  explicit constexpr Msg(Status status)
-      : bytes_{status.value()} {
-    assert((type() == MsgType::kSystemExclusive)
-        || (N == 1 + status.numDataBytes()));
+  explicit constexpr Msg(Status status) : bytes_{status.value()} {
+    assert((type() == MsgType::kSystemExclusive) || (N == 1 + status.numDataBytes()));
   }
 
   template<std::size_t NN = N, typename = std::enable_if_t<NN == 2>>
   explicit constexpr Msg(Status status, DataValue data1)
       : bytes_{status.value(), static_cast<std::uint8_t>(data1.value())} {
-    assert((type() == MsgType::kSystemExclusive)
-        || (N == 1 + status.numDataBytes()));
+    assert((type() == MsgType::kSystemExclusive) || (N == 1 + status.numDataBytes()));
   }
 
   template<std::size_t NN = N, typename = std::enable_if_t<NN == 3>>
   explicit constexpr Msg(Status status, DataValue data1, DataValue data2)
-      : bytes_{status.value(),
-              static_cast<std::uint8_t>(data1.value()),
-              static_cast<std::uint8_t>(data2.value())} {
-    assert((type() == MsgType::kSystemExclusive)
-        || (N == 1 + status.numDataBytes()));
+      : bytes_{
+            status.value(), static_cast<std::uint8_t>(data1.value()),
+            static_cast<std::uint8_t>(data2.value())} {
+    assert((type() == MsgType::kSystemExclusive) || (N == 1 + status.numDataBytes()));
   }
 
   /** Returns type of this message, as determined by its Status byte. */
@@ -117,10 +113,10 @@ public:
    * ensure that the conversion is valid before calling (in debug mode,
    * assertions will check).
    */
-  template<
-      typename MsgT,
-      typename = std::enable_if_t<std::is_base_of<Msg<N>, MsgT>::value>>
-  MsgT to() const { return MsgT::fromMsg(*this); }
+  template<typename MsgT, typename = std::enable_if_t<std::is_base_of<Msg<N>, MsgT>::value>>
+  MsgT to() const {
+    return MsgT::fromMsg(*this);
+  }
 
   /**
    * Returns read-only reference of ViewType to this Msg; check type() to ensure
@@ -128,9 +124,10 @@ public:
    * check).
    */
   template<
-      typename ViewType,
-      typename = std::enable_if_t<ViewType::kAccessType == MsgAccess::kReadOnly>>
-  ViewType asView() const { return ViewType{bytes_, N}; }
+      typename ViewType, typename = std::enable_if_t<ViewType::kAccessType == MsgAccess::kReadOnly>>
+  ViewType asView() const {
+    return ViewType{bytes_, N};
+  }
 
   /** Implicitly converts to MsgView. */
   operator MsgView() const { return asView<MsgView>(); }
@@ -141,9 +138,10 @@ public:
    * check).
    */
   template<
-      typename RefType,
-      typename = std::enable_if_t<RefType::kAccessType == MsgAccess::kReadWrite>>
-  RefType asRef() { return RefType{bytes_, N}; }
+      typename RefType, typename = std::enable_if_t<RefType::kAccessType == MsgAccess::kReadWrite>>
+  RefType asRef() {
+    return RefType{bytes_, N};
+  }
 
   /** Implicitly converts to MsgRef, if this is read-write. */
   operator MsgRef() { return asRef<MsgRef>(); }
@@ -162,28 +160,29 @@ static_assert(sizeof(Msg<2>) == 2, "Msg<2> must be 2 bytes");
 static_assert(sizeof(Msg<3>) == 3, "Msg<3> must be 3 bytes");
 
 // Ensure trivial destructors (so they can be skipped):
-static_assert(std::is_trivially_destructible<Msg<1>>::value, "Msg<1> must be trivially destructible");
-static_assert(std::is_trivially_destructible<Msg<2>>::value, "Msg<2> must be trivially destructible");
-static_assert(std::is_trivially_destructible<Msg<3>>::value, "Msg<3> must be trivially destructible");
+static_assert(
+    std::is_trivially_destructible<Msg<1>>::value, "Msg<1> must be trivially destructible");
+static_assert(
+    std::is_trivially_destructible<Msg<2>>::value, "Msg<2> must be trivially destructible");
+static_assert(
+    std::is_trivially_destructible<Msg<3>>::value, "Msg<3> must be trivially destructible");
 
 // Equality operations:
-inline constexpr bool operator==(Msg<1> lhs, Msg<1> rhs) {
-  return (lhs.status() == rhs.status());
-}
+inline constexpr bool operator==(Msg<1> lhs, Msg<1> rhs) { return (lhs.status() == rhs.status()); }
 
 inline constexpr bool operator==(Msg<2> lhs, Msg<2> rhs) {
-  return (lhs.status() == rhs.status())
-      && (lhs.data1() == rhs.data1());
+  return (lhs.status() == rhs.status()) && (lhs.data1() == rhs.data1());
 }
 
 inline constexpr bool operator==(Msg<3> lhs, Msg<3> rhs) {
-  return (lhs.status() == rhs.status())
-      && (lhs.data1() == rhs.data1())
-      && (lhs.data2() == rhs.data2());
+  return (lhs.status() == rhs.status()) && (lhs.data1() == rhs.data1())
+         && (lhs.data2() == rhs.data2());
 }
 
 template<std::size_t N>
-inline constexpr bool operator!=(Msg<N> lhs, Msg<N> rhs) { return !(lhs == rhs); }
+inline constexpr bool operator!=(Msg<N> lhs, Msg<N> rhs) {
+  return !(lhs == rhs);
+}
 
 /**
  * Parent class for an N-byte Channel message that stores its own bytes
@@ -199,17 +198,14 @@ public:
   // All Channel messages have 1 or 2 data bytes.
   static_assert((N == 2) || (N == 3), "ChanMsg<N>: N must be 2 or 3 bytes");
 
-  static ChanMsg<2> fromMsg(const Msg<2>& msg) {
-    return ChanMsg<2>{msg.status(), msg.data1()};
-  }
+  static ChanMsg<2> fromMsg(const Msg<2>& msg) { return ChanMsg<2>{msg.status(), msg.data1()}; }
 
   static ChanMsg<3> fromMsg(const Msg<3>& msg) {
     return ChanMsg<3>{msg.status(), msg.data1(), msg.data2()};
   }
 
   template<std::size_t NN = N, typename = std::enable_if_t<NN == 2>>
-  explicit constexpr ChanMsg(Status status, DataValue data1)
-      : Msg<N>{status, data1} {
+  explicit constexpr ChanMsg(Status status, DataValue data1) : Msg<N>{status, data1} {
     assert(status.isChannelSpecific());
   }
 
@@ -249,10 +245,10 @@ protected:
 static_assert(sizeof(ChanMsg<2>) == 2, "ChanMsg<2> must be 2 bytes");
 static_assert(sizeof(ChanMsg<3>) == 3, "ChanMsg<3> must be 3 bytes");
 
-static_assert(std::is_trivially_destructible<ChanMsg<2>>::value,
-              "ChanMsg<2> must be trivially destructible");
-static_assert(std::is_trivially_destructible<ChanMsg<3>>::value,
-              "ChanMsg<3> must be trivially destructible");
+static_assert(
+    std::is_trivially_destructible<ChanMsg<2>>::value, "ChanMsg<2> must be trivially destructible");
+static_assert(
+    std::is_trivially_destructible<ChanMsg<3>>::value, "ChanMsg<3> must be trivially destructible");
 
 /**
  * A Note Off or Note On message that stores its own bytes contiguously.
@@ -341,22 +337,19 @@ public:
 
 private:
   explicit constexpr NoteMsg(Status status, KeyNumber key, DataValue velocity)
-      : ChanMsg<3>{status,
-                   DataValue{static_cast<std::int8_t>(key.value())},
-                   velocity} {
+      : ChanMsg<3>{status, DataValue{static_cast<std::int8_t>(key.value())}, velocity} {
     assert(key.isNormal());
   }
 };
 
 static_assert(sizeof(NoteMsg) == 3, "NoteMsg must be 3 bytes");
-static_assert(std::is_trivially_destructible<NoteMsg>::value,
-              "NoteMsg must be trivially destructible");
+static_assert(
+    std::is_trivially_destructible<NoteMsg>::value, "NoteMsg must be trivially destructible");
 
 /** A timestamped Note Off or Note On message. */
 class TimedNoteMsg : public TimedMsg<NoteMsg> {
 public:
-  static TimedNoteMsg on(
-      double timestamp, Channel channel, KeyNumber key, DataValue velocity) {
+  static TimedNoteMsg on(double timestamp, Channel channel, KeyNumber key, DataValue velocity) {
     return TimedNoteMsg{timestamp, NoteMsg::on(channel, key, velocity)};
   }
 
@@ -367,8 +360,7 @@ public:
 
   // Support implicit conversion from TimedMsg<NoteMsg>, so that
   // TimedMsg::to<NoteMsg>() can be assigned to this type if needed.
-  TimedNoteMsg(const TimedMsg<NoteMsg>& other)
-      : TimedNoteMsg{other.timestamp(), other.value()} {}
+  TimedNoteMsg(const TimedMsg<NoteMsg>& other) : TimedNoteMsg{other.timestamp(), other.value()} {}
 
   explicit TimedNoteMsg(double timestamp, const NoteMsg& noteMsg)
       : TimedMsg<NoteMsg>{timestamp, noteMsg} {}
@@ -400,9 +392,9 @@ public:
    * "all" value).
    */
   explicit constexpr KeyPressureMsg(Channel channel, KeyNumber key, DataValue pressure)
-      : ChanMsg<3>{Status::channelVoice(MsgType::kPolyphonicKeyPressure, channel),
-                   DataValue{static_cast<std::int8_t>(key.value())},
-                   pressure} {
+      : ChanMsg<3>{
+            Status::channelVoice(MsgType::kPolyphonicKeyPressure, channel),
+            DataValue{static_cast<std::int8_t>(key.value())}, pressure} {
     assert(key.isNormal());
   }
 
@@ -432,8 +424,9 @@ public:
 };
 
 static_assert(sizeof(KeyPressureMsg) == 3, "KeyPressureMsg must be 3 bytes");
-static_assert(std::is_trivially_destructible<KeyPressureMsg>::value,
-              "KeyPressureMsg must be trivially destructible");
+static_assert(
+    std::is_trivially_destructible<KeyPressureMsg>::value,
+    "KeyPressureMsg must be trivially destructible");
 
 /** A timestamped Polyphonic Key Pressure message. */
 class TimedKeyPressureMsg : public TimedMsg<KeyPressureMsg> {
@@ -443,8 +436,7 @@ public:
   TimedKeyPressureMsg(const TimedMsg<KeyPressureMsg>& other)
       : TimedKeyPressureMsg{other.timestamp(), other.value()} {}
 
-  explicit TimedKeyPressureMsg(
-      double timestamp, Channel channel, KeyNumber key, DataValue pressure)
+  explicit TimedKeyPressureMsg(double timestamp, Channel channel, KeyNumber key, DataValue pressure)
       : TimedMsg<KeyPressureMsg>{timestamp, channel, key, pressure} {}
 
   explicit TimedKeyPressureMsg(double timestamp, const KeyPressureMsg& keyPressureMsg)
@@ -472,9 +464,9 @@ public:
    * value).
    */
   explicit constexpr ControlChangeMsg(Channel channel, Control control, DataValue value)
-      : ChanMsg<3>{Status::channelVoice(MsgType::kControlChange, channel),
-                   controlToDataValue(control),
-                   value} {}
+      : ChanMsg<3>{
+            Status::channelVoice(MsgType::kControlChange, channel), controlToDataValue(control),
+            value} {}
 
   /** Returns Control number being changed. */
   constexpr Control control() const { return controlFromDataValue(data1()); }
@@ -496,8 +488,9 @@ public:
 };
 
 static_assert(sizeof(ControlChangeMsg) == 3, "ControlChangeMsg must be 3 bytes");
-static_assert(std::is_trivially_destructible<ControlChangeMsg>::value,
-              "ControlChangeMsg must be trivially destructible");
+static_assert(
+    std::is_trivially_destructible<ControlChangeMsg>::value,
+    "ControlChangeMsg must be trivially destructible");
 
 /** A timestamped Control Change message. */
 class TimedControlChangeMsg : public TimedMsg<ControlChangeMsg> {
@@ -538,8 +531,9 @@ public:
    * Input program must be a normal program (not a special "none" value).
    */
   explicit constexpr ProgramChangeMsg(Channel channel, PresetNumber program)
-      : ChanMsg<2>{Status::channelVoice(MsgType::kProgramChange, channel),
-                   DataValue{static_cast<std::int8_t>(program.index())}} {
+      : ChanMsg<2>{
+            Status::channelVoice(MsgType::kProgramChange, channel),
+            DataValue{static_cast<std::int8_t>(program.index())}} {
     assert(program.isNormal());
   }
 
@@ -563,8 +557,9 @@ public:
 };
 
 static_assert(sizeof(ProgramChangeMsg) == 2, "ProgramChangeMsg must be 2 bytes");
-static_assert(std::is_trivially_destructible<ProgramChangeMsg>::value,
-              "ProgramChangeMsg must be trivially destructible");
+static_assert(
+    std::is_trivially_destructible<ProgramChangeMsg>::value,
+    "ProgramChangeMsg must be trivially destructible");
 
 /** A timestamped Program Change message. */
 class TimedProgramChangeMsg : public TimedMsg<ProgramChangeMsg> {
@@ -574,8 +569,7 @@ public:
   TimedProgramChangeMsg(const TimedMsg<ProgramChangeMsg>& other)
       : TimedProgramChangeMsg{other.timestamp(), other.value()} {}
 
-  explicit TimedProgramChangeMsg(
-      double timestamp, Channel channel, PresetNumber program)
+  explicit TimedProgramChangeMsg(double timestamp, Channel channel, PresetNumber program)
       : TimedMsg<ProgramChangeMsg>{timestamp, channel, program} {}
 
   explicit TimedProgramChangeMsg(double timestamp, const ProgramChangeMsg& pcMsg)
@@ -620,8 +614,9 @@ public:
 };
 
 static_assert(sizeof(ChanPressureMsg) == 2, "ChanPressureMsg must be 2 bytes");
-static_assert(std::is_trivially_destructible<ChanPressureMsg>::value,
-              "ChanPressureMsg must be trivially destructible");
+static_assert(
+    std::is_trivially_destructible<ChanPressureMsg>::value,
+    "ChanPressureMsg must be trivially destructible");
 
 /** A timestamped Channel Pressure message. */
 class TimedChanPressureMsg : public TimedMsg<ChanPressureMsg> {
@@ -631,8 +626,7 @@ public:
   TimedChanPressureMsg(const TimedMsg<ChanPressureMsg>& other)
       : TimedChanPressureMsg{other.timestamp(), other.value()} {}
 
-  explicit TimedChanPressureMsg(
-      double timestamp, Channel channel, DataValue pressure)
+  explicit TimedChanPressureMsg(double timestamp, Channel channel, DataValue pressure)
       : TimedMsg<ChanPressureMsg>{timestamp, channel, pressure} {}
 
   explicit TimedChanPressureMsg(double timestamp, const ChanPressureMsg& cpMsg)
@@ -651,10 +645,9 @@ public:
   static PitchBendMsg fromMsg(const Msg<3>& msg) {
     assert(msg.type() == MsgType::kPitchBend);
     return PitchBendMsg{
-        msg.status().channel(),
-        PitchBend::fromLsbMsb(
-            static_cast<std::uint8_t>(msg.data1().value()),
-            static_cast<std::uint8_t>(msg.data2().value()))};
+        msg.status().channel(), PitchBend::fromLsbMsb(
+                                    static_cast<std::uint8_t>(msg.data1().value()),
+                                    static_cast<std::uint8_t>(msg.data2().value()))};
   }
 
   /**
@@ -664,15 +657,15 @@ public:
    * value).
    */
   explicit constexpr PitchBendMsg(Channel channel, PitchBend bend)
-      : ChanMsg<3>{Status::channelVoice(MsgType::kPitchBend, channel),
-                   DataValue{static_cast<std::int8_t>(bend.lsb())},
-                   DataValue{static_cast<std::int8_t>(bend.msb())}} {}
+      : ChanMsg<3>{
+            Status::channelVoice(MsgType::kPitchBend, channel),
+            DataValue{static_cast<std::int8_t>(bend.lsb())},
+            DataValue{static_cast<std::int8_t>(bend.msb())}} {}
 
   /** Returns 14-bit [1, 16383] MIDI pitch bend value. */
   constexpr PitchBend bend() const {
     return PitchBend::fromLsbMsb(
-        static_cast<std::uint8_t>(data1().value()),
-        static_cast<std::uint8_t>(data2().value()));
+        static_cast<std::uint8_t>(data1().value()), static_cast<std::uint8_t>(data2().value()));
   }
 
   /** Updates to the given 14-bit [1, 16383] MIDI pitch bend value. */
@@ -689,8 +682,9 @@ public:
 };
 
 static_assert(sizeof(PitchBendMsg) == 3, "PitchBendMsg must be 3 bytes");
-static_assert(std::is_trivially_destructible<PitchBendMsg>::value,
-              "PitchBendMsg must be trivially destructible");
+static_assert(
+    std::is_trivially_destructible<PitchBendMsg>::value,
+    "PitchBendMsg must be trivially destructible");
 
 /** A timestamped Pitch Bend message. */
 class TimedPitchBendMsg : public TimedMsg<PitchBendMsg> {
@@ -700,8 +694,7 @@ public:
   TimedPitchBendMsg(const TimedMsg<PitchBendMsg>& other)
       : TimedPitchBendMsg{other.timestamp(), other.value()} {}
 
-  explicit TimedPitchBendMsg(
-      double timestamp, Channel channel, PitchBend bend)
+  explicit TimedPitchBendMsg(double timestamp, Channel channel, PitchBend bend)
       : TimedMsg<PitchBendMsg>{timestamp, channel, bend} {}
 
   explicit TimedPitchBendMsg(double timestamp, const PitchBendMsg& pbMsg)
@@ -781,8 +774,9 @@ public:
    * provides a value for.
    */
   void setPiece(MtcQuarterFramePiece piece) {
-    setDataByte(internal::setBits(dataByte(), static_cast<std::uint8_t>(piece),
-                internal::kMtcQuarterFramePieceBits));
+    setDataByte(
+        internal::setBits(
+            dataByte(), static_cast<std::uint8_t>(piece), internal::kMtcQuarterFramePieceBits));
   }
 
   /**
@@ -812,8 +806,9 @@ public:
 
 private:
   explicit constexpr MtcQuarterFrameMsg(std::uint8_t dataByte)
-      : Msg<2>{Status::system(MsgType::kMtcQuarterFrame),
-               DataValue{static_cast<std::int8_t>(dataByte)}} {
+      : Msg<2>{
+            Status::system(MsgType::kMtcQuarterFrame),
+            DataValue{static_cast<std::int8_t>(dataByte)}} {
     assert(dataByte <= static_cast<int>(DataValue::max().value()));
   }
 
@@ -823,8 +818,9 @@ private:
 };
 
 static_assert(sizeof(MtcQuarterFrameMsg) == 2, "MtcQuarterFrameMsg must be 2 bytes");
-static_assert(std::is_trivially_destructible<MtcQuarterFrameMsg>::value,
-              "MtcQuarterFrameMsg must be trivially destructible");
+static_assert(
+    std::is_trivially_destructible<MtcQuarterFrameMsg>::value,
+    "MtcQuarterFrameMsg must be trivially destructible");
 
 /** A timestamped MTC Quarter Frame message. */
 class TimedMtcQuarterFrameMsg : public TimedMsg<MtcQuarterFrameMsg> {
@@ -858,10 +854,9 @@ class SongPosMsg : public Msg<3> {
 public:
   static SongPosMsg fromMsg(const Msg<3>& msg) {
     assert(msg.type() == MsgType::kSongPositionPointer);
-    return SongPosMsg{
-        DoubleDataValue::fromLsbMsb(
-            static_cast<std::uint8_t>(msg.data1().value()),
-            static_cast<std::uint8_t>(msg.data2().value()))};
+    return SongPosMsg{DoubleDataValue::fromLsbMsb(
+        static_cast<std::uint8_t>(msg.data1().value()),
+        static_cast<std::uint8_t>(msg.data2().value()))};
   }
 
   /**
@@ -886,8 +881,7 @@ public:
    */
   constexpr DoubleDataValue sixteenthsAfterStart() const {
     return DoubleDataValue::fromLsbMsb(
-        static_cast<std::uint8_t>(data1().value()),
-        static_cast<std::uint8_t>(data2().value()));
+        static_cast<std::uint8_t>(data1().value()), static_cast<std::uint8_t>(data2().value()));
   }
 
   /**
@@ -911,14 +905,15 @@ public:
 
 private:
   explicit constexpr SongPosMsg(DoubleDataValue sixteenthsAfterStart)
-      : Msg<3>{Status::system(MsgType::kSongPositionPointer),
-               DataValue{static_cast<std::int8_t>(sixteenthsAfterStart.lsb())},
-               DataValue{static_cast<std::int8_t>(sixteenthsAfterStart.msb())}} {}
+      : Msg<3>{
+            Status::system(MsgType::kSongPositionPointer),
+            DataValue{static_cast<std::int8_t>(sixteenthsAfterStart.lsb())},
+            DataValue{static_cast<std::int8_t>(sixteenthsAfterStart.msb())}} {}
 };
 
 static_assert(sizeof(SongPosMsg) == 3, "SongPosMsg must be 3 bytes");
-static_assert(std::is_trivially_destructible<SongPosMsg>::value,
-              "SongPosMsg must be trivially destructible");
+static_assert(
+    std::is_trivially_destructible<SongPosMsg>::value, "SongPosMsg must be trivially destructible");
 
 /** A timestamped Song Position Pointer message. */
 class TimedSongPosMsg : public TimedMsg<SongPosMsg> {
@@ -958,8 +953,9 @@ public:
    * value).
    */
   explicit constexpr SongSelectMsg(PresetNumber song)
-      : Msg<2>{Status::system(MsgType::kSongSelect),
-               DataValue{static_cast<std::int8_t>(song.index())}} {
+      : Msg<2>{
+            Status::system(MsgType::kSongSelect),
+            DataValue{static_cast<std::int8_t>(song.index())}} {
     assert(song.isNormal());
   }
 
@@ -983,8 +979,9 @@ public:
 };
 
 static_assert(sizeof(SongSelectMsg) == 2, "SongSelectMsg must be 2 bytes");
-static_assert(std::is_trivially_destructible<SongSelectMsg>::value,
-              "SongSelectMsg must be trivially destructible");
+static_assert(
+    std::is_trivially_destructible<SongSelectMsg>::value,
+    "SongSelectMsg must be trivially destructible");
 
 /** A timestamped Song Select message. */
 class TimedSongSelectMsg : public TimedMsg<SongSelectMsg> {

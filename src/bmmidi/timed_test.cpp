@@ -8,8 +8,8 @@
 #include <gtest/gtest.h>
 
 #include "bmmidi/control.hpp"
-#include "bmmidi/msg_reference.hpp"
 #include "bmmidi/msg.hpp"
+#include "bmmidi/msg_reference.hpp"
 
 namespace {
 
@@ -63,43 +63,41 @@ TEST(Timed, WrapsAnInt) {
 TEST(Timed, WrapsMsg) {
   auto timedMsg = bmmidi::Timed<bmmidi::Msg<2>>{
       3.0,
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                   bmmidi::Channel::index(12)),
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(12)),
       bmmidi::DataValue{57}};
   EXPECT_THAT(timedMsg.timestamp(), Eq(3.0));
-  EXPECT_THAT(timedMsg.value(),
+  EXPECT_THAT(
+      timedMsg.value(),
       Eq(bmmidi::Msg<2>{
-             bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                          bmmidi::Channel::index(12)),
-             bmmidi::DataValue{57}}));
+          bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(12)),
+          bmmidi::DataValue{57}}));
 
   timedMsg.setTimestamp(5.1);
   EXPECT_THAT(timedMsg.timestamp(), Eq(5.1));
-  EXPECT_THAT(timedMsg.value(),
+  EXPECT_THAT(
+      timedMsg.value(),
       Eq(bmmidi::Msg<2>{
-             bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                          bmmidi::Channel::index(12)),
-             bmmidi::DataValue{57}}));
+          bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(12)),
+          bmmidi::DataValue{57}}));
 
   timedMsg.value() = bmmidi::Msg<2>{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
-                                   bmmidi::Channel::index(3)),
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure, bmmidi::Channel::index(3)),
       bmmidi::DataValue{96}};
   EXPECT_THAT(timedMsg.timestamp(), Eq(5.1));
-  EXPECT_THAT(timedMsg.value(),
-      Eq(bmmidi::Msg<2>{
-             bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
-                                          bmmidi::Channel::index(3)),
-             bmmidi::DataValue{96}}));
+  EXPECT_THAT(
+      timedMsg.value(), Eq(bmmidi::Msg<2>{
+                            bmmidi::Status::channelVoice(
+                                bmmidi::MsgType::kChannelPressure, bmmidi::Channel::index(3)),
+                            bmmidi::DataValue{96}}));
 
   // Accessors should be const:
   const auto& constRef = timedMsg;
   EXPECT_THAT(constRef.timestamp(), Eq(5.1));
-  EXPECT_THAT(constRef.value(),
-      Eq(bmmidi::Msg<2>{
-             bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
-                                          bmmidi::Channel::index(3)),
-             bmmidi::DataValue{96}}));
+  EXPECT_THAT(
+      constRef.value(), Eq(bmmidi::Msg<2>{
+                            bmmidi::Status::channelVoice(
+                                bmmidi::MsgType::kChannelPressure, bmmidi::Channel::index(3)),
+                            bmmidi::DataValue{96}}));
 
   // The following shouldn't compile if uncommented:
   //     constRef.setTimestamp(0.1234);
@@ -111,68 +109,59 @@ TEST(Timed, WrapsMsg) {
   // Should support copy construction and assignment.
   bmmidi::Timed<bmmidi::Msg<2>> copy{timedMsg};
   EXPECT_THAT(copy.timestamp(), Eq(5.1));
-  EXPECT_THAT(copy.value(),
-      Eq(bmmidi::Msg<2>{
-             bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
-                                          bmmidi::Channel::index(3)),
-             bmmidi::DataValue{96}}));
+  EXPECT_THAT(
+      copy.value(), Eq(bmmidi::Msg<2>{
+                        bmmidi::Status::channelVoice(
+                            bmmidi::MsgType::kChannelPressure, bmmidi::Channel::index(3)),
+                        bmmidi::DataValue{96}}));
 
   // Change the copy.
   copy.setTimestamp(8675);
   copy.value() = bmmidi::Msg<2>{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
-                                   bmmidi::Channel::index(1)),
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure, bmmidi::Channel::index(1)),
       bmmidi::DataValue{23}};
   EXPECT_THAT(copy.timestamp(), Eq(8675));
-  EXPECT_THAT(copy.value(),
-      Eq(bmmidi::Msg<2>{
-             bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
-                                          bmmidi::Channel::index(1)),
-             bmmidi::DataValue{23}}));
+  EXPECT_THAT(
+      copy.value(), Eq(bmmidi::Msg<2>{
+                        bmmidi::Status::channelVoice(
+                            bmmidi::MsgType::kChannelPressure, bmmidi::Channel::index(1)),
+                        bmmidi::DataValue{23}}));
 
   // Original should be unaffected.
   EXPECT_THAT(timedMsg.timestamp(), Eq(5.1));
-  EXPECT_THAT(timedMsg.value(),
-      Eq(bmmidi::Msg<2>{
-             bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
-                                          bmmidi::Channel::index(3)),
-             bmmidi::DataValue{96}}));
+  EXPECT_THAT(
+      timedMsg.value(), Eq(bmmidi::Msg<2>{
+                            bmmidi::Status::channelVoice(
+                                bmmidi::MsgType::kChannelPressure, bmmidi::Channel::index(3)),
+                            bmmidi::DataValue{96}}));
 
   // Can also re-assign value.
   timedMsg = copy;
   EXPECT_THAT(timedMsg.timestamp(), Eq(8675));
-  EXPECT_THAT(timedMsg.value(),
-      Eq(bmmidi::Msg<2>{
-             bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
-                                          bmmidi::Channel::index(1)),
-             bmmidi::DataValue{23}}));
+  EXPECT_THAT(
+      timedMsg.value(), Eq(bmmidi::Msg<2>{
+                            bmmidi::Status::channelVoice(
+                                bmmidi::MsgType::kChannelPressure, bmmidi::Channel::index(1)),
+                            bmmidi::DataValue{23}}));
 }
 
 TEST(Timed, SupportsEqualityOperations) {
   auto timedCcCh10Expr76 = bmmidi::Timed<bmmidi::Msg<3>>{
       100.0,
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                   bmmidi::Channel::index(9)),
-      bmmidi::controlToDataValue(bmmidi::Control::kExpression),
-      bmmidi::DataValue{76}};
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9)),
+      bmmidi::controlToDataValue(bmmidi::Control::kExpression), bmmidi::DataValue{76}};
   auto sameValue = bmmidi::Timed<bmmidi::Msg<3>>{
       100.0,
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                   bmmidi::Channel::index(9)),
-      bmmidi::controlToDataValue(bmmidi::Control::kExpression),
-      bmmidi::DataValue{76}};
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9)),
+      bmmidi::controlToDataValue(bmmidi::Control::kExpression), bmmidi::DataValue{76}};
   auto withDifferentTimestamp = bmmidi::Timed<bmmidi::Msg<3>>{
       100.1,
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                   bmmidi::Channel::index(9)),
-      bmmidi::controlToDataValue(bmmidi::Control::kExpression),
-      bmmidi::DataValue{76}};
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9)),
+      bmmidi::controlToDataValue(bmmidi::Control::kExpression), bmmidi::DataValue{76}};
   auto withDifferentCcValue = bmmidi::Timed<bmmidi::Msg<3>>{
       100.0,
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                   bmmidi::Channel::index(9)),
-      bmmidi::controlToDataValue(bmmidi::Control::kExpression),
-      bmmidi::DataValue{88}};
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(9)),
+      bmmidi::controlToDataValue(bmmidi::Control::kExpression), bmmidi::DataValue{88}};
 
   EXPECT_THAT(timedCcCh10Expr76 == timedCcCh10Expr76, IsTrue());
   EXPECT_THAT(timedCcCh10Expr76 != timedCcCh10Expr76, IsFalse());
@@ -197,11 +186,8 @@ TEST(TimedMsg, SupportsMsgToMsgConversions) {
   // A more generic TimedMsg...
   // (Note On, channel 3, key 69, velocity 90, at time 654.321).
   bmmidi::TimedMsg<bmmidi::Msg<3>> timedMsg{
-      654.321,
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                   bmmidi::Channel::index(2)),
-      bmmidi::DataValue{69},
-      bmmidi::DataValue{90}};
+      654.321, bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2)),
+      bmmidi::DataValue{69}, bmmidi::DataValue{90}};
 
   // ...should convert to the more specific TimedNoteMsg.
   bmmidi::TimedNoteMsg timedNoteMsg = timedMsg.to<bmmidi::NoteMsg>();
@@ -228,11 +214,8 @@ TEST(TimedMsg, SupportsMsgToReferenceConversions) {
   // A more generic TimedMsg...
   // (Note On, channel 3, key 69, velocity 90, at time 654.321).
   bmmidi::TimedMsg<bmmidi::Msg<3>> timedMsg{
-      654.321,
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                   bmmidi::Channel::index(2)),
-      bmmidi::DataValue{69},
-      bmmidi::DataValue{90}};
+      654.321, bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2)),
+      bmmidi::DataValue{69}, bmmidi::DataValue{90}};
 
   // ...should convert to the more specific read-only TimedNoteMsgView...
   bmmidi::TimedNoteMsgView timedNoteMsgView = timedMsg.asView<bmmidi::NoteMsgView>();

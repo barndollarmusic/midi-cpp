@@ -22,7 +22,7 @@ inline constexpr std::uint8_t getBits(std::uint8_t value, std::uint8_t bitMask) 
 inline constexpr std::uint8_t setBits(
     std::uint8_t oldValue, std::uint8_t newValue, std::uint8_t bitMask) {
   std::uint8_t result = oldValue;
-  result &= ~bitMask;  // Clear the bitMask bits.
+  result &= ~bitMask;              // Clear the bitMask bits.
   result |= (newValue & bitMask);  // Replace with corresponding bits from newValue.
   return result;
 }

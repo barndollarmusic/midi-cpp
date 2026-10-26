@@ -129,7 +129,7 @@ TEST(MtcFullFrame, CanSetInvalidIntermediateValuesFromQuarterFrames) {
 
   // Can now set the upper bit to restore validity.
   tc.setPieceFromQuarterFrameDataByte(0b0111'0010);  // Rate + HH (0rrh) upper 4 bits.
-  
+
   EXPECT_THAT(tc.hh(), Eq(8));
   EXPECT_THAT(tc.isValid(), IsTrue());
 }
@@ -147,22 +147,24 @@ TEST(MtcFullFrame, CanReadAsQuarterFrames) {
   tc.setSS(7);
   tc.setFF(24);
 
-  EXPECT_THAT(tc.quarterFrameDataByteFor(bmmidi::MtcQuarterFramePiece::k0FrameLowerBits),
-              Eq(0b0000'1000));
-  EXPECT_THAT(tc.quarterFrameDataByteFor(bmmidi::MtcQuarterFramePiece::k1FrameUpperBits),
-              Eq(0b0001'0001));
-  EXPECT_THAT(tc.quarterFrameDataByteFor(bmmidi::MtcQuarterFramePiece::k2SecLowerBits),
-              Eq(0b0010'0111));
-  EXPECT_THAT(tc.quarterFrameDataByteFor(bmmidi::MtcQuarterFramePiece::k3SecUpperBits),
-              Eq(0b0011'0000));
-  EXPECT_THAT(tc.quarterFrameDataByteFor(bmmidi::MtcQuarterFramePiece::k4MinLowerBits),
-              Eq(0b0100'1011));
-  EXPECT_THAT(tc.quarterFrameDataByteFor(bmmidi::MtcQuarterFramePiece::k5MinUpperBits),
-              Eq(0b0101'0011));
-  EXPECT_THAT(tc.quarterFrameDataByteFor(bmmidi::MtcQuarterFramePiece::k6RateHourLowerBits),
-              Eq(0b0110'0111));
-  EXPECT_THAT(tc.quarterFrameDataByteFor(bmmidi::MtcQuarterFramePiece::k7RateHourUpperBits),
-              Eq(0b0111'0011));
+  EXPECT_THAT(
+      tc.quarterFrameDataByteFor(bmmidi::MtcQuarterFramePiece::k0FrameLowerBits), Eq(0b0000'1000));
+  EXPECT_THAT(
+      tc.quarterFrameDataByteFor(bmmidi::MtcQuarterFramePiece::k1FrameUpperBits), Eq(0b0001'0001));
+  EXPECT_THAT(
+      tc.quarterFrameDataByteFor(bmmidi::MtcQuarterFramePiece::k2SecLowerBits), Eq(0b0010'0111));
+  EXPECT_THAT(
+      tc.quarterFrameDataByteFor(bmmidi::MtcQuarterFramePiece::k3SecUpperBits), Eq(0b0011'0000));
+  EXPECT_THAT(
+      tc.quarterFrameDataByteFor(bmmidi::MtcQuarterFramePiece::k4MinLowerBits), Eq(0b0100'1011));
+  EXPECT_THAT(
+      tc.quarterFrameDataByteFor(bmmidi::MtcQuarterFramePiece::k5MinUpperBits), Eq(0b0101'0011));
+  EXPECT_THAT(
+      tc.quarterFrameDataByteFor(bmmidi::MtcQuarterFramePiece::k6RateHourLowerBits),
+      Eq(0b0110'0111));
+  EXPECT_THAT(
+      tc.quarterFrameDataByteFor(bmmidi::MtcQuarterFramePiece::k7RateHourUpperBits),
+      Eq(0b0111'0011));
 }
 
 }  // namespace

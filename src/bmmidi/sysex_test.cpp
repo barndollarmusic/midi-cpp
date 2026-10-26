@@ -63,19 +63,19 @@ TEST(Manufacturer, SupportsEqualityOperations) {
 }
 
 TEST(UniversalType, ProvidesCategoryAndSubIds) {
-  EXPECT_THAT(bmmidi::universal::kSampleDumpHeader.category(),
-              Eq(bmmidi::UniversalCategory::kNonRealTime));
+  EXPECT_THAT(
+      bmmidi::universal::kSampleDumpHeader.category(), Eq(bmmidi::UniversalCategory::kNonRealTime));
   EXPECT_THAT(bmmidi::universal::kSampleDumpHeader.subId1(), Eq(0x01));
   EXPECT_THAT(bmmidi::universal::kSampleDumpHeader.hasSubId2(), IsFalse());
 
-  EXPECT_THAT(bmmidi::universal::kTuningBulkDumpReq.category(),
-              Eq(bmmidi::UniversalCategory::kNonRealTime));
+  EXPECT_THAT(
+      bmmidi::universal::kTuningBulkDumpReq.category(),
+      Eq(bmmidi::UniversalCategory::kNonRealTime));
   EXPECT_THAT(bmmidi::universal::kTuningBulkDumpReq.subId1(), Eq(0x08));
   EXPECT_THAT(bmmidi::universal::kTuningBulkDumpReq.hasSubId2(), IsTrue());
   EXPECT_THAT(bmmidi::universal::kTuningBulkDumpReq.subId2(), Eq(0x00));
 
-  EXPECT_THAT(bmmidi::universal::kMtcFull.category(),
-              Eq(bmmidi::UniversalCategory::kRealTime));
+  EXPECT_THAT(bmmidi::universal::kMtcFull.category(), Eq(bmmidi::UniversalCategory::kRealTime));
   EXPECT_THAT(bmmidi::universal::kMtcFull.subId1(), Eq(0x01));
   EXPECT_THAT(bmmidi::universal::kMtcFull.hasSubId2(), IsTrue());
   EXPECT_THAT(bmmidi::universal::kMtcFull.subId2(), Eq(0x01));
@@ -368,14 +368,14 @@ TEST(UniversalSysEx, WorksForRealtime) {
   EXPECT_THAT(msg.rawMsgBytes()[3], Eq(0x08));  // Sub-ID #1 (0x08).
   EXPECT_THAT(msg.rawMsgBytes()[4], Eq(0x02));  // Sub-ID #2 (0x02).
 
-  EXPECT_THAT(msg.rawMsgBytes()[5], Eq(0x04));  // Payload [0]
-  EXPECT_THAT(msg.rawMsgBytes()[6], Eq(0x01));  // Payload [1]
-  EXPECT_THAT(msg.rawMsgBytes()[7], Eq(0x3C));  // Payload [2]
-  EXPECT_THAT(msg.rawMsgBytes()[8], Eq(0x3B));  // Payload [3]
-  EXPECT_THAT(msg.rawMsgBytes()[9], Eq(0x63));  // Payload [4]
-  EXPECT_THAT(msg.rawMsgBytes()[10], Eq(0x1A)); // Payload [5]
+  EXPECT_THAT(msg.rawMsgBytes()[5], Eq(0x04));   // Payload [0]
+  EXPECT_THAT(msg.rawMsgBytes()[6], Eq(0x01));   // Payload [1]
+  EXPECT_THAT(msg.rawMsgBytes()[7], Eq(0x3C));   // Payload [2]
+  EXPECT_THAT(msg.rawMsgBytes()[8], Eq(0x3B));   // Payload [3]
+  EXPECT_THAT(msg.rawMsgBytes()[9], Eq(0x63));   // Payload [4]
+  EXPECT_THAT(msg.rawMsgBytes()[10], Eq(0x1A));  // Payload [5]
 
-  EXPECT_THAT(msg.rawMsgBytes()[11], Eq(0xF7)); // EOX.
+  EXPECT_THAT(msg.rawMsgBytes()[11], Eq(0xF7));  // EOX.
 }
 
 }  // namespace

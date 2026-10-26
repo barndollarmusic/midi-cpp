@@ -29,9 +29,9 @@ TEST(MsgView, WorksForStandaloneBytes) {
 
   // Read-only accessors:
   EXPECT_THAT(view.type(), Eq(bmmidi::MsgType::kControlChange));
-  EXPECT_THAT(view.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                      bmmidi::Channel::index(12))));
+  EXPECT_THAT(
+      view.status(), Eq(bmmidi::Status::channelVoice(
+                         bmmidi::MsgType::kControlChange, bmmidi::Channel::index(12))));
   EXPECT_THAT(view.data1(), Eq(bmmidi::DataValue{1}));
   EXPECT_THAT(view.data2(), Eq(bmmidi::DataValue{37}));
   EXPECT_THAT(view.numBytes(), Eq(3));
@@ -44,17 +44,15 @@ TEST(MsgView, WorksForStandaloneBytes) {
 TEST(MsgView, WorksForMsg) {
   // Control Change, channel 13, CC #1 (Mod Wheel), value 37.
   bmmidi::Msg<3> ccCh13Mod37{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                   bmmidi::Channel::index(12)),
-      bmmidi::controlToDataValue(bmmidi::Control::kModWheel),
-      bmmidi::DataValue{37}};
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(12)),
+      bmmidi::controlToDataValue(bmmidi::Control::kModWheel), bmmidi::DataValue{37}};
   auto view = ccCh13Mod37.asView<bmmidi::MsgView>();
 
   // Read-only accessors:
   EXPECT_THAT(view.type(), Eq(bmmidi::MsgType::kControlChange));
-  EXPECT_THAT(view.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                      bmmidi::Channel::index(12))));
+  EXPECT_THAT(
+      view.status(), Eq(bmmidi::Status::channelVoice(
+                         bmmidi::MsgType::kControlChange, bmmidi::Channel::index(12))));
   EXPECT_THAT(view.data1(), Eq(bmmidi::DataValue{1}));
   EXPECT_THAT(view.data2(), Eq(bmmidi::DataValue{37}));
   EXPECT_THAT(view.numBytes(), Eq(3));
@@ -68,10 +66,8 @@ TEST(MsgView, ComparesByteValues) {
   // Should be able to compare a Msg to raw bytes through MsgView interface.
   // Control Change, channel 13, CC #1 (Mod Wheel), value 37.
   const bmmidi::Msg<3> msg{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                   bmmidi::Channel::index(12)),
-      bmmidi::controlToDataValue(bmmidi::Control::kModWheel),
-      bmmidi::DataValue{37}};
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(12)),
+      bmmidi::controlToDataValue(bmmidi::Control::kModWheel), bmmidi::DataValue{37}};
   const auto msgView = msg.asView<bmmidi::MsgView>();
 
   // (Same, just as raw bytes).
@@ -83,8 +79,7 @@ TEST(MsgView, ComparesByteValues) {
 
   // A different Msg<3> value should compare as unequal.
   const bmmidi::Msg<3> differentMsg{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                   bmmidi::Channel::index(12)),
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(12)),
       bmmidi::controlToDataValue(bmmidi::Control::kModWheel),
       bmmidi::DataValue{38}};  // Value 38 instead of 37.
   const auto differentMsgView = differentMsg.asView<bmmidi::MsgView>();
@@ -103,9 +98,9 @@ TEST(MsgRef, WorksForStandaloneBytes) {
 
   // Read-only accessors are still available:
   EXPECT_THAT(ref.type(), Eq(bmmidi::MsgType::kControlChange));
-  EXPECT_THAT(ref.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                      bmmidi::Channel::index(12))));
+  EXPECT_THAT(
+      ref.status(), Eq(bmmidi::Status::channelVoice(
+                        bmmidi::MsgType::kControlChange, bmmidi::Channel::index(12))));
   EXPECT_THAT(ref.data1(), Eq(bmmidi::DataValue{1}));
   EXPECT_THAT(ref.data2(), Eq(bmmidi::DataValue{37}));
   EXPECT_THAT(ref.numBytes(), Eq(3));
@@ -116,25 +111,25 @@ TEST(MsgRef, WorksForStandaloneBytes) {
 
   // Mutations:
   ref.setData2(bmmidi::DataValue{126});
-  EXPECT_THAT(ref.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                      bmmidi::Channel::index(12))));
+  EXPECT_THAT(
+      ref.status(), Eq(bmmidi::Status::channelVoice(
+                        bmmidi::MsgType::kControlChange, bmmidi::Channel::index(12))));
   EXPECT_THAT(ref.data1(), Eq(bmmidi::DataValue{1}));
   EXPECT_THAT(ref.data2(), Eq(bmmidi::DataValue{126}));
 
   ref.setData1(bmmidi::DataValue{0x45});
-  EXPECT_THAT(ref.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                      bmmidi::Channel::index(12))));
+  EXPECT_THAT(
+      ref.status(), Eq(bmmidi::Status::channelVoice(
+                        bmmidi::MsgType::kControlChange, bmmidi::Channel::index(12))));
   EXPECT_THAT(ref.data1(), Eq(bmmidi::DataValue{69}));
   EXPECT_THAT(ref.data2(), Eq(bmmidi::DataValue{126}));
 
   ref.setStatus(
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
-                                   bmmidi::Channel::index(15)));
-  EXPECT_THAT(ref.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
-                                      bmmidi::Channel::index(15))));
+      bmmidi::Status::channelVoice(
+          bmmidi::MsgType::kPolyphonicKeyPressure, bmmidi::Channel::index(15)));
+  EXPECT_THAT(
+      ref.status(), Eq(bmmidi::Status::channelVoice(
+                        bmmidi::MsgType::kPolyphonicKeyPressure, bmmidi::Channel::index(15))));
   EXPECT_THAT(ref.data1(), Eq(bmmidi::DataValue{69}));
   EXPECT_THAT(ref.data2(), Eq(bmmidi::DataValue{126}));
 
@@ -148,9 +143,9 @@ TEST(MsgRef, WorksForStandaloneBytes) {
   ref.rawBytes()[1] = 0x44;
   ref.rawBytes()[2] = 0x5A;
 
-  EXPECT_THAT(ref.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      ref.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2))));
   EXPECT_THAT(ref.data1(), Eq(bmmidi::DataValue{68}));
   EXPECT_THAT(ref.data2(), Eq(bmmidi::DataValue{90}));
 
@@ -162,17 +157,15 @@ TEST(MsgRef, WorksForStandaloneBytes) {
 TEST(MsgRef, WorksForMsg) {
   // Control Change, channel 13, CC #1 (Mod Wheel), value 37.
   bmmidi::Msg<3> ccCh13Mod37{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                   bmmidi::Channel::index(12)),
-      bmmidi::controlToDataValue(bmmidi::Control::kModWheel),
-      bmmidi::DataValue{37}};
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(12)),
+      bmmidi::controlToDataValue(bmmidi::Control::kModWheel), bmmidi::DataValue{37}};
   auto ref = ccCh13Mod37.asRef<bmmidi::MsgRef>();
 
   // Read-only accessors are still available:
   EXPECT_THAT(ref.type(), Eq(bmmidi::MsgType::kControlChange));
-  EXPECT_THAT(ref.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                      bmmidi::Channel::index(12))));
+  EXPECT_THAT(
+      ref.status(), Eq(bmmidi::Status::channelVoice(
+                        bmmidi::MsgType::kControlChange, bmmidi::Channel::index(12))));
   EXPECT_THAT(ref.data1(), Eq(bmmidi::DataValue{1}));
   EXPECT_THAT(ref.data2(), Eq(bmmidi::DataValue{37}));
   EXPECT_THAT(ref.numBytes(), Eq(3));
@@ -183,25 +176,25 @@ TEST(MsgRef, WorksForMsg) {
 
   // Mutations:
   ref.setData2(bmmidi::DataValue{126});
-  EXPECT_THAT(ref.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                      bmmidi::Channel::index(12))));
+  EXPECT_THAT(
+      ref.status(), Eq(bmmidi::Status::channelVoice(
+                        bmmidi::MsgType::kControlChange, bmmidi::Channel::index(12))));
   EXPECT_THAT(ref.data1(), Eq(bmmidi::DataValue{1}));
   EXPECT_THAT(ref.data2(), Eq(bmmidi::DataValue{126}));
 
   ref.setData1(bmmidi::DataValue{0x45});
-  EXPECT_THAT(ref.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                      bmmidi::Channel::index(12))));
+  EXPECT_THAT(
+      ref.status(), Eq(bmmidi::Status::channelVoice(
+                        bmmidi::MsgType::kControlChange, bmmidi::Channel::index(12))));
   EXPECT_THAT(ref.data1(), Eq(bmmidi::DataValue{69}));
   EXPECT_THAT(ref.data2(), Eq(bmmidi::DataValue{126}));
 
   ref.setStatus(
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
-                                   bmmidi::Channel::index(15)));
-  EXPECT_THAT(ref.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
-                                      bmmidi::Channel::index(15))));
+      bmmidi::Status::channelVoice(
+          bmmidi::MsgType::kPolyphonicKeyPressure, bmmidi::Channel::index(15)));
+  EXPECT_THAT(
+      ref.status(), Eq(bmmidi::Status::channelVoice(
+                        bmmidi::MsgType::kPolyphonicKeyPressure, bmmidi::Channel::index(15))));
   EXPECT_THAT(ref.data1(), Eq(bmmidi::DataValue{69}));
   EXPECT_THAT(ref.data2(), Eq(bmmidi::DataValue{126}));
 
@@ -215,9 +208,9 @@ TEST(MsgRef, WorksForMsg) {
   ref.rawBytes()[1] = 0x44;
   ref.rawBytes()[2] = 0x5A;
 
-  EXPECT_THAT(ref.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      ref.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2))));
   EXPECT_THAT(ref.data1(), Eq(bmmidi::DataValue{68}));
   EXPECT_THAT(ref.data2(), Eq(bmmidi::DataValue{90}));
 
@@ -229,10 +222,8 @@ TEST(MsgRef, WorksForMsg) {
 TEST(MsgRef, ImplicitlyConvertsToMsgView) {
   // Control Change, channel 13, CC #1 (Mod Wheel), value 37.
   bmmidi::Msg<3> ccCh13Mod37{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                   bmmidi::Channel::index(12)),
-      bmmidi::controlToDataValue(bmmidi::Control::kModWheel),
-      bmmidi::DataValue{37}};
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(12)),
+      bmmidi::controlToDataValue(bmmidi::Control::kModWheel), bmmidi::DataValue{37}};
   auto ref = ccCh13Mod37.asRef<bmmidi::MsgRef>();
 
   // MsgRef should implicitly convert to MsgView.
@@ -256,9 +247,9 @@ TEST(ChanMsgView, CanReferToRawBytes) {
   EXPECT_THAT(chanMsgView.channel().displayNumber(), Eq(3));
 
   // Can also still use MsgView accessors:
-  EXPECT_THAT(chanMsgView.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      chanMsgView.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2))));
   EXPECT_THAT(chanMsgView.data1(), Eq(bmmidi::DataValue{69}));
   EXPECT_THAT(chanMsgView.data2(), Eq(bmmidi::DataValue{90}));
 }
@@ -272,9 +263,9 @@ TEST(ChanMsgRef, CanReferToRawBytes) {
   EXPECT_THAT(chanMsgRef.channel().displayNumber(), Eq(3));
 
   // Can also still use MsgRef accessors:
-  EXPECT_THAT(chanMsgRef.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      chanMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2))));
   EXPECT_THAT(chanMsgRef.data1(), Eq(bmmidi::DataValue{69}));
   EXPECT_THAT(chanMsgRef.data2(), Eq(bmmidi::DataValue{90}));
 
@@ -316,9 +307,9 @@ TEST(NoteMsgView, CanReferToRawBytes) {
 
   // Can also still use base accessors:
   EXPECT_THAT(noteMsgView.channel().displayNumber(), Eq(3));
-  EXPECT_THAT(noteMsgView.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      noteMsgView.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2))));
   EXPECT_THAT(noteMsgView.data1(), Eq(bmmidi::DataValue{69}));
   EXPECT_THAT(noteMsgView.data2(), Eq(bmmidi::DataValue{90}));
 }
@@ -336,9 +327,9 @@ TEST(NoteMsgView, TreatsNoteOnZeroVelocityAsNoteOff) {
 
   // Can also still use base accessors:
   EXPECT_THAT(noteMsgView.channel().displayNumber(), Eq(3));
-  EXPECT_THAT(noteMsgView.status(),  // But status is still kNoteOn.
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      noteMsgView.status(),  // But status is still kNoteOn.
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2))));
   EXPECT_THAT(noteMsgView.data1(), Eq(bmmidi::DataValue{69}));
   EXPECT_THAT(noteMsgView.data2(), Eq(bmmidi::DataValue{0}));
 }
@@ -380,11 +371,9 @@ TEST(NoteMsgView, ShouldConvertFromMsg) {
   // A more generic Msg...
   // (Note On, channel 3, key 69, velocity 90).
   const bmmidi::Msg<3> msg{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                   bmmidi::Channel::index(2)),
-      bmmidi::DataValue{69},
-      bmmidi::DataValue{90}};
-  
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2)),
+      bmmidi::DataValue{69}, bmmidi::DataValue{90}};
+
   // ...should be able to be referenced with a more specific NoteMsgView...
   auto noteOnView = msg.asView<bmmidi::NoteMsgView>();
 
@@ -408,9 +397,9 @@ TEST(NoteMsgRef, CanReferToRawBytes) {
 
   // Can also still use base accessors:
   EXPECT_THAT(noteMsgRef.channel().displayNumber(), Eq(3));
-  EXPECT_THAT(noteMsgRef.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOff,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      noteMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOff, bmmidi::Channel::index(2))));
   EXPECT_THAT(noteMsgRef.data1(), Eq(bmmidi::DataValue{69}));
   EXPECT_THAT(noteMsgRef.data2(), Eq(bmmidi::DataValue{90}));
 
@@ -425,9 +414,9 @@ TEST(NoteMsgRef, CanReferToRawBytes) {
   EXPECT_THAT(noteMsgRef.key().value(), Eq(60));
   EXPECT_THAT(noteMsgRef.velocity().value(), Eq(22));
   EXPECT_THAT(noteMsgRef.channel().displayNumber(), Eq(14));
-  EXPECT_THAT(noteMsgRef.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                      bmmidi::Channel::index(13))));
+  EXPECT_THAT(
+      noteMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(13))));
   EXPECT_THAT(noteMsgRef.data1(), Eq(bmmidi::DataValue{60}));
   EXPECT_THAT(noteMsgRef.data2(), Eq(bmmidi::DataValue{22}));
 
@@ -461,11 +450,9 @@ TEST(NoteMsgRef, ShouldConvertFromMsg) {
   // A more generic Msg (which is read-write)...
   // (Note On, channel 3, key 69, velocity 90).
   bmmidi::Msg<3> msg{
-      bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn,
-                                   bmmidi::Channel::index(2)),
-      bmmidi::DataValue{69},
-      bmmidi::DataValue{90}};
-  
+      bmmidi::Status::channelVoice(bmmidi::MsgType::kNoteOn, bmmidi::Channel::index(2)),
+      bmmidi::DataValue{69}, bmmidi::DataValue{90}};
+
   // ...should be able to be referenced with a more specific NoteMsgRef...
   auto noteOnRef = msg.asRef<bmmidi::NoteMsgRef>();
 
@@ -511,9 +498,9 @@ TEST(KeyPressureMsgView, CanReferToRawBytes) {
 
   // Can also still use base accessors:
   EXPECT_THAT(kpMsgView.channel().displayNumber(), Eq(3));
-  EXPECT_THAT(kpMsgView.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      kpMsgView.status(), Eq(bmmidi::Status::channelVoice(
+                              bmmidi::MsgType::kPolyphonicKeyPressure, bmmidi::Channel::index(2))));
   EXPECT_THAT(kpMsgView.data1(), Eq(bmmidi::DataValue{69}));
   EXPECT_THAT(kpMsgView.data2(), Eq(bmmidi::DataValue{90}));
 }
@@ -529,9 +516,9 @@ TEST(KeyPressureMsgRef, CanReferToRawBytes) {
 
   // Can also still use base accessors:
   EXPECT_THAT(kpMsgRef.channel().displayNumber(), Eq(3));
-  EXPECT_THAT(kpMsgRef.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      kpMsgRef.status(), Eq(bmmidi::Status::channelVoice(
+                             bmmidi::MsgType::kPolyphonicKeyPressure, bmmidi::Channel::index(2))));
   EXPECT_THAT(kpMsgRef.data1(), Eq(bmmidi::DataValue{69}));
   EXPECT_THAT(kpMsgRef.data2(), Eq(bmmidi::DataValue{90}));
 
@@ -543,9 +530,9 @@ TEST(KeyPressureMsgRef, CanReferToRawBytes) {
   EXPECT_THAT(kpMsgRef.key().value(), Eq(60));
   EXPECT_THAT(kpMsgRef.pressure().value(), Eq(22));
   EXPECT_THAT(kpMsgRef.channel().displayNumber(), Eq(14));
-  EXPECT_THAT(kpMsgRef.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure,
-                                      bmmidi::Channel::index(13))));
+  EXPECT_THAT(
+      kpMsgRef.status(), Eq(bmmidi::Status::channelVoice(
+                             bmmidi::MsgType::kPolyphonicKeyPressure, bmmidi::Channel::index(13))));
   EXPECT_THAT(kpMsgRef.data1(), Eq(bmmidi::DataValue{60}));
   EXPECT_THAT(kpMsgRef.data2(), Eq(bmmidi::DataValue{22}));
 
@@ -565,9 +552,9 @@ TEST(ControlChangeMsgView, CanReferToRawBytes) {
 
   // Can also still use base accessors:
   EXPECT_THAT(ccMsgView.channel().displayNumber(), Eq(3));
-  EXPECT_THAT(ccMsgView.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      ccMsgView.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(2))));
   EXPECT_THAT(ccMsgView.data1(), Eq(bmmidi::DataValue{11}));
   EXPECT_THAT(ccMsgView.data2(), Eq(bmmidi::DataValue{90}));
 }
@@ -583,9 +570,9 @@ TEST(ControlChangeMsgRef, CanReferToRawBytes) {
 
   // Can also still use base accessors:
   EXPECT_THAT(ccMsgRef.channel().displayNumber(), Eq(3));
-  EXPECT_THAT(ccMsgRef.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      ccMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange, bmmidi::Channel::index(2))));
   EXPECT_THAT(ccMsgRef.data1(), Eq(bmmidi::DataValue{11}));
   EXPECT_THAT(ccMsgRef.data2(), Eq(bmmidi::DataValue{90}));
 
@@ -597,9 +584,9 @@ TEST(ControlChangeMsgRef, CanReferToRawBytes) {
   EXPECT_THAT(ccMsgRef.control(), Eq(bmmidi::Control::kModWheel));
   EXPECT_THAT(ccMsgRef.value(), Eq(bmmidi::DataValue{22}));
   EXPECT_THAT(ccMsgRef.channel().displayNumber(), Eq(14));
-  EXPECT_THAT(ccMsgRef.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kControlChange,
-                                      bmmidi::Channel::index(13))));
+  EXPECT_THAT(
+      ccMsgRef.status(), Eq(bmmidi::Status::channelVoice(
+                             bmmidi::MsgType::kControlChange, bmmidi::Channel::index(13))));
   EXPECT_THAT(ccMsgRef.data1(), Eq(bmmidi::DataValue{1}));
   EXPECT_THAT(ccMsgRef.data2(), Eq(bmmidi::DataValue{22}));
 
@@ -618,9 +605,9 @@ TEST(ProgramChangeMsgView, CanReferToRawBytes) {
 
   // Can also still use base accessors:
   EXPECT_THAT(pcMsgView.channel().displayNumber(), Eq(3));
-  EXPECT_THAT(pcMsgView.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      pcMsgView.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(2))));
   EXPECT_THAT(pcMsgView.data1(), Eq(bmmidi::DataValue{56}));
 }
 
@@ -634,9 +621,9 @@ TEST(ProgramChangeMsgRef, CanReferToRawBytes) {
 
   // Can also still use base accessors:
   EXPECT_THAT(pcMsgRef.channel().displayNumber(), Eq(3));
-  EXPECT_THAT(pcMsgRef.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      pcMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(2))));
   EXPECT_THAT(pcMsgRef.data1(), Eq(bmmidi::DataValue{56}));
 
   // Can mutate:
@@ -645,9 +632,9 @@ TEST(ProgramChangeMsgRef, CanReferToRawBytes) {
 
   EXPECT_THAT(pcMsgRef.program().displayNumber(), Eq(23));
   EXPECT_THAT(pcMsgRef.channel().displayNumber(), Eq(14));
-  EXPECT_THAT(pcMsgRef.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kProgramChange,
-                                      bmmidi::Channel::index(13))));
+  EXPECT_THAT(
+      pcMsgRef.status(), Eq(bmmidi::Status::channelVoice(
+                             bmmidi::MsgType::kProgramChange, bmmidi::Channel::index(13))));
   EXPECT_THAT(pcMsgRef.data1(), Eq(bmmidi::DataValue{22}));
 
   EXPECT_THAT(srcBytes[0], Eq(0xCD));
@@ -664,9 +651,9 @@ TEST(ChanPressureMsgView, CanReferToRawBytes) {
 
   // Can also still use base accessors:
   EXPECT_THAT(cpMsgView.channel().displayNumber(), Eq(3));
-  EXPECT_THAT(cpMsgView.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      cpMsgView.status(), Eq(bmmidi::Status::channelVoice(
+                              bmmidi::MsgType::kChannelPressure, bmmidi::Channel::index(2))));
   EXPECT_THAT(cpMsgView.data1(), Eq(bmmidi::DataValue{56}));
 }
 
@@ -680,9 +667,9 @@ TEST(ChanPressureMsgRef, CanReferToRawBytes) {
 
   // Can also still use base accessors:
   EXPECT_THAT(cpMsgRef.channel().displayNumber(), Eq(3));
-  EXPECT_THAT(cpMsgRef.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      cpMsgRef.status(), Eq(bmmidi::Status::channelVoice(
+                             bmmidi::MsgType::kChannelPressure, bmmidi::Channel::index(2))));
   EXPECT_THAT(cpMsgRef.data1(), Eq(bmmidi::DataValue{56}));
 
   // Can mutate:
@@ -691,9 +678,9 @@ TEST(ChanPressureMsgRef, CanReferToRawBytes) {
 
   EXPECT_THAT(cpMsgRef.pressure().value(), Eq(22));
   EXPECT_THAT(cpMsgRef.channel().displayNumber(), Eq(14));
-  EXPECT_THAT(cpMsgRef.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kChannelPressure,
-                                      bmmidi::Channel::index(13))));
+  EXPECT_THAT(
+      cpMsgRef.status(), Eq(bmmidi::Status::channelVoice(
+                             bmmidi::MsgType::kChannelPressure, bmmidi::Channel::index(13))));
   EXPECT_THAT(cpMsgRef.data1(), Eq(bmmidi::DataValue{22}));
 
   EXPECT_THAT(srcBytes[0], Eq(0xDD));
@@ -715,9 +702,9 @@ TEST(PitchBendMsgView, CanReferToRawBytes) {
 
   // Can also still use base accessors:
   EXPECT_THAT(pbMsgView.channel().displayNumber(), Eq(3));
-  EXPECT_THAT(pbMsgView.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPitchBend,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      pbMsgView.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPitchBend, bmmidi::Channel::index(2))));
   EXPECT_THAT(pbMsgView.data1(), Eq(bmmidi::DataValue{0x0B}));
   EXPECT_THAT(pbMsgView.data2(), Eq(bmmidi::DataValue{0x77}));
 }
@@ -737,9 +724,9 @@ TEST(PitchBendMsgRef, CanReferToRawBytes) {
 
   // Can also still use base accessors:
   EXPECT_THAT(pbMsgRef.channel().displayNumber(), Eq(3));
-  EXPECT_THAT(pbMsgRef.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPitchBend,
-                                      bmmidi::Channel::index(2))));
+  EXPECT_THAT(
+      pbMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPitchBend, bmmidi::Channel::index(2))));
   EXPECT_THAT(pbMsgRef.data1(), Eq(bmmidi::DataValue{0x0B}));
   EXPECT_THAT(pbMsgRef.data2(), Eq(bmmidi::DataValue{0x77}));
 
@@ -751,9 +738,9 @@ TEST(PitchBendMsgRef, CanReferToRawBytes) {
   EXPECT_THAT(pbMsgRef.bend().lsb(), Eq(0x01));
   EXPECT_THAT(pbMsgRef.bend().msb(), Eq(0x00));
   EXPECT_THAT(pbMsgRef.channel().displayNumber(), Eq(14));
-  EXPECT_THAT(pbMsgRef.status(),
-      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPitchBend,
-                                      bmmidi::Channel::index(13))));
+  EXPECT_THAT(
+      pbMsgRef.status(),
+      Eq(bmmidi::Status::channelVoice(bmmidi::MsgType::kPitchBend, bmmidi::Channel::index(13))));
   EXPECT_THAT(pbMsgRef.data1(), Eq(bmmidi::DataValue{0x01}));
   EXPECT_THAT(pbMsgRef.data2(), Eq(bmmidi::DataValue{0x00}));
 
@@ -780,8 +767,8 @@ TEST(SysExMsgView, CanReferToRawBytes) {
 
 TEST(SysExMsgView, CanReferToMfrSysEx) {
   auto sysExMsg = bmmidi::MfrSysExBuilder{bmmidi::Manufacturer::nonCommercial()}
-      .withNumPayloadBytes(3)
-      .buildOnHeap();
+                      .withNumPayloadBytes(3)
+                      .buildOnHeap();
   sysExMsg.rawPayloadBytes()[0] = 0xA0;
   sysExMsg.rawPayloadBytes()[1] = 0xA1;
   sysExMsg.rawPayloadBytes()[2] = 0xA2;
@@ -803,9 +790,8 @@ TEST(SysExMsgView, CanReferToUniversalSysEx) {
   const auto type = bmmidi::universal::kTuningBulkDumpReq;
   const auto device22 = bmmidi::Device::id(22);  // 0x16.
 
-  auto sysExMsg = bmmidi::UniversalSysExBuilder{type, device22}
-      .withNumPayloadBytes(1)
-      .buildOnHeap();
+  auto sysExMsg =
+      bmmidi::UniversalSysExBuilder{type, device22}.withNumPayloadBytes(1).buildOnHeap();
   sysExMsg.rawPayloadBytes()[0] = 0x04;  // Tuning program #.
 
   bmmidi::SysExMsgView sysExMsgView{sysExMsg.rawMsgBytes(), sysExMsg.numMsgBytesIncludingEox()};
@@ -847,8 +833,8 @@ TEST(MfrSysExMsgView, WorksForNonCommercialRawBytes) {
 TEST(MfrSysExMsgView, WorksForExtIdMfrSysExMsg) {
   // (Fake Spectrasonics SysEx message format with 3 payload bytes).
   auto sysExMsg = bmmidi::MfrSysExBuilder{bmmidi::Manufacturer::extId(0x02, 0x2C)}
-      .withNumPayloadBytes(3)
-      .buildOnHeap();
+                      .withNumPayloadBytes(3)
+                      .buildOnHeap();
   sysExMsg.rawPayloadBytes()[0] = 0xA0;
   sysExMsg.rawPayloadBytes()[1] = 0xA1;
   sysExMsg.rawPayloadBytes()[2] = 0xA2;
@@ -938,8 +924,8 @@ TEST(UniversalSysExMsgView, WorksForOneSubIdTypeRawBytes) {
 
 TEST(UniversalSysExMsgView, WorksForRealtimeRawBytes) {
   // (Realtime Universal SysEx Tuning Note Change for device 22, tuning program 0x04, key 60).
-  const std::uint8_t srcBytes[] =
-      {0xF0, 0x7F, 0x16, 0x08, 0x02, 0x04, 0x01, 0x3C, 0x3B, 0x63, 0x1A, 0xF7};
+  const std::uint8_t srcBytes[] = {0xF0, 0x7F, 0x16, 0x08, 0x02, 0x04,
+                                   0x01, 0x3C, 0x3B, 0x63, 0x1A, 0xF7};
   bmmidi::UniversalSysExMsgView univMsgView{srcBytes, sizeof(srcBytes)};
 
   // Can use UniversalSysExMsgView accessors:
@@ -975,10 +961,10 @@ TEST(UniversalSysExMsgView, WorksForRealtimeRawBytes) {
   // LSB:            0b110 0011 (  0x63 = 99)
   // MSB:   0b00 1101 0         (  0x1A = 26)
   // Val: 0b  00 1101 0110 0011 (0x0D63 = 3427)
-  EXPECT_THAT(univMsgView.rawBytes()[9], Eq(0x63));  // Payload [4] (LSB fraction above)
-  EXPECT_THAT(univMsgView.rawBytes()[10], Eq(0x1A)); // Payload [5] (MSB fraction above)
+  EXPECT_THAT(univMsgView.rawBytes()[9], Eq(0x63));   // Payload [4] (LSB fraction above)
+  EXPECT_THAT(univMsgView.rawBytes()[10], Eq(0x1A));  // Payload [5] (MSB fraction above)
 
-  EXPECT_THAT(univMsgView.rawBytes()[11], Eq(0xF7)); // EOX.
+  EXPECT_THAT(univMsgView.rawBytes()[11], Eq(0xF7));  // EOX.
 }
 
 TEST(UniversalSysExMsgRef, WorksForTwoSubIdTypeUniversalSysExMsg) {
@@ -986,9 +972,8 @@ TEST(UniversalSysExMsgRef, WorksForTwoSubIdTypeUniversalSysExMsg) {
   const auto type = bmmidi::universal::kTuningBulkDumpReq;
   const auto allDevices = bmmidi::Device::all();
 
-  auto sysExMsg = bmmidi::UniversalSysExBuilder{type, allDevices}
-      .withNumPayloadBytes(1)
-      .buildOnHeap();
+  auto sysExMsg =
+      bmmidi::UniversalSysExBuilder{type, allDevices}.withNumPayloadBytes(1).buildOnHeap();
   sysExMsg.rawPayloadBytes()[0] = 0x04;
 
   bmmidi::UniversalSysExMsgRef univMsgRef{
@@ -1021,7 +1006,7 @@ TEST(UniversalSysExMsgRef, WorksForTwoSubIdTypeUniversalSysExMsg) {
   // Can mutate device and payload bytes only (other mutators aren't provided,
   // since they could end up changing the # of message bytes).
   univMsgRef.setDevice(bmmidi::Device::id(22));  // 0x16.
-  univMsgRef.rawPayloadBytes()[0] = 0x3D;  // Tuning program.
+  univMsgRef.rawPayloadBytes()[0] = 0x3D;        // Tuning program.
 
   EXPECT_THAT(univMsgRef.rawBytes()[0], Eq(0xF0));  // SysEx status byte.
   EXPECT_THAT(univMsgRef.rawBytes()[1], Eq(0x7E));  // SysEx ID (non-realtime universal).
@@ -1081,7 +1066,7 @@ TEST(MtcQuarterFrameMsgRef, CanReferToRawBytes) {
   // Or can set piece and value individually:
   // (FF upper 1 bit of 0b0001).
   qfMsgRef.setPiece(bmmidi::MtcQuarterFramePiece::k1FrameUpperBits);  // 0x10.
-  qfMsgRef.setValueFromLower4Bits(0b0000'0001);  // 0x01.
+  qfMsgRef.setValueFromLower4Bits(0b0000'0001);                       // 0x01.
 
   EXPECT_THAT(qfMsgRef.dataByte(), Eq(0x11));
   EXPECT_THAT(qfMsgRef.piece(), Eq(bmmidi::MtcQuarterFramePiece::k1FrameUpperBits));
@@ -1107,8 +1092,8 @@ TEST(SongPosMsgView, CanReferToRawBytes) {
   EXPECT_THAT(posMsgView.sixteenthsAfterStart().msb(), Eq(0x77));
 
   // Can also still use base accessors:
-  EXPECT_THAT(posMsgView.status(),
-      Eq(bmmidi::Status::system(bmmidi::MsgType::kSongPositionPointer)));
+  EXPECT_THAT(
+      posMsgView.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kSongPositionPointer)));
   EXPECT_THAT(posMsgView.data1(), Eq(bmmidi::DataValue{0x0B}));
   EXPECT_THAT(posMsgView.data2(), Eq(bmmidi::DataValue{0x77}));
 }
@@ -1127,8 +1112,8 @@ TEST(SongPosMsgRef, CanReferToRawBytes) {
   EXPECT_THAT(posMsgRef.sixteenthsAfterStart().msb(), Eq(0x77));
 
   // Can also still use base accessors:
-  EXPECT_THAT(posMsgRef.status(),
-      Eq(bmmidi::Status::system(bmmidi::MsgType::kSongPositionPointer)));
+  EXPECT_THAT(
+      posMsgRef.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kSongPositionPointer)));
   EXPECT_THAT(posMsgRef.data1(), Eq(bmmidi::DataValue{0x0B}));
   EXPECT_THAT(posMsgRef.data2(), Eq(bmmidi::DataValue{0x77}));
 
@@ -1138,8 +1123,8 @@ TEST(SongPosMsgRef, CanReferToRawBytes) {
   EXPECT_THAT(posMsgRef.sixteenthsAfterStart().value(), Eq(0));
   EXPECT_THAT(posMsgRef.sixteenthsAfterStart().lsb(), Eq(0x00));
   EXPECT_THAT(posMsgRef.sixteenthsAfterStart().msb(), Eq(0x00));
-  EXPECT_THAT(posMsgRef.status(),
-      Eq(bmmidi::Status::system(bmmidi::MsgType::kSongPositionPointer)));
+  EXPECT_THAT(
+      posMsgRef.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kSongPositionPointer)));
   EXPECT_THAT(posMsgRef.data1(), Eq(bmmidi::DataValue{0x00}));
   EXPECT_THAT(posMsgRef.data2(), Eq(bmmidi::DataValue{0x00}));
 
@@ -1157,8 +1142,7 @@ TEST(SongSelectMsgView, CanReferToRawBytes) {
   EXPECT_THAT(songMsgView.song().displayNumber(), Eq(57));
 
   // Can also still use base accessors:
-  EXPECT_THAT(songMsgView.status(),
-      Eq(bmmidi::Status::system(bmmidi::MsgType::kSongSelect)));
+  EXPECT_THAT(songMsgView.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kSongSelect)));
   EXPECT_THAT(songMsgView.data1(), Eq(bmmidi::DataValue{56}));
 }
 
@@ -1171,16 +1155,14 @@ TEST(SongSelectMsgRef, CanReferToRawBytes) {
   EXPECT_THAT(songMsgRef.song().displayNumber(), Eq(57));
 
   // Can also still use base accessors:
-  EXPECT_THAT(songMsgRef.status(),
-      Eq(bmmidi::Status::system(bmmidi::MsgType::kSongSelect)));
+  EXPECT_THAT(songMsgRef.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kSongSelect)));
   EXPECT_THAT(songMsgRef.data1(), Eq(bmmidi::DataValue{56}));
 
   // Can mutate:
   songMsgRef.setSong(bmmidi::PresetNumber::index(22));
 
   EXPECT_THAT(songMsgRef.song().displayNumber(), Eq(23));
-  EXPECT_THAT(songMsgRef.status(),
-      Eq(bmmidi::Status::system(bmmidi::MsgType::kSongSelect)));
+  EXPECT_THAT(songMsgRef.status(), Eq(bmmidi::Status::system(bmmidi::MsgType::kSongSelect)));
   EXPECT_THAT(songMsgRef.data1(), Eq(bmmidi::DataValue{22}));
 
   EXPECT_THAT(srcBytes[0], Eq(0xF3));

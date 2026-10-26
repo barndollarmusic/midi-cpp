@@ -49,12 +49,13 @@ private:
 // Equality operations:
 template<typename T>
 inline bool operator==(Timed<T> lhs, Timed<T> rhs) {
-  return (lhs.timestamp() == rhs.timestamp())
-      && (lhs.value() == rhs.value());
+  return (lhs.timestamp() == rhs.timestamp()) && (lhs.value() == rhs.value());
 }
 
 template<typename T>
-inline bool operator!=(Timed<T> lhs, Timed<T> rhs) { return !(lhs == rhs); }
+inline bool operator!=(Timed<T> lhs, Timed<T> rhs) {
+  return !(lhs == rhs);
+}
 
 }  // namespace bmmidi
 

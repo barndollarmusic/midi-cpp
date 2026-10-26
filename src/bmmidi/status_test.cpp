@@ -37,8 +37,8 @@ TEST(Status, ShouldCreateChannelVoice) {
   }
 
   {
-    const auto keyAftertouchCh16 =
-        bmmidi::Status::channelVoice(bmmidi::MsgType::kPolyphonicKeyPressure, bmmidi::Channel::last());
+    const auto keyAftertouchCh16 = bmmidi::Status::channelVoice(
+        bmmidi::MsgType::kPolyphonicKeyPressure, bmmidi::Channel::last());
     EXPECT_THAT(keyAftertouchCh16.type(), Eq(bmmidi::MsgType::kPolyphonicKeyPressure));
     EXPECT_THAT(keyAftertouchCh16.value(), Eq(0xAF));  // 0xAn, where n is F for channel index.
     EXPECT_THAT(keyAftertouchCh16.numDataBytes(), Eq(2));

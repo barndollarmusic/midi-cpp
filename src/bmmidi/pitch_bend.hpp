@@ -17,7 +17,7 @@ namespace bmmidi {
 /**
  * Represents a pitch bend range in semitones, allowing for fractional semitones
  * as well as asymmetrical ranges (e.g. down -12 semitones but up +2 semitones).
- * 
+ *
  * The center pitch bend wheel position always represents no bend.
  */
 class PitchBendRange {
@@ -49,15 +49,13 @@ public:
    * PitchBendRange.
    */
   constexpr bool canBendBySemitones(double semitonesOffset) const {
-    return (semitonesOffset < 0.0)
-        ? (-semitonesOffset <= maxSemitonesDown_)
-        : (semitonesOffset <= maxSemitonesUp_);
+    return (semitonesOffset < 0.0) ? (-semitonesOffset <= maxSemitonesDown_)
+                                   : (semitonesOffset <= maxSemitonesUp_);
   }
 
 private:
   explicit constexpr PitchBendRange(double maxSemitonesDown, double maxSemitonesUp)
-      : maxSemitonesDown_{maxSemitonesDown},
-        maxSemitonesUp_{maxSemitonesUp} {
+      : maxSemitonesDown_{maxSemitonesDown}, maxSemitonesUp_{maxSemitonesUp} {
     assert(maxSemitonesDown >= 0.0);
     assert(maxSemitonesUp >= 0.0);
   }
@@ -87,8 +85,8 @@ public:
    */
   static PitchBend semitoneBend(double semitones, PitchBendRange range) {
     const double offsetFraction = (semitones < 0.0)
-        ? std::max(-1.0, semitones / range.maxSemitonesDown())
-        : std::min(semitones / range.maxSemitonesUp(), 1.0);
+                                      ? std::max(-1.0, semitones / range.maxSemitonesDown())
+                                      : std::min(semitones / range.maxSemitonesUp(), 1.0);
 
     const std::int16_t value =
         static_cast<std::int16_t>(std::round(kMidpoint + offsetFraction * kMaxOffset));
@@ -114,8 +112,7 @@ public:
   explicit constexpr PitchBend(std::int16_t value)
       : DoubleDataValue{(value == 0) ? std::int16_t{1} : value} {}
 
-  constexpr PitchBend(DoubleDataValue rhs)
-      : PitchBend{rhs.value()} {}
+  constexpr PitchBend(DoubleDataValue rhs) : PitchBend{rhs.value()} {}
   PitchBend& operator=(DoubleDataValue rhs) {
     *this = PitchBend{rhs};
     return *this;
@@ -131,8 +128,8 @@ public:
     // Not: Take max in downward case to allow for a 0 value (which should be
     // treated the same as 1).
     return (offsetFraction < 0.0)
-        ? std::max(-range.maxSemitonesDown(), offsetFraction * range.maxSemitonesDown())
-        : offsetFraction * range.maxSemitonesUp();
+               ? std::max(-range.maxSemitonesDown(), offsetFraction * range.maxSemitonesDown())
+               : offsetFraction * range.maxSemitonesUp();
   }
 
 private:
@@ -147,8 +144,9 @@ private:
   // by value as a DoubleDataValue.
 };
 
-static_assert(sizeof(PitchBend) == sizeof(DoubleDataValue),
-              "PitchBend must have same size as DoubleDataValue");
+static_assert(
+    sizeof(PitchBend) == sizeof(DoubleDataValue),
+    "PitchBend must have same size as DoubleDataValue");
 
 }  // namespace bmmidi
 

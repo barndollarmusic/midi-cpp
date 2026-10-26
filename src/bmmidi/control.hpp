@@ -244,7 +244,7 @@ enum class Control : std::uint8_t {
    * 1 (0x01): hard left (0 also pans hard left)
    * 64 (0x40): center
    * 127 (0x7F): hard right
-   * 
+   *
    * Recommended implementation:
    * L Gain (dB) = 20 * log(cos((pi / 2) * max(0, value - 1) / 126))
    * R Gain (dB) = 20 * log(sin((pi / 2) * max(0, value - 1) / 126))
@@ -467,10 +467,10 @@ enum class Control : std::uint8_t {
    * stop all currently sounding notes (except perhaps those that are being
    * played via the device's Local Control). Should be sent before All Sound
    * Off.
-   * 
+   *
    * Because not all receivers implement support for this, it is recommended to
    * send 128 individual Note Off messages before this.
-   * 
+   *
    * Value (unused) should be 0.
    */
   kAllNotesOff = k123,
@@ -504,9 +504,7 @@ enum class Control : std::uint8_t {
 };
 
 /** Returns true if value is in valid [0, 127] Control range. */
-constexpr bool controlNumberIsInRange(int value) {
-  return (0 <= value) && (value <= 127);
-}
+constexpr bool controlNumberIsInRange(int value) { return (0 <= value) && (value <= 127); }
 
 /** Returns Control with the given [0, 127] numerical value. */
 constexpr Control controlFromNumber(int value) {
@@ -515,9 +513,7 @@ constexpr Control controlFromNumber(int value) {
 }
 
 /** Returns [0, 127] numerical value of given Control. */
-constexpr std::int8_t controlToNumber(Control control) {
-  return static_cast<std::int8_t>(control);
-}
+constexpr std::int8_t controlToNumber(Control control) { return static_cast<std::int8_t>(control); }
 
 /** Returns Control from [0, 127] DataValue. */
 constexpr Control controlFromDataValue(DataValue dataValue) {
