@@ -22,7 +22,7 @@ function(bmmidi_header_library name)
   target_include_directories(BMMidi_${name}
       INTERFACE ${BMMidi_SOURCE_DIR}/src)
 
-  target_compile_features(BMMidi_${name} INTERFACE cxx_std_14)
+  target_compile_features(BMMidi_${name} INTERFACE cxx_std_17)
 endfunction()
 
 ## Configures target compile options to enable this project's standard set of
@@ -55,7 +55,7 @@ function(bmmidi_library name)
   target_include_directories(BMMidi_${name}
       PUBLIC ${BMMidi_SOURCE_DIR}/src)
 
-  target_compile_features(BMMidi_${name} PUBLIC cxx_std_14)
+  target_compile_features(BMMidi_${name} PUBLIC cxx_std_17)
   bmmidi_enable_warnings(${name})
 
   # TODO: Configure installation, if necessary.
@@ -80,7 +80,7 @@ function(bmmidi_gtest name)
   target_include_directories(BMMidi_${name}
       PUBLIC ${BMMidi_SOURCE_DIR}/src)
 
-  target_compile_features(BMMidi_${name} PUBLIC cxx_std_14)
+  target_compile_features(BMMidi_${name} PUBLIC cxx_std_17)
   bmmidi_enable_warnings(${name})
 
   target_link_libraries(BMMidi_${name}

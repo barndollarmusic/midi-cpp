@@ -2,12 +2,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-include(BMMidiDeps)
 include(FetchContent)
 
 if(BMMidi_ENABLE_TESTING)
-  FetchContent_Declare(googletest
+  FetchContent_Declare(
+      googletest
       GIT_REPOSITORY https://github.com/google/googletest
-      GIT_TAG e4717df71a4f45bf9f0ac88c6cd9846a0bc248dd)  # 2021-09-23
-  bmmidi_make_dep_available(googletest)
+      GIT_TAG 063de7e9578f82b369302001269680b4b1553359  # 2026-08-10 (v1.18.0)
+      EXCLUDE_FROM_ALL)
+  FetchContent_MakeAvailable(googletest)
 endif()

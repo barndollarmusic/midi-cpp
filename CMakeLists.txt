@@ -2,12 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.28...4.5)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 project(BMMidi
-    VERSION 0.1
+    VERSION 0.2
     DESCRIPTION "C++ MIDI utilities (direct or adapt another framework)"
     HOMEPAGE_URL "https://github.com/barndollarmusic/midi-cpp"
     LANGUAGES CXX)

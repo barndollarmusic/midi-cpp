@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 if(NOT BMMIDI_IS_TOP_LEVEL_PROJECT)
-  if(CMAKE_CXX_STANDARD LESS 14)
+  if(CMAKE_CXX_STANDARD LESS 17)
     message(FATAL_ERROR
-        "BMMidi requires CMAKE_CXX_STANDARD >= 14 (got: ${CMAKE_CXX_STANDARD})")
+        "BMMidi requires CMAKE_CXX_STANDARD >= 17 (got: ${CMAKE_CXX_STANDARD})")
   endif()
 
   return()  # Don't set these defaults if this isn't the top-level project.
@@ -17,8 +17,8 @@ endif()
 
 include(CheckCXXCompilerFlag)
 
-# Default to C++14 standard.
-set(CMAKE_CXX_STANDARD 14)
+# Default to C++17 standard.
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS NO)
 
